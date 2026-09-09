@@ -28,6 +28,8 @@ class AccessControlTest(unittest.TestCase):
             if (
                 mod == "main"
                 or mod == "database"
+                or mod == "routers"
+                or mod.startswith("routers.")
                 or mod == "security"
                 or mod.startswith("security.")
                 or mod.startswith("core")
@@ -57,7 +59,7 @@ class AccessControlTest(unittest.TestCase):
     def test_browse_and_playback_require_auth_when_anonymous_disabled(self):
         client = self._client()
 
-        self.assertEqual(client.get("/api/stations").status_code, 401)
+        self.assertEqual(client.get("/api/radio/stations").status_code, 401)
         self.assertEqual(client.get("/api/iptv/channels").status_code, 401)
         self.assertEqual(client.get("/api/yunting/all").status_code, 404)
         self.assertEqual(

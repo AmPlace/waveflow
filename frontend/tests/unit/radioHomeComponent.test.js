@@ -37,24 +37,22 @@ function openHome(){
 }
 const button = text => wrapper.findAll('button').find(b=>b.text()===text)
 
-test('partial catalog failure is visible; retry reloads both catalogs and explicit filters keep authority',async()=>{
-  let failStatic=true
+test('single catalog failure is visible; retry reloads the same authority and explicit filters keep authority',async()=>{
+  let failCatalog=true
   const calls=[]
   globalThis.fetch=async url=>{
     calls.push(String(url))
-    if(String(url).endsWith('/api/stations'))return failStatic?{ok:false}:response([{id:'static',name:'内置',tags:['HK','news']}])
-    return response({stations:[row],catalog_states:[]})
+    return failCatalog?{ok:false}:response({stations:[row],catalog_states:[]})
   }
   const store=openHome();await flushPromises()
-  assert.match(wrapper.text(),/部分电台目录暂时不可用/)
-  assert.equal(button('音乐'),undefined)
-  assert.ok(button('自定义'))
-  assert.deepEqual(wrapper.findAll('option').map(o=>o.text()),['全部分组','目录甲'])
-  failStatic=false;await button('重试').trigger('click');await flushPromises()
-  assert.equal(calls.filter(url=>url.endsWith('/api/stations')).length,2)
+  assert.match(wrapper.text(),/电台目录暂时无法加载/)
+  failCatalog=false;await button('重试加载').trigger('click');await flushPromises()
   assert.equal(calls.filter(url=>url.endsWith('/api/radio/stations')).length,2)
   assert.doesNotMatch(wrapper.text(),/部分电台目录暂时不可用/)
-  await wrapper.get('select').setValue('目录甲')
+  assert.ok(button('自定义'))
+  assert.equal(wrapper.find('select').exists(),false)
+  assert.equal(button('目录甲'),undefined)
+  await button('台湾').trigger('click')
   assert.equal(wrapper.findAll('.channel-card').length,1)
   await wrapper.get('.channel-card').trigger('click')
   assert.equal(store.currentStation,'radio_fixture')
@@ -66,27 +64,53 @@ test('partial catalog failure is visible; retry reloads both catalogs and explic
   assert.equal(wrapper.get('.channel-card').attributes('aria-current'),'true')
 })
 
-test('fast static catalog stays browsable while plugin request waits; unmount rejects late results',async()=>{
+test('single catalog request is cancelled on unmount and cannot publish late results',async()=>{
   let finish
   const signals=[]
   globalThis.fetch=async(url,options)=>{
     signals.push(options.signal)
-    if(String(url).endsWith('/api/stations'))return response([{id:'static',name:'内置',tags:['HK']}])
     return new Promise(resolve=>{finish=resolve})
   }
   const store=openHome();await flushPromises()
-  assert.equal(store.stationList.length,1)
-  assert.match(wrapper.text(),/正在更新电台目录/)
+  assert.equal(store.stationList.length,0)
+  assert.match(wrapper.text(),/正在加载电台目录/)
   wrapper.unmount();wrapper=null
-  assert.equal(signals[0].aborted,false)
-  assert.equal(signals[1].aborted,true)
+  assert.equal(signals[0].aborted,true)
+  assert.equal(signals[0].aborted,true)
   finish(response({stations:[row]}));await flushPromises()
-  assert.deepEqual(store.stationList.map(s=>s.id),['static'])
+  assert.deepEqual(store.stationList,[])
+})
+
+test('explicit provinces stay in the region row; names and directory brands never invent region or type', async () => {
+  const stations = [
+    { ...row, station_id: 'fujian_news', country: 'CN', group_name: '福建', name: '广东体育广播', metadata: { tag: 'news' } },
+    { ...row, station_id: 'fujian_untyped', country: 'CN', group_name: '福建', metadata: {} },
+    { ...row, station_id: 'unclassified', country: 'CN', group_name: 'MyRadio', name: '福建音乐广播', metadata: {} },
+  ]
+  globalThis.fetch = async () => response({ stations })
+  openHome()
+  await flushPromises()
+  assert.equal(wrapper.find('select').exists(), false)
+  assert.ok(button('福建'))
+  assert.ok(button('中国大陆'))
+  assert.equal(button('广东'), undefined)
+  assert.equal(button('MyRadio'), undefined)
+  assert.equal(button('音乐'), undefined)
+  assert.equal(button('体育'), undefined)
+  await button('福建').trigger('click')
+  assert.equal(wrapper.findAll('.channel-card').length, 2)
+  await button('新闻').trigger('click')
+  assert.equal(wrapper.findAll('.channel-card').length, 1)
+  assert.equal(wrapper.get('.card-channel-name').text(), '广东体育广播')
+  await button('全部类型').trigger('click')
+  assert.equal(wrapper.findAll('.channel-card').length, 2)
+  await button('全部地区').trigger('click')
+  assert.equal(wrapper.findAll('.channel-card').length, 3)
 })
 
 test('failed initial catalogs and valid empty catalogs are distinct and retryable',async()=>{
   let fail=true
-  globalThis.fetch=async url=>fail?{ok:false}:response(String(url).endsWith('/api/stations')?[]:{stations:[]})
+  globalThis.fetch=async()=>fail?{ok:false}:response({stations:[]})
   openHome();await flushPromises()
   assert.match(wrapper.text(),/电台目录暂时无法加载/)
   fail=false;await button('重试加载').trigger('click');await flushPromises()

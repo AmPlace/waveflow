@@ -77,6 +77,23 @@ class MarketPluginLifecycleTest(unittest.IsolatedAsyncioTestCase):
         _clear_modules()
         self.tmp.cleanup()
 
+    async def test_domain_observer_sees_committed_install_disable_enable_and_uninstall(self):
+        observed = []
+
+        async def changed(identity):
+            publisher, plugin_id = identity.split("/", 1)
+            row = await self.db.get_plugin_installation(publisher, plugin_id)
+            observed.append(row["lifecycle_state"] if row else "removed")
+
+        self.service.lifecycle_changed = changed
+        package = self.package()
+        identity = "org.waveflow/fixture-multi-provider"
+        await self.service.install_from_packages([package], identity)
+        await self.service.disable(identity)
+        await self.service.enable(identity)
+        await self.service.uninstall(identity)
+        self.assertEqual(observed, ["active", "disabled", "active", "removed"])
+
     def package(
         self,
         version="1.0.0",

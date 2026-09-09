@@ -1,6 +1,7 @@
 import unittest
 import asyncio
 import inspect
+import os
 import sys
 import time
 import types
@@ -39,6 +40,13 @@ class ThinPlaylistCacheKeyTest(unittest.TestCase):
 
 
 class MediaProxyLogicTest(unittest.TestCase):
+    def setUp(self):
+        # These identity tests do not initialize a database. Use a stable test
+        # root rather than depending on another test's temporary secret store.
+        secret = mock.patch.dict(os.environ, {"WAVEFLOW_PROXY_HANDLE_SECRET": "media-proxy-test-fixture"})
+        secret.start()
+        self.addCleanup(secret.stop)
+
     def test_playback_keeps_untested_sources(self):
         source = {
             "url": "https://example.com/live.m3u8",

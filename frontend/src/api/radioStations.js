@@ -22,6 +22,9 @@ function mapRadioStation(station) {
     resolve_expires_at: item.resolve_expires_at,
   }))
   const metadata = station?.metadata && typeof station.metadata === 'object' ? station.metadata : {}
+  const metadataTags = Array.isArray(metadata.tags)
+    ? metadata.tags.map((tag) => String(tag || '').trim()).filter(Boolean)
+    : []
   const name = String(station?.name || station?.provider_station_id || stationId).trim()
   return {
     id: stationId,
@@ -37,11 +40,16 @@ function mapRadioStation(station) {
     radioDomain: 'radio',
     catalogStatus: String(station?.catalog_status || '').trim(),
     radioRegion: String(station?.country || '').trim(),
-    radioGroup: String(station?.group_name || '').trim(),
     radioType: typeof metadata.tag === 'string' ? metadata.tag.trim() : '',
     livePath: true,
     directPlay: false,
-    tags: [station?.country, station?.group_name, station?.language, typeof metadata.tag === 'string' ? metadata.tag : '']
+    tags: [
+      station?.country,
+      station?.group_name,
+      station?.language,
+      ...metadataTags,
+      typeof metadata.tag === 'string' ? metadata.tag : '',
+    ]
       .map((tag) => String(tag || '').trim())
       .filter(Boolean),
   }
@@ -123,18 +131,6 @@ export async function fetchRadioCatalog(options = {}) {
     status: 'success', stations: rows.map(mapRadioStation).filter(Boolean),
     catalogStates: normalizeCatalogStates(result.body?.catalog_states),
   }
-}
-
-export async function fetchStaticRadioCatalog(options = {}) {
-  const result = await fetchCatalogData('/api/stations', options)
-  if (result.status !== 'success') return result
-  if (!Array.isArray(result.body)) return { status: 'error', errorKind: 'invalid_response' }
-  return { status: 'success', stations: result.body.filter(station => station?.id) }
-}
-
-export async function fetchRadioStations(options = {}) {
-  const result = await fetchRadioCatalog(options)
-  return result.status === 'success' ? result.stations : null
 }
 
 export async function fetchRadioProgramme(station, { fetchImpl = fetch } = {}) {

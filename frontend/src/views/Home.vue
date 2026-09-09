@@ -24,14 +24,9 @@
           <span v-if="radioLoading" class="hidden text-sm text-[var(--text-tertiary)] sm:inline">正在加载...</span>
         </div>
 
-        <div class="flex shrink-0 items-center gap-2">
-        <select v-if="groups.length" v-model="selectedGroup" aria-label="目录分组" class="radio-group-select h-[var(--control-height)] min-w-0 max-w-[160px] rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text-secondary)]">
-          <option value="">全部分组</option>
-          <option v-for="group in groups" :key="group" :value="group">{{ group }}</option>
-        </select>
         <button
           type="button"
-          class="inline-flex h-[var(--control-height)] shrink-0 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+          class="inline-flex h-[var(--control-height)] shrink-0 self-start items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] sm:self-auto"
           @click="nextSortMode"
         >
           <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -39,7 +34,6 @@
           </svg>
           {{ currentSortLabel }}
         </button>
-        </div>
       </div>
     </header>
 
@@ -179,7 +173,6 @@ import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import {
   fetchRadioCatalog,
-  fetchStaticRadioCatalog,
   fetchRadioProgramme,
   summarizeRadioCatalogState,
 } from '../api/radioStations'
@@ -233,7 +226,6 @@ const typeLabels = { music: '音乐', news: '新闻', talk: '谈话', sports: '�
 
 const selectedRegion = ref('')
 const selectedType = ref('')
-const selectedGroup = ref('')
 const searchQuery = inject('searchQuery')
 const stationSortMode = ref('original')
 
@@ -271,13 +263,12 @@ const types = computed(() => {
 })
 
 function stationRegions(station) {
-  return station.radioDomain ? [station.radioRegion].filter(Boolean) : (station.tags || []).filter(tag => regionLabels[tag])
+  const explicitRegions = (station.tags || []).filter(tag => Object.hasOwn(regionLabels, tag))
+  return [...new Set([station.radioRegion, ...explicitRegions].filter(Boolean))]
 }
 function stationTypes(station) {
   return station.radioDomain ? [station.radioType].filter(Boolean) : (station.tags || []).filter(tag => typeLabels[tag])
 }
-const groups = computed(() => [...new Set(allStations.value.map(station => station.radioGroup).filter(Boolean))])
-watch(groups, values => { if (selectedGroup.value && !values.includes(selectedGroup.value)) selectedGroup.value = '' })
 
 const regionItems = computed(() => [
   { value: '', label: '全部地区' },
@@ -317,7 +308,6 @@ watchEffect(() => {
   const result = allStations.value.filter((s) => {
     if (region && !stationRegions(s).includes(region)) return false
     if (type && !stationTypes(s).includes(type)) return false
-    if (selectedGroup.value && s.radioGroup !== selectedGroup.value) return false
     if (query && !(s.name || '').toLowerCase().includes(query)) return false
     return true
   })
@@ -377,7 +367,6 @@ function stationStatusLabel(station) {
 function clearRadioFilters() {
   selectedRegion.value = ''
   selectedType.value = ''
-  selectedGroup.value = ''
   if (searchQuery?.value !== undefined) searchQuery.value = ''
 }
 
@@ -481,30 +470,13 @@ async function loadRadioCatalog() {
   radioLoading.value = true
 
   const ownsRequest = () => !disposed && requestSeq === radioCatalogRequestSeq && !controller.signal.aborted
-  const [staticResult, result] = await Promise.all([
-    fetchStaticRadioCatalog({ signal: controller.signal }).then(snapshot => {
-      if (ownsRequest() && snapshot.status === 'success') {
-        const dynamicStations = playerStore.stationList.filter(station => station?.radioDomain)
-        const seen = new Set()
-        playerStore.loadStations([...snapshot.stations, ...dynamicStations].filter(station => {
-          if (!station?.id || seen.has(station.id)) return false
-          seen.add(station.id)
-          return true
-        }))
-      }
-      return snapshot
-    }),
-    fetchRadioCatalog({ signal: controller.signal }).then(snapshot => {
-      if (ownsRequest() && snapshot.status === 'success') playerStore.addRadioStations(snapshot.stations)
-      return snapshot
-    }),
-  ])
-  if (disposed || requestSeq !== radioCatalogRequestSeq || result.status === 'cancelled' || staticResult.status === 'cancelled') return
+  const result = await fetchRadioCatalog({ signal: controller.signal })
+  if (ownsRequest() && result.status === 'success') playerStore.addRadioStations(result.stations)
+  if (disposed || requestSeq !== radioCatalogRequestSeq || result.status === 'cancelled') return
   if (radioCatalogController === controller) radioCatalogController = null
 
   radioLoading.value = false
   const states = result.status === 'success' ? [...result.catalogStates] : [{ status: 'failed' }]
-  if (staticResult.status !== 'success') states.push({ status: 'failed' })
   radioCatalogState.value = summarizeRadioCatalogState(allStations.value, states)
   if (currentStation.value) refreshCurrentRadioProgramme(currentStation.value)
 }
@@ -536,10 +508,3 @@ onBeforeUnmount(() => {
   if (programmeTimer) clearInterval(programmeTimer)
 })
 </script>
-
-<style scoped>
-.radio-group-select:focus-visible { outline: 2px solid var(--text-secondary); outline-offset: 3px; }
-.radio-main .card-info { flex-direction: column; align-items: stretch; justify-content: center; gap: 2px; }
-.radio-main .card-channel { width: 100%; flex: 0 0 auto; }
-.radio-main .card-program-name { width: 100%; max-width: none; text-align: left; font-size: 11px; line-height: 14px; }
-</style>

@@ -6,32 +6,26 @@ import { createRadioAudioEngine } from '../../src/utils/radioAudioEngine.js'
 function deferred() {
   let resolve
   let reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
+  const promise = new Promise((res, rej) => { resolve = res; reject = rej })
   return { promise, resolve, reject }
 }
 
 async function flush() {
-  for (let i = 0; i < 8; i += 1) await Promise.resolve()
+  for (let index = 0; index < 8; index += 1) await Promise.resolve()
   await new Promise((resolve) => setImmediate(resolve))
-  for (let i = 0; i < 8; i += 1) await Promise.resolve()
+  for (let index = 0; index < 8; index += 1) await Promise.resolve()
 }
 
 class FakeAudio {
-  constructor(label = 'audio') {
-    this.label = label
+  constructor() {
     this._src = ''
     this.currentSrc = ''
     this.volume = 1
     this.listeners = new Map()
-    this.onceListeners = new Set()
     this.playCalls = []
     this.pauseCalls = 0
     this.loadCalls = 0
     this.nextPlay = null
-    this.error = null
   }
 
   set src(value) {
@@ -39,767 +33,182 @@ class FakeAudio {
     this.currentSrc = this._src
   }
 
-  get src() {
-    return this._src
-  }
+  get src() { return this._src }
 
-  addEventListener(name, fn, options = {}) {
+  addEventListener(name, callback, options = {}) {
     if (!this.listeners.has(name)) this.listeners.set(name, new Set())
-    this.listeners.get(name).add(fn)
-    if (options?.once) this.onceListeners.add(fn)
+    this.listeners.get(name).add({ callback, once: Boolean(options.once) })
   }
 
-  removeEventListener(name, fn) {
-    this.listeners.get(name)?.delete(fn)
-    this.onceListeners.delete(fn)
+  removeEventListener(name, callback) {
+    const listeners = this.listeners.get(name)
+    if (!listeners) return
+    for (const listener of listeners) if (listener.callback === callback) listeners.delete(listener)
   }
 
   emit(name) {
-    for (const fn of Array.from(this.listeners.get(name) || [])) {
-      if (this.onceListeners.has(fn)) this.removeEventListener(name, fn)
-      fn()
+    for (const listener of Array.from(this.listeners.get(name) || [])) {
+      if (listener.once) this.listeners.get(name).delete(listener)
+      listener.callback()
     }
   }
 
-  listenerCount() {
-    let count = 0
-    for (const listeners of this.listeners.values()) count += listeners.size
-    return count
-  }
-
   play() {
-    this.playCalls.push(this.currentSrc || this.src)
+    this.playCalls.push(this.currentSrc)
     const next = this.nextPlay
     this.nextPlay = null
     return next ? next.promise : Promise.resolve()
   }
 
-  pause() {
-    this.pauseCalls += 1
-  }
-
-  load() {
-    this.loadCalls += 1
-  }
-
+  pause() { this.pauseCalls += 1 }
+  load() { this.loadCalls += 1 }
   removeAttribute(name) {
     if (name === 'src') {
-      this._src = ''
-      this.currentSrc = ''
+      this.src = ''
     }
   }
-
-  canPlayType() {
-    return ''
-  }
+  canPlayType() { return '' }
 }
 
-function createHlsMock({ supported = true } = {}) {
+function hlsMock(supported) {
   const instances = []
-  class FakeHls {
-    static Events = {
-      ERROR: 'ERROR',
-      FRAG_LOADED: 'FRAG_LOADED',
-      MANIFEST_PARSED: 'MANIFEST_PARSED',
-    }
-
-    static isSupported() {
-      return supported
-    }
-
-    constructor(config) {
-      this.config = config
-      this.handlers = new Map()
-      this.destroyed = false
-      this.source = ''
-      this.media = null
-      instances.push(this)
-    }
-
-    on(name, fn) {
-      if (!this.handlers.has(name)) this.handlers.set(name, new Set())
-      this.handlers.get(name).add(fn)
-    }
-
-    off(name, fn) {
-      this.handlers.get(name)?.delete(fn)
-    }
-
-    emit(name, data) {
-      for (const fn of Array.from(this.handlers.get(name) || [])) fn(name, data)
-    }
-
-    handlerCount() {
-      let count = 0
-      for (const handlers of this.handlers.values()) count += handlers.size
-      return count
-    }
-
-    loadSource(url) {
-      this.source = url
-    }
-
-    attachMedia(media) {
-      this.media = media
-    }
-
-    destroy() {
-      this.destroyed = true
-    }
+  class Hls {
+    static Events = { ERROR: 'ERROR', MANIFEST_PARSED: 'MANIFEST_PARSED' }
+    static isSupported() { return supported }
+    constructor(config) { this.config = config; this.handlers = new Map(); this.destroyed = false; instances.push(this) }
+    on(name, callback) { if (!this.handlers.has(name)) this.handlers.set(name, new Set()); this.handlers.get(name).add(callback) }
+    off(name, callback) { this.handlers.get(name)?.delete(callback) }
+    emit(name, data) { for (const callback of this.handlers.get(name) || []) callback(name, data) }
+    loadSource(url) { this.source = url }
+    attachMedia(media) { this.media = media }
+    destroy() { this.destroyed = true }
   }
-  return { Hls: FakeHls, instances }
+  return { Hls, instances }
 }
 
-function responseJson(value) {
-  return { ok: true, json: async () => value }
+function response(value) { return { ok: true, json: async () => value } }
+
+function radio(id, stationId = id, sourceId = `source-${id}`) {
+  return { id, name: `Radio ${id}`, radioStationId: stationId, radioSourceId: sourceId }
 }
 
-function createHarness({ hlsSupported = false, fetchImpl, setTimerImpl, clearTimerImpl, apiBase = '', apiCredentials = 'same-origin' } = {}) {
-  const audio = new FakeAudio('main')
-  const hlsMock = createHlsMock({ supported: hlsSupported })
-  const probeAudios = []
-  const state = {
-    currentStation: { value: '' },
-    volume: { value: 1 },
-    hlsRef: { value: null },
-    directStreamMode: { value: '' },
-    mediaMetadata: null,
-  }
+function harness({ fetchImpl, hlsSupported = false } = {}) {
+  const audio = new FakeAudio()
+  const hls = hlsMock(hlsSupported)
+  const currentStation = { value: '' }
   const store = {
     currentIptvChannel: null,
-    stationMap: {
-      A: { id: 'A', name: 'A Radio', directPlay: true },
-      B: { id: 'B', name: 'B Radio', directUrl: 'https://b.example/live.mp3' },
-      C: { id: 'C', name: 'C Radio', directUrl: 'https://c.example/live.mp3' },
-      HLS_A: { id: 'HLS_A', name: 'Old HLS' },
-      HLS_B: { id: 'HLS_B', name: 'New HLS' },
-    },
+    stationMap: {},
     isPlaying: false,
     isLoading: false,
     playbackError: '',
     clearPlaybackError() { this.playbackError = '' },
     setLoading(value) { this.isLoading = Boolean(value) },
-    setPlaybackError(value) {
-      this.playbackError = value || ''
-      if (this.playbackError) this.isLoading = false
-    },
-    togglePlay(value) {
-      this.isPlaying = typeof value === 'boolean' ? value : !this.isPlaying
-    },
-  }
-  const mediaSession = {
-    metadata: null,
-    handlers: {},
-    setActionHandler(name, fn) { this.handlers[name] = fn },
-  }
-  class FakeMediaMetadata {
-    constructor(value) {
-      Object.assign(this, value)
-      state.mediaMetadata = value
-    }
+    setPlaybackError(value) { this.playbackError = value || ''; if (value) this.isLoading = false },
+    togglePlay(value) { this.isPlaying = Boolean(value) },
   }
   const engine = createRadioAudioEngine({
-    audioRef: { value: audio },
-    hlsRef: state.hlsRef,
-    directStreamMode: state.directStreamMode,
-    playerStore: store,
-    currentStation: state.currentStation,
-    volume: state.volume,
-    Hls: hlsMock.Hls,
-    API_BASE: apiBase,
-    apiCredentials,
-    publicAsset: (url) => url,
-    getNavigator: () => ({ mediaSession }),
-    getMediaMetadata: () => FakeMediaMetadata,
-    createAudio: () => {
-      const item = new FakeAudio(`probe-${probeAudios.length}`)
-      probeAudios.push(item)
-      return item
-    },
-    fetchImpl,
-    setTimer: setTimerImpl || (() => ({ fake: true })),
-    clearTimer: clearTimerImpl || (() => {}),
-    logger: { log() {}, warn() {} },
+    audioRef: { value: audio }, hlsRef: { value: null }, directStreamMode: { value: '' },
+    playerStore: store, currentStation, volume: { value: 1 }, Hls: hls.Hls, API_BASE: '',
+    fetchImpl, publicAsset: (value) => value, getNavigator: () => ({}), getMediaMetadata: () => undefined,
+    createAudio: () => new FakeAudio(), logger: { warn() {}, log() {} },
   })
-
-  return { audio, engine, hlsInstances: hlsMock.instances, mediaSession, probeAudios, state, store }
+  return { audio, currentStation, store, engine, hls: hls.instances }
 }
 
-function createTimerTracker() {
-  let sequence = 0
-  const pending = new Map()
-  return {
-    setTimer(fn, ms) {
-      const id = ++sequence
-      pending.set(id, { fn, ms })
-      return id
-    },
-    clearTimer(id) {
-      pending.delete(id)
-    },
-    pendingCount() {
-      return pending.size
-    },
-  }
-}
-
-test('旧成功晚返回：A probe 晚成功不得接管 B', async () => {
-  const allUrlsA = deferred()
-  const fetchImpl = async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) return allUrlsA.promise
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  }
-  const h = createHarness({ fetchImpl })
-
-  h.state.currentStation.value = 'A'
-  h.engine.loadStation('A')
-  allUrlsA.resolve(responseJson(['https://a.example/one.mp3']))
-  await flush()
-  assert.equal(h.probeAudios.length, 1)
-
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-  assert.equal(h.mediaSession.metadata.title, 'B Radio')
-
-  h.probeAudios[0].emit('canplay')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-  assert.equal(h.mediaSession.metadata.title, 'B Radio')
-  assert.equal(h.store.isPlaying, true)
-})
-
-test('旧错误晚返回：A fatal/error 不得覆盖 B 状态', async () => {
-  const h = createHarness({ hlsSupported: true, fetchImpl: async () => { throw new Error('no fetch') } })
-
-  h.state.currentStation.value = 'HLS_A'
-  h.engine.loadStation('HLS_A')
-  await flush()
-  const oldHls = h.hlsInstances[0]
-  assert.ok(oldHls)
-
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-  h.store.playbackError = ''
-  h.store.isLoading = false
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-
-  oldHls.emit('ERROR', { fatal: true })
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-  assert.equal(h.store.playbackError, '')
-  assert.equal(h.store.isPlaying, true)
-  assert.equal(h.store.isLoading, false)
-})
-
-test('A -> B -> C 交错完成后只有 C 接管', async () => {
-  const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-  const playA = deferred()
-  const playB = deferred()
-
-  h.audio.nextPlay = playA
-  h.state.currentStation.value = 'A'
-  h.store.stationMap.A = { id: 'A', name: 'A Radio', directUrl: 'https://a.example/live.mp3' }
-  h.engine.loadStation('A')
-  await flush()
-
-  h.audio.nextPlay = playB
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-
-  h.state.currentStation.value = 'C'
-  h.engine.loadStation('C')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://c.example/live.mp3')
-  assert.equal(h.mediaSession.metadata.title, 'C Radio')
-
-  playA.resolve()
-  playB.resolve()
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://c.example/live.mp3')
-  assert.equal(h.mediaSession.metadata.title, 'C Radio')
-  assert.equal(h.store.isPlaying, true)
-})
-
-test('切到 IPTV 后旧 Radio 完成不得播放或写状态', async () => {
-  const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-  const playA = deferred()
-  h.audio.nextPlay = playA
-
-  h.state.currentStation.value = 'A'
-  h.store.stationMap.A = { id: 'A', name: 'A Radio', directUrl: 'https://a.example/live.mp3' }
-  h.engine.loadStation('A')
-  await flush()
-
-  h.store.currentIptvChannel = { name: 'IPTV' }
-  h.state.currentStation.value = ''
-  h.engine.stopRadioAttempt()
-  h.store.isPlaying = false
-  playA.resolve()
-  await flush()
-
-  assert.equal(h.store.isPlaying, false)
-  assert.equal(h.mediaSession.metadata, null)
-  assert.equal(h.audio.currentSrc, '')
-})
-
-test('组件卸载后旧 Promise/HLS/audio callback 不得写 store 或重新播放', async () => {
-  const h = createHarness({ hlsSupported: true, fetchImpl: async () => { throw new Error('no fetch') } })
-  h.state.currentStation.value = 'HLS_A'
-  h.engine.loadStation('HLS_A')
-  await flush()
-  const hls = h.hlsInstances[0]
-
-  h.engine.stopRadioAttempt()
-  h.store.playbackError = ''
-  h.store.isPlaying = false
-  hls.emit('MANIFEST_PARSED')
-  hls.emit('ERROR', { fatal: true })
-  h.audio.emit('error')
-  await flush()
-
-  assert.equal(h.store.playbackError, '')
-  assert.equal(h.store.isPlaying, false)
-  assert.equal(h.audio.playCalls.length, 0)
-})
-
-test('资源 ownership：旧 attempt cleanup 不得 destroy 新 HLS', async () => {
-  const h = createHarness({ hlsSupported: true, fetchImpl: async () => { throw new Error('no fetch') } })
-  h.state.currentStation.value = 'HLS_A'
-  h.engine.loadStation('HLS_A')
-  await flush()
-  const oldHls = h.hlsInstances[0]
-
-  h.state.currentStation.value = 'HLS_B'
-  h.engine.loadStation('HLS_B')
-  await flush()
-  const newHls = h.hlsInstances[1]
-
-  assert.equal(oldHls.destroyed, true)
-  assert.equal(newHls.destroyed, false)
-  oldHls.emit('ERROR', { fatal: true })
-  await flush()
-  assert.equal(newHls.destroyed, false)
-  assert.equal(h.state.hlsRef.value, newHls)
-})
-
-test('正常路径回归：direct、fallback、proxy fallback 顺序保持', async () => {
-  const allUrls = deferred()
-  const fetchImpl = async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) return allUrls.promise
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  }
-  const h = createHarness({ fetchImpl })
-  h.state.currentStation.value = 'A'
-  h.engine.loadStation('A')
-  allUrls.resolve(responseJson(['https://a.example/one.mp3']))
-  await flush()
-  h.probeAudios[0].emit('error')
-  await flush()
-  assert.equal(h.probeAudios.length, 2, 'direct 失败后应继续探测 channel proxy')
-  h.probeAudios[1].emit('canplay')
-  await flush()
-  assert.match(h.audio.currentSrc, /\/api\/media\/channel\/A\/stream$/)
-
-  const h2 = createHarness({ fetchImpl: async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) return responseJson(['https://a.example/direct.mp3'])
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  } })
-  h2.state.currentStation.value = 'A'
-  h2.engine.loadStation('A')
-  await flush()
-  h2.probeAudios[0].emit('canplay')
-  await flush()
-  assert.equal(h2.audio.currentSrc, 'https://a.example/direct.mp3')
-  assert.equal(h2.state.directStreamMode.value, 'direct')
-})
-
-test('并发探测中快速失败不得抢先结束较慢的可播放源', async () => {
-  const fetchImpl = async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) {
-      return responseJson([
-        'https://a.example/fast-fail.mp3',
-        'https://a.example/slow-winner.mp3',
-      ])
-    }
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  }
-  const h = createHarness({ fetchImpl })
-  h.state.currentStation.value = 'A'
-  h.engine.loadStation('A')
-  await flush()
-
-  assert.equal(h.probeAudios.length, 2)
-  h.probeAudios[0].emit('error')
-  await flush()
-  assert.equal(h.probeAudios.length, 2, '一个失败后不应提前启动代理兜底')
-
-  h.probeAudios[1].emit('canplay')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://a.example/slow-winner.mp3')
-  assert.equal(h.state.directStreamMode.value, 'direct')
-})
-
-test('并发探测胜出后立即清理 loser 的 timer 和 audio listener', async () => {
-  const timers = createTimerTracker()
-  const fetchImpl = async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) {
-      return responseJson([
-        'https://a.example/loser.mp3',
-        'https://a.example/winner.mp3',
-      ])
-    }
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  }
-  const h = createHarness({
-    fetchImpl,
-    setTimerImpl: timers.setTimer,
-    clearTimerImpl: timers.clearTimer,
-  })
-  h.state.currentStation.value = 'A'
-  h.engine.loadStation('A')
-  await flush()
-
-  assert.equal(h.probeAudios.length, 2)
-  h.probeAudios[1].emit('canplay')
-  await flush()
-
-  assert.equal(h.audio.currentSrc, 'https://a.example/winner.mp3')
-  assert.equal(h.probeAudios[0].listenerCount(), 0, 'loser audio listener 应立即移除')
-  assert.equal(timers.pendingCount(), 0, 'winner 产生后不应留下 probe/HEAD/overall timer')
-})
-
-test('HLS 并发探测胜出后立即销毁 loser 并移除事件监听', async () => {
-  const timers = createTimerTracker()
-  const fetchImpl = async (url, options = {}) => {
-    if (String(url).includes('/A/all-urls')) {
-      return responseJson([
-        'https://a.example/loser.m3u8',
-        'https://a.example/winner.m3u8',
-      ])
-    }
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  }
-  const h = createHarness({
-    hlsSupported: true,
-    fetchImpl,
-    setTimerImpl: timers.setTimer,
-    clearTimerImpl: timers.clearTimer,
-  })
-  h.state.currentStation.value = 'A'
-  h.engine.loadStation('A')
-  await flush()
-
-  assert.equal(h.hlsInstances.length, 2)
-  const loser = h.hlsInstances[0]
-  const winner = h.hlsInstances[1]
-  winner.emit('FRAG_LOADED')
-  await flush()
-
-  assert.equal(loser.destroyed, true)
-  assert.equal(loser.handlerCount(), 0)
-  assert.equal(winner.destroyed, true, 'probe winner 也应销毁，正式播放使用独立实例')
-  assert.equal(winner.handlerCount(), 0)
-  assert.equal(timers.pendingCount(), 1, '只允许保留正式 HLS 起播超时 timer')
-})
-
-test('原生 audio error：当前 attempt 触发 fallback，旧 attempt 的 error 不触发', async () => {
-  // 模拟 direct station（directUrl 存在 → error 后走 fallbackToProxyStream）
-  const h = createHarness({ fetchImpl: async (url, options = {}) => {
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  } })
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-
-  // 当前 attempt 的 audio error → 应触发 fallbackToProxyStream（切到 channel stream 代理）
-  // 注：playAudioSafely 成功后会 clearPlaybackError，所以不检查中间态错误文案，
-  // 只检查 audio src 已切换到代理 URL。
-  h.audio.emit('error')
-  await flush()
-  assert.match(h.audio.currentSrc, /\/api\/media\/channel\/B\/stream$/)
-  assert.equal(h.audio.playCalls.length, 2, 'fallback source must issue a fresh play request')
-
-  // 现在切到 C，旧 B 的 audio error handler 应已失效
-  h.state.currentStation.value = 'C'
-  h.engine.loadStation('C')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://c.example/live.mp3')
-  assert.equal(h.state.currentStation.value, 'C')
-  assert.match(h.audio.currentSrc, /c\.example/)
-})
-
-test('卸载后重新挂载：旧 attempt 全部失效，新 station 可正常播放', async () => {
-  const h = createHarness({ fetchImpl: async (url, options = {}) => {
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  } })
-
-  // 播放 A
-  h.state.currentStation.value = 'A'
-  h.store.stationMap.A = { id: 'A', name: 'A Radio', directUrl: 'https://a.example/live.mp3' }
-  h.engine.loadStation('A')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://a.example/live.mp3')
-
-  // 卸载
-  h.engine.stopRadioAttempt()
-  h.store.isPlaying = false
-  assert.equal(h.audio.currentSrc, '')
-
-  // 新实例（模拟重新挂载）——同一个 engine 的 stopRadioAttempt 已清理
-  h.store.stationMap.D = { id: 'D', name: 'D Radio', directUrl: 'https://d.example/live.mp3' }
-  h.state.currentStation.value = 'D'
-  h.engine.loadStation('D')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://d.example/live.mp3')
-  assert.equal(h.state.mediaMetadata?.title, 'D Radio')
-
-  // 旧 A 的 async 不应影响 D
-  assert.equal(h.store.isPlaying, true)
-})
-
-test('同一 station 重选：重新 load 并正常播放', async () => {
-  const h = createHarness({ fetchImpl: async (url, options = {}) => {
-    if (options.method === 'HEAD') return {}
-    throw new Error(`unexpected fetch ${url}`)
-  } })
-
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-  // loadStation 调 2 次 load()：resetAudioSource + setMainAudioSrc
-  assert.equal(h.audio.loadCalls, 2)
-
-  // 再次选择同一 station
-  h.engine.loadStation('B')
-  await flush()
-  assert.equal(h.audio.currentSrc, 'https://b.example/live.mp3')
-  // 第二次 loadStation 又调 2 次 load()，总计 4
-  assert.equal(h.audio.loadCalls >= 4, true)
-})
-
-test('persisted Radio source resolves by source_id and bypasses legacy URL racing', async () => {
+test('persisted audio HTTP source resolves only by source_id and plays the Core proxy URL', async () => {
   const calls = []
-  const h = createHarness({
-    fetchImpl: async (url) => {
-      calls.push(String(url))
-      assert.equal(String(url).includes('upstream.invalid'), false)
-      if (String(url).includes('/api/radio/stations/radio_a/resolve')) {
-        return responseJson({ source_type: 'audio_http' })
-      }
-      throw new Error(`unexpected Radio request ${url}`)
-    },
-  })
-  h.store.stationMap.RADIO = {
-    id: 'RADIO', name: 'Persisted Radio', radioStationId: 'radio_a', radioSourceId: 'source_a',
-  }
-  h.state.currentStation.value = 'RADIO'
-  h.engine.loadStation('RADIO')
+  const h = harness({ fetchImpl: async (url) => {
+    calls.push(String(url))
+    return response({ source_type: 'audio_http' })
+  } })
+  h.store.stationMap.one = radio('one', 'station-one', 'source-one')
+  h.currentStation.value = 'one'
+
+  h.engine.loadStation('one', { intent: 'station_click' })
   await flush()
 
-  assert.deepEqual(calls, ['/api/radio/stations/radio_a/resolve?source_id=source_a'])
-  assert.equal(h.audio.src, '/api/media/radio/radio_a/stream?source_id=source_a')
-  assert.deepEqual(h.audio.playCalls, ['/api/media/radio/radio_a/stream?source_id=source_a'])
-  assert.equal(h.probeAudios.length, 0)
+  assert.deepEqual(calls, ['/api/radio/stations/station-one/resolve?source_id=source-one'])
+  assert.deepEqual(h.audio.playCalls, ['/api/media/radio/station-one/stream?source_id=source-one'])
+  assert.equal(h.store.playbackError, '')
 })
 
-test('Desktop Radio credentials reach only Core JSON/HLS, never external HLS origins', async () => {
-  const h = createHarness({hlsSupported:true,apiBase:'http://127.0.0.1:18765',apiCredentials:'include',fetchImpl:async(url,options)=>{
-    assert.equal(url,'http://127.0.0.1:18765/api/radio/stations/radio_a/resolve?source_id=source_a')
-    assert.equal(options.credentials,'include')
-    return responseJson({source_type:'hls'})
-  }})
-  h.store.stationMap.RADIO={id:'RADIO',name:'Radio',radioStationId:'radio_a',radioSourceId:'source_a'}
-  h.state.currentStation.value='RADIO'
-  h.engine.loadStation('RADIO',{intent:'station_click'})
+test('persisted HLS source stays on the Core radio media route', async () => {
+  const h = harness({ hlsSupported: true, fetchImpl: async () => response({ source_type: 'hls' }) })
+  h.store.stationMap.one = radio('one', 'station-one', 'source-one')
+  h.currentStation.value = 'one'
+
+  h.engine.loadStation('one')
   await flush()
-  const hls=h.hlsInstances.at(-1)
-  assert.ok(hls)
-  const xhr={}
-  hls.config.xhrSetup(xhr,hls.source)
-  assert.equal(xhr.withCredentials,true)
-  hls.config.xhrSetup(xhr,'https://provider.invalid/live.m3u8')
-  assert.equal(xhr.withCredentials,false)
-  hls.config.xhrSetup(xhr,'http://127.0.0.1:18766/live.m3u8')
-  assert.equal(xhr.withCredentials,false)
-  h.engine.stopRadioAttempt()
+
+  assert.equal(h.hls.length, 1)
+  assert.equal(h.hls[0].source, '/api/media/radio/station-one/playlist.m3u8?source_id=source-one')
+  h.hls[0].emit('MANIFEST_PARSED')
+  await flush()
+  assert.deepEqual(h.audio.playCalls, [''])
 })
 
-test('persisted Radio resolve continues the same attempt and performs one play request', async () => {
-  const calls = []
-  const h = createHarness({
-    fetchImpl: async (url) => {
-      calls.push(String(url))
-      if (String(url).includes('/api/radio/stations/radio_a/resolve')) {
-        return responseJson({ source_type: 'audio_http' })
-      }
-      throw new Error(`unexpected Radio request ${url}`)
-    },
-  })
-  h.store.stationMap.RADIO = {
-    id: 'RADIO', name: 'Persisted Radio', radioStationId: 'radio_a', radioSourceId: 'source_a',
-  }
-  h.state.currentStation.value = 'RADIO'
-  const attempt = h.engine.loadStation('RADIO', { intent: 'station_click' })
+test('late resolve from an old station cannot overwrite a newer station attempt', async () => {
+  const first = deferred()
+  const h = harness({ fetchImpl: async (url) => {
+    if (String(url).includes('station-one')) return first.promise
+    return response({ source_type: 'audio_http' })
+  } })
+  h.store.stationMap.one = radio('one', 'station-one', 'source-one')
+  h.store.stationMap.two = radio('two', 'station-two', 'source-two')
+  h.currentStation.value = 'one'
+  h.engine.loadStation('one')
   await flush()
 
-  assert.deepEqual(calls, ['/api/radio/stations/radio_a/resolve?source_id=source_a'])
-  assert.equal(h.engine.activeAttemptInfo().id, attempt.id)
-  assert.equal(h.engine.activeAttemptInfo().intent, 'station_click')
-  assert.deepEqual(h.audio.playCalls, ['/api/media/radio/radio_a/stream?source_id=source_a'])
+  h.currentStation.value = 'two'
+  h.engine.loadStation('two')
+  await flush()
+  first.resolve(response({ source_type: 'audio_http' }))
+  await flush()
+
+  assert.deepEqual(h.audio.playCalls, ['/api/media/radio/station-two/stream?source_id=source-two'])
+  assert.equal(h.engine.activeAttemptInfo().stationId, 'two')
 })
 
-test('failed Radio resolve releases the attempt so a later Play can retry', async () => {
-  let resolveCalls = 0
-  const h = createHarness({
-    fetchImpl: async () => {
-      resolveCalls += 1
-      return { ok: false, json: async () => ({}) }
-    },
-  })
-  h.store.stationMap.RADIO = {
-    id: 'RADIO', name: 'Persisted Radio', radioStationId: 'radio_a', radioSourceId: 'source_a',
-  }
-  h.state.currentStation.value = 'RADIO'
-  h.engine.loadStation('RADIO', { intent: 'station_click' })
-  await flush()
+test('failed resolve releases its attempt so explicit play can retry', async () => {
+  let calls = 0
+  const h = harness({ fetchImpl: async () => { calls += 1; return { ok: false, json: async () => ({}) } } })
+  h.store.stationMap.one = radio('one')
+  h.currentStation.value = 'one'
 
-  assert.equal(resolveCalls, 1)
+  h.engine.loadStation('one', { intent: 'station_click' })
+  await flush()
   assert.equal(h.engine.activeAttemptInfo(), null)
   assert.equal(h.store.playbackError, '电台播放源解析失败，请稍后重试。')
 
   h.store.playbackError = ''
-  h.store.isPlaying = true
-  h.engine.loadStation('RADIO', { intent: 'play_button' })
+  h.engine.loadStation('one', { intent: 'play_button' })
   await flush()
-  assert.equal(resolveCalls, 2)
+  assert.equal(calls, 2)
 })
 
-test('play rejection classification only uses autoplay text for NotAllowedError', async (t) => {
-  const cases = [
-    ['NotAllowedError', '浏览器阻止自动播放，请手动点击播放。'],
-    ['NotSupportedError', '当前浏览器不支持此音频格式，请尝试其他源。'],
-    ['NetworkError', '音频网络连接失败，请稍后重试。'],
-    ['OperationError', '音频播放失败，请稍后重试。'],
-  ]
+test('a removed or non-persisted station never falls back to legacy endpoints', () => {
+  const h = harness({ fetchImpl: async () => { throw new Error('must not fetch') } })
+  h.currentStation.value = 'gone'
+  h.engine.loadStation('gone')
 
-  for (const [name, expected] of cases) {
-    await t.test(name, async () => {
-      const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-      h.state.currentStation.value = 'B'
-      h.audio.nextPlay = { promise: Promise.reject({ name }) }
-      h.engine.loadStation('B', { intent: 'play_button' })
-      await flush()
-      assert.equal(h.store.playbackError, expected)
-      assert.equal(h.store.isPlaying, false)
-    })
-  }
-})
-
-test('AbortError is silent and a paused pending play cannot resurrect Radio playback', async () => {
-  const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-  h.state.currentStation.value = 'B'
-  h.audio.nextPlay = { promise: Promise.reject({ name: 'AbortError' }) }
-  h.engine.loadStation('B', { intent: 'station_click' })
-  await flush()
-  assert.equal(h.store.playbackError, '')
-  assert.equal(h.store.isPlaying, false)
-
-  const pending = deferred()
-  h.audio.nextPlay = pending
-  h.store.playbackError = ''
-  h.engine.loadStation('B', { intent: 'station_click' })
-  await flush()
-  h.engine.pauseCurrentAudio()
-  pending.resolve()
-  await flush()
-  assert.equal(h.store.playbackError, '')
-  assert.equal(h.store.isPlaying, false)
-})
-
-test('explicit Play can retry a source after an autoplay rejection', async () => {
-  const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-  h.state.currentStation.value = 'B'
-  h.audio.nextPlay = { promise: Promise.reject({ name: 'NotAllowedError' }) }
-  h.engine.loadStation('B', { intent: 'station_click' })
-  await flush()
-  assert.equal(h.store.playbackError, '浏览器阻止自动播放，请手动点击播放。')
-
-  h.audio.nextPlay = null
-  h.store.playbackError = ''
-  h.store.isPlaying = true
-  const played = await h.engine.playAudioSafely(undefined, { intent: 'play_button', request: true })
-  assert.equal(played, true)
-  assert.equal(h.store.playbackError, '')
-  assert.equal(h.store.isPlaying, true)
-})
-
-test('playUrl uses the same non-autoplay error classification', async () => {
-  const h = createHarness({ fetchImpl: async () => { throw new Error('no fetch') } })
-  h.state.currentStation.value = 'B'
-  h.engine.loadStation('B')
-  await flush()
-
-  h.audio.nextPlay = { promise: Promise.reject({ name: 'NotSupportedError' }) }
-  const played = await h.engine.playUrl('https://b.example/recovery.mp3', 'B', 'direct')
-
-  assert.equal(played, false)
-  assert.equal(h.store.playbackError, '当前浏览器不支持此音频格式，请尝试其他源。')
-})
-
-test('进入 auth 时 Radio 停止 HLS/audio/probe 并清理 MediaSession，旧回调不能复活', async () => {
-  const timers = createTimerTracker()
-  const playDeferred = deferred()
-  const h = createHarness({
-    hlsSupported: true,
-    fetchImpl: async () => { throw new Error('no fetch') },
-    setTimerImpl: timers.setTimer,
-    clearTimerImpl: timers.clearTimer,
-  })
-  h.state.currentStation.value = 'HLS_A'
-  h.audio.nextPlay = playDeferred
-  h.engine.loadStation('HLS_A')
-  await flush()
-  const hls = h.hlsInstances[0]
-  hls.emit('MANIFEST_PARSED')
-  await flush()
-
-  h.state.currentStation.value = ''
-  h.engine.stopRadioAttempt()
-  h.store.isPlaying = false
-  h.store.isLoading = false
-  h.store.playbackError = ''
-  playDeferred.resolve()
-  hls.emit('MANIFEST_PARSED')
-  hls.emit('ERROR', { fatal: true })
-  h.audio.emit('error')
-  await flush()
-
+  assert.equal(h.store.playbackError, '电台目录已更新，请从当前目录重新选择电台。')
   assert.equal(h.engine.activeAttemptInfo(), null)
-  assert.equal(hls.destroyed, true)
-  assert.equal(hls.handlerCount(), 0)
-  assert.equal(h.audio.currentSrc, '')
-  assert.ok(h.audio.pauseCalls > 0)
-  assert.equal(h.audio.listenerCount(), 0)
-  assert.equal(timers.pendingCount(), 0)
-  assert.equal(h.mediaSession.metadata, null)
-  assert.equal(h.mediaSession.playbackState, 'none')
-  assert.equal(h.mediaSession.handlers.play, null)
-  assert.equal(h.mediaSession.handlers.pause, null)
-  assert.equal(h.store.isPlaying, false)
-  assert.equal(h.store.isLoading, false)
-  assert.equal(h.store.playbackError, '')
+})
+
+test('stop invalidates a pending resolve and prevents late media playback', async () => {
+  const pending = deferred()
+  const h = harness({ fetchImpl: async () => pending.promise })
+  h.store.stationMap.one = radio('one')
+  h.currentStation.value = 'one'
+  h.engine.loadStation('one')
+  await flush()
+
+  h.currentStation.value = ''
+  h.engine.stopRadioAttempt()
+  pending.resolve(response({ source_type: 'audio_http' }))
+  await flush()
+
+  assert.deepEqual(h.audio.playCalls, [])
+  assert.equal(h.engine.activeAttemptInfo(), null)
 })

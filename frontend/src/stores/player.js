@@ -171,13 +171,6 @@ export const usePlayerStore = defineStore('player', {
       this.playbackError = ''
     },
 
-    addStation(station) {
-      if (this.stationMap[station.id]) return
-      // 只更新 stationMap（供 AudioEngine/BottomPlayer 查找播放地址和电台名称）
-      // 不更新 stationList，因为 Home.vue 有自己的 rbStations 列表单独管理显示
-      this.stationMap[station.id] = station
-    },
-
     addRadioStations(stations) {
       if (!Array.isArray(stations)) return false
       const next = [...this.stationList]
@@ -205,8 +198,9 @@ export const usePlayerStore = defineStore('player', {
         if (index >= 0) next[index] = updated
         else next.push(updated)
       }
-      // Only dynamic Radio rows are removed on a successful catalog refresh;
-      // retained static/legacy rows remain untouched.
+      // Radio Home has one catalog authority. A successful snapshot removes
+      // rows that no enabled provider still publishes, except an active
+      // playback projection which remains until the attempt finishes.
       for (const [stationId, station] of Object.entries(merged)) {
         if (station?.radioDomain && !incomingIds.has(stationId)) {
           if (stationId === this.currentStation) {
@@ -219,24 +213,10 @@ export const usePlayerStore = defineStore('player', {
         }
       }
       this.stationList = next.filter((station) => (
-        !station.radioDomain
-        || incomingIds.has(station.id)
-        || station.id === this.currentStation
+        incomingIds.has(station.id) || station.id === this.currentStation
       ))
       this.stationMap = merged
       return true
-    },
-
-    loadStations(stations) {
-      this.stationList = stations
-      const merged = { ...this.stationMap }
-      for (const s of stations) merged[s.id] = s
-      this.stationMap = merged
-    },
-
-    updateStationEpg(stationId, subtitle) {
-      const station = this.stationMap[stationId]
-      if (station) station.subtitle = subtitle
     },
 
     updateRadioProgramme(stationId, programmes) {

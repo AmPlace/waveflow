@@ -212,6 +212,7 @@ class ProductionPluginSubsystem:
     _radio_catalog_locks: dict[str, asyncio.Lock] = field(default_factory=dict, init=False, repr=False)
     _shutting_down: bool = field(default=False, init=False, repr=False)
     radio_resolver: RadioResolver = field(init=False)
+    automation_service: Any = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         # These callbacks are installed on the same service/runtime objects used
@@ -219,9 +220,29 @@ class ProductionPluginSubsystem:
         # and crash persistence on the generic lifecycle path rather than in
         # provider-specific routers.
         self.service.destructive_guard = self._assert_identity_not_owned
+        self.service.lifecycle_changed = self._reconcile_radio_tasks
         self.service.runtime.lifecycle_callback = self._on_runtime_lifecycle_event
         self.service.runtime.activation_context = self._runtime_activation_context
         self.radio_resolver = RadioResolver(runtime=self.service.runtime)
+
+    async def _reconcile_radio_tasks(self, identity: str = "") -> None:
+        try:
+            await self._sync_radio_tasks()
+        except Exception:
+            # Domain projection cannot roll back an already committed Plugin.
+            logger.warning("Radio task reconciliation pending: plugin=%s", identity)
+            self._schedule_lifecycle_reconcile(identity)
+
+    async def _sync_radio_tasks(self) -> None:
+        if self.automation_service is None or self._shutting_down:
+            return
+        from radio_tasks import reconcile_radio_automation_tasks
+
+        installed = await db.list_plugin_installations()
+        await reconcile_radio_automation_tasks(
+            self.automation_service, self,
+            retained_owner_identities={f"{row['publisher_id']}/{row['plugin_id']}" for row in installed},
+        )
 
     def _radio_catalog_lock(self, identity: str) -> asyncio.Lock:
         lock = self._radio_catalog_locks.get(identity)
@@ -426,7 +447,11 @@ class ProductionPluginSubsystem:
         """Queue durable Runtime projection; process monitoring never waits on SQLite."""
         if event not in {"unexpected_exit", "healthy_active"} or self._shutting_down:
             return
-        identity = instance.manifest.identity
+        self._schedule_lifecycle_reconcile(instance.manifest.identity)
+
+    def _schedule_lifecycle_reconcile(self, identity: str) -> None:
+        if self._shutting_down:
+            return
         generation = self._lifecycle_reconcile_generation.get(identity, 0) + 1
         self._lifecycle_reconcile_generation[identity] = generation
         task = self._lifecycle_reconcile_tasks.get(identity)
@@ -449,6 +474,7 @@ class ProductionPluginSubsystem:
                 generation = self._lifecycle_reconcile_generation.get(identity, 0)
                 try:
                     await self._reconcile_runtime_identity(identity)
+                    await self._sync_radio_tasks()
                 except asyncio.CancelledError:
                     raise
                 except Exception:

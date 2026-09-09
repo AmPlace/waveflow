@@ -162,34 +162,12 @@ def _is_truthy(value) -> bool:
     return str(value).strip().lower() not in {"0", "false", "no", "off", ""}
 
 
-def _is_radio_station_id(_m, station_id: str) -> bool:
-    return (
-        station_id in _m.CURRENT_STREAMS
-        or station_id in _m.STATION_FETCHER_MAP
-        or station_id in _m.DIRECT_STREAM_STATIONS
-    )
-
-
-def _is_hls_like_url(url: str) -> bool:
-    return ".m3u8" in urlparse(url).path.lower()
-
-
 def _playback_source_supported(_m, source: dict) -> bool:
     if not source.get("url"):
         return False
     if not _is_truthy(source.get("enabled", True)):
         return False
     return _m._source_type(source) not in {"unsupported"}
-
-
-async def _radio_station_url(_m, station_id: str) -> str:
-    real_url = _m.CURRENT_STREAMS.get(station_id)
-    if not real_url and station_id in _m.STATION_FETCHER_MAP:
-        try:
-            real_url = await _m.refresh_station_stream_url(station_id)
-        except HTTPException:
-            raise
-    return str(real_url or "").strip()
 
 
 def _media_access_suffix(access_ctx: MediaAccessContext, *, separator: str = "?") -> str:
@@ -547,10 +525,6 @@ async def media_channel_playlist(
             expected_source_revision=expected_source_revision,
         )
 
-    # 2. 回落到电台 station_id。
-    if _is_radio_station_id(_m, channel_key):
-        return await _serve_radio_station_playlist(channel_key, access)
-
     raise HTTPException(status_code=404, detail="频道不存在")
 
 
@@ -560,34 +534,14 @@ async def media_channel_stream(
     request: Request,
     access: MediaAccessContext = Depends(resolve_media_access),
 ):
-    """连续音频/直连流入口。
+    """Legacy static Radio stream endpoint has been removed.
 
-    主要用于非 HLS 电台源。这里只暴露稳定 station id，真实上游 URL
-    仍放在 signed stream handle 内。
+    Plugin Radio sources use ``/api/media/radio/{station_id}/stream`` with an
+    explicit persisted ``source_id``.  This route remains reserved for the
+    IPTV channel endpoint and therefore does not interpret a bare key as a
+    Radio station.
     """
-    import main as _m
-
-    if not _is_radio_station_id(_m, channel_key):
-        raise HTTPException(status_code=404, detail="电台不存在")
-
-    real_url = await _radio_station_url(_m, channel_key)
-    if not real_url:
-        raise HTTPException(status_code=503, detail="该电台播放地址尚未准备好。")
-    parsed = urlparse(real_url)
-    if parsed.scheme.lower() not in ("http", "https"):
-        raise HTTPException(status_code=400, detail="电台上游 scheme 不被允许")
-    await _validate_handle_url_or_403(real_url, allowed_schemes={"http", "https"})
-
-    handle = issue_cached_handle(
-        kind="stream",
-        url=real_url,
-        src=f"station:{channel_key}",
-        src_id=f"station:{channel_key}",
-    )
-    return RedirectResponse(
-        f"/api/media/proxy/stream/{handle}{_media_access_suffix(access)}",
-        status_code=307,
-    )
+    raise HTTPException(status_code=404, detail="频道不存在")
 
 
 @router.get("/api/media/radio/{station_id}/playlist.m3u8")
@@ -681,47 +635,6 @@ async def media_radio_stream(
         f"/api/media/proxy/stream/{handle}{_media_access_suffix(access)}",
         status_code=307,
     )
-
-
-async def _serve_radio_station_playlist(
-    station_id: str,
-    access: MediaAccessContext,
-) -> Response:
-    import main as _m
-
-    real_url = await _radio_station_url(_m, station_id)
-    if not real_url:
-        raise HTTPException(status_code=503, detail="该电台播放地址尚未准备好。")
-    if station_id in _m.DIRECT_STREAM_STATIONS or not _is_hls_like_url(real_url):
-        return RedirectResponse(
-            f"/api/media/channel/{quote(station_id, safe='')}/stream{_media_access_suffix(access)}",
-            status_code=307,
-        )
-
-    parsed = urlparse(real_url)
-    if parsed.scheme.lower() not in ("http", "https"):
-        raise HTTPException(status_code=400, detail="电台上游 scheme 不被允许")
-    await _validate_handle_url_or_403(real_url, allowed_schemes={"http", "https"})
-
-    # 拉真实 m3u8（使用电台 CDN headers）
-    try:
-        upstream = await _m.fetch_real_m3u8_text(real_url, station_id)
-        upstream.raise_for_status()
-    except RedirectTargetRejected as exc:
-        raise HTTPException(status_code=403, detail=str(exc.cause)) from exc
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"真实 m3u8 拉取失败: {exc}") from exc
-
-    base_url = str(upstream.url)
-    rewrite_ctx = _build_rewrite_context(
-        base_url=base_url,
-        src_id=f"station:{station_id}",
-        src_label=f"station:{station_id}",
-        access_ctx=access,
-        proxy_segments=True,
-    )
-    body = rewrite_m3u8(upstream.text, rewrite_ctx)
-    return Response(content=body, media_type="application/vnd.apple.mpegurl")
 
 
 async def _serve_iptv_channel_playlist(

@@ -22,7 +22,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, model_validator
 from contextlib import asynccontextmanager
-from fetchers import STATION_FETCHER_MAP
 import database
 import epg_binding_management
 import epg_management
@@ -172,53 +171,6 @@ def _stream_error_summary(error: Exception) -> str:
     return f"上游请求失败 ({type(error).__name__})"
 
 
-# 直连而不走 HLS 处理的电台 ID 集合。空字符串元素是历史遗留，没有任何匹配语义，
-# 留着只会让代码读起来怪。这里替换成真正的空集合，需要新增直连电台时再 union。
-DIRECT_STREAM_STATIONS: set[str] = set()
-
-
-STATIC_STATIONS = [
-    # ── 香港电台 (tingfm.com) ──
-    {"id": "tf_909", "name": "香港电台第一台", "logoText": "RTHK1", "logoUrl": "https://cdn.tingfm.com/tingfm/2013/04/file5e8d6ff30254e.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "RTHK Radio 1", "tags": ["HK", "news"]},
-    {"id": "tf_910", "name": "香港电台第二台", "logoText": "RTHK2", "logoUrl": "", "subtitle": "RTHK Radio 2", "tags": ["HK", "music"]},
-    {"id": "tf_911", "name": "香港电台第三台", "logoText": "RTHK3", "logoUrl": "", "subtitle": "RTHK Radio 3", "tags": ["HK", "news"]},
-    {"id": "tf_1071", "name": "香港电台第四台", "logoText": "RTHK4", "logoUrl": "https://cdn.tingfm.com/tingfm/2020/02/file5e467a134a163.jpg", "subtitle": "RTHK Radio 4", "tags": ["HK", "music"]},
-    {"id": "tf_913", "name": "香港电台第五台", "logoText": "RTHK5", "logoUrl": "", "subtitle": "RTHK Radio 5", "tags": ["HK", "news"]},
-    {"id": "tf_669", "name": "香港之声", "logoText": "之声", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/9/67829.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "RTHK Radio 6", "tags": ["HK", "news"]},
-    {"id": "tf_9855", "name": "香港电台普通话台", "logoText": "普通话", "logoUrl": "", "subtitle": "RTHK Putonghua", "tags": ["HK", "news"]},
-    {"id": "tf_743", "name": "新城财经台", "logoText": "新城", "logoUrl": "https://cdn.tingfm.com/tingfm/2023/02/oss-63fcd98d4df88.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "FM 102.4-106.3", "tags": ["HK", "news"]},
-    {"id": "tf_744", "name": "新城知讯台", "logoText": "知讯", "logoUrl": "", "subtitle": "FM 99.7-102.1", "tags": ["HK", "news"]},
-    {"id": "tf_748", "name": "新城 Metro Plus", "logoText": "Metro", "logoUrl": "", "subtitle": "Metro Plus", "tags": ["HK", "music"]},
-    {"id": "tf_745", "name": "华语 HITS 香港", "logoText": "HITS", "logoUrl": "https://cdn.tingfm.com/tingfm/2023/02/oss-63e7081b5ade4.jpg?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "Chinese HITS", "tags": ["HK", "music"]},
-    {"id": "tf_747", "name": "香港数码台", "logoText": "DRK", "logoUrl": "https://cdn.tingfm.com/tingfm/2023/02/oss-63e70606b73a7.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "Digital Radio HK", "tags": ["HK", "news"]},
-    {"id": "tf_750", "name": "香港D100 PBS", "logoText": "D100", "logoUrl": "https://cdn.tingfm.com/tingfm/2020/10/file5f766022d365b.jpg", "subtitle": "D100", "tags": ["HK", "talk"]},
-    {"id": "tf_21365", "name": "凤凰卫视资讯台", "logoText": "凤凰", "logoUrl": "", "subtitle": "Phoenix InfoNews", "tags": ["HK", "news"]},
-    {"id": "tf_21300", "name": "凤凰卫视中文台", "logoText": "凤凰", "logoUrl": "", "subtitle": "Phoenix Chinese", "tags": ["HK", "news"]},
-    # ── 新加坡电台 (tingfm.com) ──
-    {"id": "tfsg_14467", "name": "963好FM", "logoText": "963", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/5/10489.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "96.3 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14773", "name": "88.3Jia FM", "logoText": "88.3", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/1/10376.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "88.3 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14775", "name": "Money FM 89.3", "logoText": "Money", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/5/10341.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "89.3 FM", "tags": ["SG", "news"]},
-    {"id": "tfsg_14786", "name": "Ria 89.7 FM", "logoText": "Ria", "logoUrl": "", "subtitle": "89.7 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14787", "name": "Gold 905", "logoText": "Gold", "logoUrl": "", "subtitle": "90.5 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14788", "name": "ONE FM 91.3", "logoText": "ONE", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/5/10342.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "91.3 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14790", "name": "Symphony 924", "logoText": "Sym", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/1/10377.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "92.4 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14791", "name": "CNA938", "logoText": "CNA", "logoUrl": "", "subtitle": "93.8 FM", "tags": ["SG", "news"]},
-    {"id": "tfsg_14792", "name": "Warna 942", "logoText": "Warna", "logoUrl": "", "subtitle": "94.2 FM", "tags": ["SG", "news"]},
-    {"id": "tfsg_14793", "name": "Class 95", "logoText": "95", "logoUrl": "", "subtitle": "95 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14794", "name": "Capital 958", "logoText": "958", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/1/10378.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "95.8 FM", "tags": ["SG", "news"]},
-    {"id": "tfsg_14795", "name": "Oli 968", "logoText": "Oli", "logoUrl": "", "subtitle": "96.8 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14796", "name": "Love 972", "logoText": "972", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/1/10379.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "97.2 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14797", "name": "987 Hit Music", "logoText": "987", "logoUrl": "", "subtitle": "98.7 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_24099", "name": "UFM 100.3", "logoText": "UFM", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/5/10343.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "100.3 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_14271", "name": "YES 933", "logoText": "YES", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/5/10344.v5.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "93.3 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_63656", "name": "Kiss 92", "logoText": "Kiss", "logoUrl": "https://cdn.tingfm.com/tingfm/img/l/8/15248.v7.png?x-oss-process=image/resize,m_fill,w_200,h_200", "subtitle": "92 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_63610", "name": "Class 95 FM", "logoText": "95", "logoUrl": "", "subtitle": "95 FM", "tags": ["SG", "music"]},
-    {"id": "tfsg_22537", "name": "Oli 96.8 FM", "logoText": "Oli", "logoUrl": "", "subtitle": "96.8 FM", "tags": ["SG", "music"]},
-]
-
-CURRENT_STREAMS: dict[str, str] = {}
-
-
 logger = logging.getLogger("waveflow")
 
 
@@ -226,24 +178,6 @@ logger = logging.getLogger("waveflow")
 # 通过 signed handle 屏蔽上游 URL，并把 access_token 透传到子 playlist/分片。
 # 旧的电台 raw-url 公共入口已删除，
 # 客户端统一使用 ``/api/media/channel/{station_id}/playlist.m3u8``。
-
-
-async def refresh_station_stream_url(station_id: str) -> str:
-    """立即刷新单个电台的真实 m3u8 地址
-    """
-
-    fetcher = STATION_FETCHER_MAP.get(station_id)
-
-    if fetcher is None:
-        raise HTTPException(status_code=404, detail="未知电台。")
-
-    latest_stream_url = await fetcher()
-
-    CURRENT_STREAMS[station_id] = latest_stream_url
-
-    logger.info("电台 %s 播放地址已按需刷新", station_id)
-
-    return latest_stream_url
 
 
 # 全局复用的异步 HTTP 客户端，维持与上游 CDN 的 Keep-Alive 长连接
@@ -1094,52 +1028,6 @@ async def _ensure_rtsp_hls_session(
     return await asyncio.shield(startup_to_await)
 
 
-_TINGFM_STREAMS = {
-    "tf_909": "https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/master.m3u8",
-    "tf_910": "https://rthkradio2-live.akamaized.net/hls/live/2040078/radio2/master.m3u8",
-    "tf_911": "https://rthkradio3-live.akamaized.net/hls/live/2040079/radio3/master.m3u8",
-    "tf_1071": "https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/master.m3u8",
-    "tf_913": "https://rthkradio5-live.akamaized.net/hls/live/2040081/radio5/master.m3u8",
-    "tf_669": "https://rthkradiocnrhk-live.akamaized.net/hls/live/2046111/radiocnrhk/master.m3u8",
-    "tf_9855": "https://rthkradiopth-live.akamaized.net/hls/live/2040082/radiopth/master.m3u8",
-    "tf_743": "https://1716664847.rsc.cdn77.org/1716664847/index.m3u8",
-    "tf_744": "https://1603884249.rsc.cdn77.org/1603884249/index.m3u8",
-    "tf_748": "https://1946218710.rsc.cdn77.org/1946218710/index.m3u8",
-    "tf_745": "https://streaming.live365.com/a57743",
-    "tf_747": "http://ice.digitalradiohk.net:8000/drhk",
-    "tf_750": "https://uk.d100.net:8001/Channel1-128MP3",
-    "tf_21365": "https://playtv-live.ifeng.com/live/06OLEEWQKN4_audio.m3u8",
-    "tf_21300": "https://playtv-live.ifeng.com/live/06OLEGEGM4G_audio.m3u8",
-    # ── 新加坡 ──
-    "tfsg_14467": "https://playerservices.streamtheworld.com/api/livestream-redirect/963HITAAC_SC",
-    "tfsg_14773": "https://playerservices.streamtheworld.com/api/livestream-redirect/883JIAAAC_SC",
-    "tfsg_14775": "https://playerservices.streamtheworld.com/api/livestream-redirect/MONEY893AAC_SC",
-    "tfsg_14786": "https://playerservices.streamtheworld.com/api/livestream-redirect/RIA897AAC_SC",
-    "tfsg_14787": "https://playerservices.streamtheworld.com/api/livestream-redirect/GOLD905AAC_SC",
-    "tfsg_14788": "https://playerservices.streamtheworld.com/api/livestream-redirect/ONE913AAC_SC",
-    "tfsg_14790": "https://playerservices.streamtheworld.com/api/livestream-redirect/SYMPHONY924AAC_SC",
-    "tfsg_14791": "https://playerservices.streamtheworld.com/api/livestream-redirect/938NOWAAC_SC",
-    "tfsg_14792": "https://playerservices.streamtheworld.com/api/livestream-redirect/WARNA942AAC_SC",
-    "tfsg_14793": "https://playerservices.streamtheworld.com/api/livestream-redirect/CLASS95AAC_SC",
-    "tfsg_14794": "https://playerservices.streamtheworld.com/api/livestream-redirect/CAPITAL958AAC_SC",
-    "tfsg_14795": "https://playerservices.streamtheworld.com/api/livestream-redirect/OLI968AAC_SC",
-    "tfsg_14796": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOVE972AAC_SC",
-    "tfsg_14797": "https://playerservices.streamtheworld.com/api/livestream-redirect/987FMAAC_SC",
-    "tfsg_24099": "https://playerservices.streamtheworld.com/api/livestream-redirect/UFM1003AAC_SC",
-    "tfsg_14271": "https://playerservices.streamtheworld.com/api/livestream-redirect/YES933AAC_SC",
-    "tfsg_63656": "https://playerservices.streamtheworld.com/api/livestream-redirect/KISS_92AAC_SC",
-    "tfsg_63610": "https://playerservices.streamtheworld.com/api/livestream-redirect/CLASS95AAC_SC",
-    "tfsg_22537": "https://playerservices.streamtheworld.com/api/livestream-redirect/OLI968AAC_SC",
-}
-
-
-def _load_tingfm_streams():
-    """加载 tingfm HK 电台流地址到 CURRENT_STREAMS"""
-    for station_id, url in _TINGFM_STREAMS.items():
-        CURRENT_STREAMS[station_id] = url
-    logger.info("tingfm HK 电台加载完成: %d 个", len(_TINGFM_STREAMS))
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _RTSP_HLS_SHUTTING_DOWN
@@ -1205,6 +1093,7 @@ async def lifespan(app: FastAPI):
                 app.state.provider_resolver = None
         automation_service = await create_production_automation_service(http_client)
         if plugin_subsystem is not None:
+            plugin_subsystem.automation_service = automation_service
             if await database.list_plugin_installations():
                 register_plugin_update_task(automation_service.registry, plugin_subsystem)
             if (
@@ -1212,7 +1101,13 @@ async def lifespan(app: FastAPI):
                 and hasattr(automation_service, "registry")
                 and hasattr(automation_service, "repository")
             ):
-                await reconcile_radio_automation_tasks(automation_service, plugin_subsystem)
+                await reconcile_radio_automation_tasks(
+                    automation_service, plugin_subsystem,
+                    retained_owner_identities={
+                        f"{row['publisher_id']}/{row['plugin_id']}"
+                        for row in await database.list_plugin_installations()
+                    },
+                )
         app.state.automation_service = automation_service
         await automation_service.start()
         _clear_stale_rtsp_hls_dirs()
@@ -1223,8 +1118,6 @@ async def lifespan(app: FastAPI):
             asyncio.create_task(refresh_logo_template_from_remote(http_client), name="logo-template-refresh"),
             owner="logo_template_refresh",
         )
-        # 加载 tingfm HK 电台流地址
-        _load_tingfm_streams()
         yield
     finally:
         # RTSP startup tasks are shared session work, not request-owned
@@ -1317,285 +1210,10 @@ async def get_config() -> dict:
     }
 
 
-@app.get("/api/stations", dependencies=[Depends(require_browse_access)])
-async def get_stations() -> Response:
-    """返回用户可见的静态电台列表；地区标签仅是 station metadata。"""
-    return Response(
-        content=json.dumps(STATIC_STATIONS, ensure_ascii=False),
-        media_type="application/json",
-    )
-
-
 # 旧 ``/api/{station_id}/playlist.m3u8`` / ``/api/{station_id}/{m3u8_name}.m3u8`` /
 # ``/api/{station_id}/chunk.ts`` / ``/api/proxy/stream`` 公共入口已被
 # ``/api/media/channel/{key}/playlist.m3u8`` + signed-handle 子路由统一取代，
 # 不再注册以避免裸 ``target_url`` / ``url`` 形式的 SSRF 入口残留。
-
-
-@app.get("/api/{station_id}/stream", dependencies=[Depends(require_media_access)])
-async def proxy_direct_audio_stream(station_id: str) -> StreamingResponse:
-    if station_id not in DIRECT_STREAM_STATIONS:
-        raise HTTPException(status_code=400, detail="该电台不是直连音频流。")
-
-    real_stream_url = CURRENT_STREAMS.get(station_id)
-
-    if real_stream_url is None:
-        real_stream_url = await refresh_station_stream_url(station_id)
-
-    validate_target_url(real_stream_url)
-
-
-    upstream_response: httpx.Response | None = None
-
-    try:
-
-        # 直连音频流：和 chunk 路径一致，强制 identity，避免 httpx 默认 gzip 把
-        # 流式音频解码出错或乱报 Content-Length。
-        _stream_headers = {**CDN_REQUEST_HEADERS, "Accept-Encoding": "identity"}
-        upstream_req = http_client.build_request("GET", real_stream_url, headers=_stream_headers)
-        upstream_response = await http_client.send(upstream_req, stream=True)
-
-        if upstream_response.status_code in TOKEN_REFRESH_HTTP_STATUS_CODES:
-            await upstream_response.aclose()
-
-            logger.warning(
-                "电台 %s 直连音频流返回 %s，准备刷新地址后重试一次",
-                station_id,
-                upstream_response.status_code,
-            )
-
-            real_stream_url = await refresh_station_stream_url(station_id)
-            upstream_req = http_client.build_request("GET", real_stream_url, headers=_stream_headers)
-            upstream_response = await http_client.send(upstream_req, stream=True)
-
-        upstream_response.raise_for_status()
-    except httpx.HTTPError as exc:
-        if upstream_response is not None:
-            await upstream_response.aclose()
-        logger.exception("电台 %s 直连音频流代理失败：%s", station_id, exc)
-        raise HTTPException(status_code=502, detail="真实音频流拉取失败。") from exc
-
-    async def stream_audio_bytes() -> AsyncIterator[bytes]:
-        try:
-            # 强制 identity 编码（见上方 build_request 处的 headers 注释），
-            # 因此用 aiter_raw 直接吐字节，避免 httpx 对未压缩内容做无意义 decode。
-            async for chunk in upstream_response.aiter_raw(64 * 1024):
-                if chunk:
-                    yield chunk
-        finally:
-            await upstream_response.aclose()
-
-    media_type = upstream_response.headers.get("content-type", "audio/mpeg")
-
-    return StreamingResponse(stream_audio_bytes(), media_type=media_type)
-
-
-import re as _re
-
-
-_T2S = {
-    "樂": "乐", "聲": "声", "網": "网", "廣": "广", "聯": "联",
-    "談": "谈", "體": "体", "車": "车", "濟": "济", "鄉": "乡",
-    "訊": "讯", "藝": "艺", "語": "语", "華": "华", "電": "电",
-    "視": "视", "國": "国", "劇": "剧", "寶": "宝", "環": "环",
-    "紅": "红", "節": "节", "製": "制", "報": "报", "導": "导",
-    "續": "续", "話": "话", "兒": "儿", "動": "动", "預": "预",
-    "後": "后", "獨": "独", "經": "经", "選": "选", "顧": "顾",
-    "慶": "庆", "親": "亲", "師": "师", "勞": "劳", "樹": "树",
-    "費": "费", "際": "际", "婦": "妇", "軍": "军", "黨": "党",
-    "陽": "阳", "萬": "万", "聖": "圣", "誕": "诞", "與": "与",
-    "術": "术", "雜": "杂", "舞": "舞", "戲": "戏", "戲": "戏",
-    "廳": "厅", "錄": "录", "紀": "纪", "繪": "绘", "攝": "摄",
-    "書": "书", "畫": "画", "詩": "诗", "詞": "词", "謠": "谣",
-    "調": "调", "擊": "击", "搖": "摇", "滾": "滚", "藍": "蓝",
-    "靈": "灵", "處": "处", "號": "号", "機": "机", "檔": "档",
-    "線": "线", "練": "练", "組": "组", "團": "团", "隊": "队",
-    "員": "员", "場": "场", "館": "馆", "園": "园", "區": "区",
-    "鄉": "乡", "鎮": "镇", "縣": "县", "島": "岛", "峽": "峡",
-    "灣": "湾", "裡": "里", "裡": "里", "週": "周", "東": "东",
-    "西": "西", "南": "南", "北": "北", "中": "中",
-}
-
-
-def _normalize_name(raw: str) -> str:
-    s = raw.lower().replace(" ", "")
-    s = _re.sub(r"(?<![a-z])fm\d[\d.]*", "", s)
-    s = _re.sub(r"[一-鿥]{0,4}(之声|之聲|电台|广播电台|广播|联播网|聯播網)$", "", s)
-    s = "".join(_T2S.get(c, c) for c in s)
-    return s
-
-
-def _names_match(query: str, target: str) -> bool:
-    if not query or not target:
-        return False
-    if query == target:
-        return True
-    shorter, longer = (query, target) if len(query) <= len(target) else (target, query)
-    if shorter in longer and len(shorter) >= 4 and len(shorter) * 100 >= len(longer) * 60:
-        return True
-    return False
-
-
-def _infer_rb_region(station_id: str) -> str | None:
-    if station_id.startswith("mr_"):
-        return "TW"
-    if station_id.startswith("yt_"):
-        return "CN"
-    return None
-
-
-def _find_rb_url(station_id: str, name: str = "", region: str | None = None) -> str | None:
-    if station_id.startswith("rb_"):
-        return None
-
-    if not name:
-        return None
-
-    query = _normalize_name(name)
-    if not query:
-        return None
-
-    countries = [region] if region else list(RB_CACHE.keys())
-    for country in countries:
-        cached = RB_CACHE.get(country)
-        if not cached:
-            continue
-        try:
-            for item in json.loads(cached["data"]):
-                rb_name = _normalize_name(item.get("name") or "")
-                if not rb_name:
-                    continue
-                if _names_match(query, rb_name):
-                    url = item.get("url_resolved") or item.get("url") or ""
-                    if url.startswith(("http://", "https://")):
-                        return url
-        except Exception:
-            continue
-
-    return None
-
-
-def _find_fallback_url(station_id: str, name: str = "") -> str | None:
-    region = _infer_rb_region(station_id)
-    return _find_rb_url(station_id, name, region=region)
-
-
-def _collect_all_urls(station_id: str, name: str = "") -> list[str]:
-
-    urls: list[str] = []
-    seen: set[str] = set()
-
-    def _add(url: str | None):
-        if url and url not in seen:
-            seen.add(url)
-            urls.append(url)
-
-    _add(CURRENT_STREAMS.get(station_id))
-
-    region = _infer_rb_region(station_id)
-    _add(_find_rb_url(station_id, name, region=region))
-
-    return urls
-
-
-@app.get("/api/{station_id}/all-urls", dependencies=[Depends(require_media_access)])
-async def get_all_urls(station_id: str, name: str = "") -> Response:
-    urls = _collect_all_urls(station_id, name)
-    return Response(
-        content=json.dumps(urls, ensure_ascii=False),
-        media_type="application/json",
-    )
-
-
-async def _head_check(url: str) -> tuple[str, float]:
-    t0 = time.monotonic()
-    try:
-        async with httpx.AsyncClient(verify=False, follow_redirects=True, timeout=5.0) as client:
-            resp = await client.head(url, headers=CDN_REQUEST_HEADERS)
-            if resp.status_code < 400:
-                return (url, time.monotonic() - t0)
-    except Exception:
-        pass
-    return (url, float("inf"))
-
-
-@app.get("/api/{station_id}/reachable-urls", dependencies=[Depends(require_media_access)])
-async def get_reachable_urls(station_id: str, name: str = "") -> Response:
-    urls = _collect_all_urls(station_id, name)
-    if not urls:
-        return Response(content="[]", media_type="application/json")
-
-    results = await asyncio.gather(*[_head_check(u) for u in urls])
-    reachable = sorted(
-        [(u, t) for u, t in results if t < float("inf")],
-        key=lambda x: x[1],
-    )
-    sorted_urls = [u for u, _ in reachable]
-
-    logger.info("电台 %s 可达性探测: %d/%d 可达, 最快: %s",
-                station_id, len(sorted_urls), len(urls),
-                sorted_urls[0] if sorted_urls else "无")
-
-    return Response(
-        content=json.dumps(sorted_urls, ensure_ascii=False),
-        media_type="application/json",
-    )
-
-
-
-@app.get("/api/{station_id}/stream-url", dependencies=[Depends(require_media_access)])
-async def get_stream_url(station_id: str, name: str = "") -> Response:
-    url = CURRENT_STREAMS.get(station_id)
-
-    if url is None:
-        fetcher = STATION_FETCHER_MAP.get(station_id)
-
-        if url is None and fetcher is None:
-            raise HTTPException(status_code=404, detail="未知电台。")
-        if url is None and fetcher is not None:
-            try:
-                url = await fetcher()
-                CURRENT_STREAMS[station_id] = url
-            except Exception as exc:
-                logger.warning("电台 %s 主 fetcher 失败: %s，尝试多源回退", station_id, exc)
-                fallback_url = _find_fallback_url(station_id, name)
-                if fallback_url:
-                    logger.info("电台 %s 多源回退成功", station_id)
-                    url = fallback_url
-                    CURRENT_STREAMS[station_id] = url
-                else:
-                    logger.exception("电台 %s stream-url 刷新失败（多源均无匹配）", station_id)
-                    raise HTTPException(status_code=503, detail="播放地址暂不可用") from exc
-
-    return Response(
-        content=json.dumps({"url": url}),
-        media_type="application/json",
-    )
-
-
-RB_CACHE: dict[str, dict] = {}
-RB_CACHE_TTL = 6 * 3600
-
-
-@app.get("/api/radio-browser/stations/{country_code}", dependencies=[Depends(require_browse_access)])
-async def proxy_radio_browser(country_code: str) -> Response:
-
-    cached = RB_CACHE.get(country_code)
-    if cached and time.time() - cached["ts"] < RB_CACHE_TTL:
-        return Response(content=cached["data"], media_type="application/json")
-
-    url = f"https://all.api.radio-browser.info/json/stations/bycountrycodeexact/{country_code}?order=votes&reverse=true"
-    try:
-        resp = await http_client.get(url, follow_redirects=True)
-        resp.raise_for_status()
-    except httpx.HTTPError as exc:
-        if cached:
-            logger.warning("Radio Browser 拉取失败，返回缓存: %s", exc)
-            return Response(content=cached["data"], media_type="application/json")
-        raise HTTPException(status_code=502, detail="Radio Browser 请求失败") from exc
-
-    RB_CACHE[country_code] = {"data": resp.text, "ts": time.time()}
-    return Response(content=resp.text, media_type="application/json")
 
 
 # =====================================================================

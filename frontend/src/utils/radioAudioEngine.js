@@ -17,11 +17,6 @@ export function createRadioAudioEngine({
   clearTimer = (id) => clearTimeout(id),
   logger = console,
 }) {
-  const directStreamStationMap = {}
-  let fallbackUrls = []
-  let fallbackIndex = 0
-  let fallbackStationId = ''
-  let directProbeWinner = null
   let attemptSeq = 0
   let activeAttempt = null
   let mainAudioErrorCleanup = null
@@ -37,18 +32,6 @@ export function createRadioAudioEngine({
   function normalizePlaybackIntent(intent, fallback = 'passive') {
     const value = String(intent || '').trim()
     return RADIO_PLAYBACK_INTENTS.has(value) ? value : fallback
-  }
-
-  function channelStreamUrl(stationId) {
-    return `${API_BASE}/api/media/channel/${encodeURIComponent(stationId)}/stream`
-  }
-
-  function getDirectUrl(stationId) {
-    return playerStore.stationMap[stationId]?.directUrl
-  }
-
-  function hasDirectUrl(stationId) {
-    return Boolean(getDirectUrl(stationId))
   }
 
   function persistedRadioStation(stationId) {
@@ -312,368 +295,16 @@ export function createRadioAudioEngine({
     return playPromise
   }
 
-  function fallbackToProxyStream(stationId, attempt = activeAttempt) {
-    if (!isAttemptActive(attempt) || !audioRef.value) return
-    attempt.intent = 'recovery'
-
-    if (directStreamMode.value === 'proxy') {
-      playerStore.setPlaybackError('后端中转音频流连接失败，请稍后重试。')
-      playerStore.togglePlay(false)
-      return
-    }
-
-    const streamConfig = directStreamStationMap[stationId]
-    const proxyUrl = streamConfig?.proxyUrl || channelStreamUrl(stationId)
-
-    directStreamMode.value = 'proxy'
-    playerStore.setPlaybackError('直连失败，正在自动切换后端中转。')
-    playerStore.setLoading(true)
-    if (!setMainAudioSrc(attempt, proxyUrl)) return
-    playAudioSafely(attempt)
-  }
-
-  function isHlsUrl(url) {
-    return /\.m3u8(\?|$)/i.test(url)
-  }
-
-  async function playUrl(url, stationId, mode, attempt = activeAttempt) {
-    if (!isAttemptActive(attempt)) return false
-    prepareAttemptMedia(attempt)
-    destroyCurrentHls()
-    directStreamMode.value = mode
-
-    if (isHlsUrl(url) && Hls?.isSupported()) {
-      const hls = new Hls({
-        xhrSetup: configureCoreCredentials,
-        enableWorker: true, lowLatencyMode: true, autoStartLoad: true,
-        startFragPrefetch: true, liveSyncDurationCount: 2,
-        liveMaxLatencyDurationCount: 5, maxBufferLength: 10,
-      })
-      attempt.mainHls = hls
-      hlsRef.value = hls
-      hls.loadSource(url)
-      hls.attachMedia(audioRef.value)
-      await new Promise((resolve, reject) => {
-        let settled = false
-        let timer = null
-        const cleanup = () => {
-          if (timer) clearTimer(timer)
-          hls.off?.(Hls.Events.MANIFEST_PARSED, onParsed)
-          hls.off?.(Hls.Events.ERROR, onError)
-        }
-        const settle = (fn, value) => {
-          if (settled) return
-          settled = true
-          cleanup()
-          fn(value)
-        }
-        const onParsed = () => {
-          if (!isAttemptActive(attempt)) {
-            settle(reject, new Error('stale radio attempt'))
-            return
-          }
-          settle(resolve)
-        }
-        const onError = (_e, d) => {
-          if (!isAttemptActive(attempt)) {
-            settle(reject, new Error('stale radio attempt'))
-            return
-          }
-          if (d?.fatal) settle(reject, d)
-        }
-        hls.on(Hls.Events.MANIFEST_PARSED, onParsed)
-        hls.on(Hls.Events.ERROR, onError)
-        timer = setTimer(() => settle(reject, new Error('HLS 加载超时')), 10_000)
-        addAttemptCleanup(attempt, cleanup)
-      })
-    } else {
-      if (!setMainAudioSrc(attempt, url)) return false
-    }
-
-    if (!isAttemptActive(attempt)) return false
-    audioRef.value.volume = volume.value
-    return playAudioSafely(attempt)
-  }
-
-  function upgradeHttps(url) {
-    return url.startsWith('http://') ? 'https://' + url.slice(7) : url
-  }
-
-  async function filterReachable(urls, { tryHttps = false, attempt = activeAttempt } = {}) {
-    const activeChecks = new Set()
-    const cleanupChecks = () => {
-      for (const cancel of Array.from(activeChecks)) cancel()
-      activeChecks.clear()
-    }
-    const removeCleanup = addAttemptCleanup(attempt, cleanupChecks)
-    const checks = urls.map((url) => {
-      const testUrl = tryHttps ? upgradeHttps(url) : url
-      return new Promise((resolve) => {
-        const controller = new AbortController()
-        let settled = false
-        let timer = null
-        const finish = (result) => {
-          if (settled) return
-          settled = true
-          if (timer) clearTimer(timer)
-          activeChecks.delete(cancel)
-          resolve(result)
-        }
-        const cancel = () => {
-          try { controller.abort() } catch {}
-          finish(null)
-        }
-        activeChecks.add(cancel)
-        fetchImpl(testUrl, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
-          .then(() => finish([testUrl, url]))
-          .catch(() => finish(null))
-        timer = setTimer(cancel, 3000)
-      })
-    })
-    const results = await Promise.all(checks)
-    cleanupChecks()
-    removeCleanup()
-    if (!isAttemptActive(attempt)) return []
-    return results.filter(Boolean)
-  }
-
-  async function probeParallel(urls, stationId, mode, { tryHttps = false, attempt = activeAttempt } = {}) {
-    if (!isAttemptActive(attempt) || !urls.length) return null
-
-    const reachable = await filterReachable(urls, { tryHttps, attempt })
-    if (!isAttemptActive(attempt) || !reachable.length) return null
-    logger.log(`[探测] ${reachable.length}/${urls.length} 个源可达${tryHttps ? '（已升级 HTTPS）' : ''}`)
-
-    const activeHls = new Set()
-    const activeAudio = new Set()
-    const activeProbeCancels = new Set()
-
-    function cleanupAll() {
-      for (const cancel of Array.from(activeProbeCancels)) cancel()
-      activeProbeCancels.clear()
-      for (const h of activeHls) { try { h.destroy() } catch {} }
-      activeHls.clear()
-      for (const a of activeAudio) {
-        try {
-          a.pause()
-          a.removeAttribute('src')
-          a.load()
-        } catch {}
-      }
-      activeAudio.clear()
-    }
-    const removeCleanup = addAttemptCleanup(attempt, cleanupAll)
-
-    const promises = reachable.map(([url, origUrl], i) => {
-      if (isHlsUrl(url) && Hls?.isSupported()) {
-        return new Promise((resolve) => {
-          if (!isAttemptActive(attempt)) { resolve(null); return }
-          const probeEl = createAudio()
-          const hls = new Hls({ autoStartLoad: true, maxBufferLength: 1, xhrSetup: configureCoreCredentials })
-          activeHls.add(hls)
-          activeAudio.add(probeEl)
-          hls.loadSource(url)
-          hls.attachMedia(probeEl)
-          let settled = false
-          let timer = null
-          let cancelProbe = null
-          const onFragLoaded = () => done({ url, origUrl, index: i, type: 'hls' })
-          const onError = (_e, d) => { if (d?.fatal) done(null) }
-          const cleanup = () => {
-            if (timer) clearTimer(timer)
-            timer = null
-            hls.off(Hls.Events.FRAG_LOADED, onFragLoaded)
-            hls.off(Hls.Events.ERROR, onError)
-            if (cancelProbe) activeProbeCancels.delete(cancelProbe)
-            activeHls.delete(hls)
-            activeAudio.delete(probeEl)
-            try { hls.destroy() } catch {}
-            try {
-              probeEl.removeAttribute('src')
-              probeEl.load()
-            } catch {}
-          }
-          const done = (result) => {
-            if (settled) return
-            settled = true
-            cleanup()
-            if (result) cleanupAll()
-            resolve(isAttemptActive(attempt) ? result : null)
-          }
-          cancelProbe = () => done(null)
-          activeProbeCancels.add(cancelProbe)
-          hls.on(Hls.Events.FRAG_LOADED, onFragLoaded)
-          hls.on(Hls.Events.ERROR, onError)
-          timer = setTimer(cancelProbe, 10_000)
-        })
-      }
-      return new Promise((resolve) => {
-        if (!isAttemptActive(attempt)) { resolve(null); return }
-        const probeEl = createAudio()
-        activeAudio.add(probeEl)
-        probeEl.preload = 'auto'
-        probeEl.src = url
-        probeEl.load()
-        let settled = false
-        let timer = null
-        let cancelProbe = null
-        const onCanPlay = () => done({ url, origUrl, index: i, type: 'direct' })
-        const onError = () => done(null)
-        const cleanup = () => {
-          if (timer) clearTimer(timer)
-          timer = null
-          probeEl.removeEventListener('canplay', onCanPlay)
-          probeEl.removeEventListener('error', onError)
-          if (cancelProbe) activeProbeCancels.delete(cancelProbe)
-          activeAudio.delete(probeEl)
-          try {
-            probeEl.pause()
-            probeEl.removeAttribute('src')
-            probeEl.load()
-          } catch {}
-        }
-        const done = (result) => {
-          if (settled) return
-          settled = true
-          cleanup()
-          if (result) cleanupAll()
-          resolve(isAttemptActive(attempt) ? result : null)
-        }
-        cancelProbe = () => done(null)
-        activeProbeCancels.add(cancelProbe)
-        probeEl.addEventListener('canplay', onCanPlay, { once: true })
-        probeEl.addEventListener('error', onError, { once: true })
-        timer = setTimer(cancelProbe, 10_000)
-      })
-    })
-
-    const winnerPromises = promises.map((promise) => promise.then((winner) => {
-      if (!winner) throw new Error('probe failed')
-      return winner
-    }))
-    let overallTimer = null
-    const result = await Promise.race([
-      Promise.any(winnerPromises).catch(() => null),
-      new Promise((resolve) => {
-        overallTimer = setTimer(() => { cleanupAll(); resolve(null) }, 12_000)
-      }),
-    ])
-    if (overallTimer) clearTimer(overallTimer)
-    cleanupAll()
-    removeCleanup()
-    if (!isAttemptActive(attempt)) {
-      cleanupAll()
-      return null
-    }
-    return result
-  }
-
-  async function tryFallbackUrls(attempt = activeAttempt) {
-    if (!isAttemptActive(attempt)) return
-    destroyCurrentHls()
-    const stationId = fallbackStationId
-    const urls = fallbackUrls.slice(fallbackIndex)
-
-    if (!urls.length) {
-      if (!isAttemptActive(attempt)) return
-      playerStore.setPlaybackError('无可用音频源。')
-      playerStore.togglePlay(false, { intent: 'passive' })
-      return
-    }
-
-    logger.log(`[回退] 并发直连探测 ${urls.length} 个源...`)
-    let winner = await probeParallel(urls, stationId, 'direct', { tryHttps: true, attempt })
-    if (!isAttemptActive(attempt)) return
-    if (winner) directProbeWinner = winner
-
-    if (!winner && directProbeWinner) {
-      const proxyUrl = channelStreamUrl(fallbackStationId)
-      logger.log(`[回退] 直连播放失败，直接中转源 #${directProbeWinner.index + 1}...`)
-      winner = { url: proxyUrl, origUrl: directProbeWinner.origUrl, index: directProbeWinner.index, type: 'proxy' }
-    }
-
-    if (!winner) {
-      const fallbackUrl = channelStreamUrl(stationId)
-      logger.log(`[回退] 直连全败，fallback 到 channel 入口...`)
-      winner = await probeParallel([fallbackUrl], stationId, 'proxy', { attempt })
-      if (!isAttemptActive(attempt)) return
-    }
-
-    if (!winner) {
-      logger.warn('[回退] 所有源（直连+中转）均失败。')
-      if (!isAttemptActive(attempt)) return
-      playerStore.setPlaybackError('所有音频源均不可用，请稍后重试。')
-      playerStore.togglePlay(false, { intent: 'passive' })
-      return
-    }
-
-    logger.log(`[回退] 胜出: ${winner.type} #${winner.index + 1}`)
-    try {
-      if (!isAttemptActive(attempt)) return
-      const played = await playUrl(winner.url, stationId, winner.type, attempt)
-      if (!played || !isAttemptActive(attempt)) return
-      fallbackIndex = winner.index + 1
-      directProbeWinner = null
-    } catch {
-      if (!isAttemptActive(attempt)) return
-      playerStore.setPlaybackError('音频播放失败，请稍后重试。')
-      playerStore.togglePlay(false, { intent: 'passive' })
-    }
-  }
-
   function handleAudioError(attempt = activeAttempt) {
     if (!isAttemptActive(attempt)) return
     attempt.intent = 'recovery'
-    const stationId = attempt.stationId
-
-    if (directStreamStationMap[stationId]) {
-      fallbackToProxyStream(stationId, attempt)
-      return
-    }
-
-    if (fallbackUrls.length > 1 && fallbackIndex < fallbackUrls.length && fallbackStationId === stationId) {
-      tryFallbackUrls(attempt)
-      return
-    }
-
     if (directStreamMode.value === 'proxy') {
       playerStore.setPlaybackError('后端中转音频流连接失败，请稍后重试。')
       playerStore.togglePlay(false, { intent: 'passive' })
       return
     }
-
-    if (hasDirectUrl(stationId)) {
-      fallbackToProxyStream(stationId, attempt)
-      return
-    }
-
     playerStore.setPlaybackError('电台音频加载失败，请检查后端代理或稍后重试。')
     playerStore.togglePlay(false, { intent: 'passive' })
-  }
-
-  async function fetchAllUrls(stationId, attempt = activeAttempt) {
-    const stName = playerStore.stationMap[stationId]?.name || ''
-    const ctrl = new AbortController()
-    const timer = setTimer(() => ctrl.abort(), 8_000)
-    const removeCleanup = addAttemptCleanup(attempt, () => ctrl.abort())
-    try {
-      const res = await fetchImpl(
-        `${API_BASE}/api/${stationId}/all-urls?name=${encodeURIComponent(stName)}`,
-        { signal: ctrl.signal, credentials: apiCredentials },
-      )
-      if (!isAttemptActive(attempt)) return []
-      if (res.ok) {
-        const data = await res.json()
-        if (!isAttemptActive(attempt)) return []
-        return data
-      }
-    } catch {
-      if (!isAttemptActive(attempt)) return []
-    } finally {
-      clearTimer(timer)
-      removeCleanup()
-    }
-    return []
   }
 
   function loadStation(stationId, options = {}) {
@@ -682,9 +313,13 @@ export function createRadioAudioEngine({
     const continuation = Boolean(options.attempt)
     const attempt = options.attempt || beginAttempt(stationId, options.intent)
     const radioStation = persistedRadioStation(stationId)
-    const playlistUrl = radioStation
-      ? radioMediaUrl(radioStation, 'playlist.m3u8')
-      : `${API_BASE}/api/media/channel/${encodeURIComponent(stationId)}/playlist.m3u8`
+    if (!radioStation) {
+      invalidateActiveAttempt()
+      playerStore.setPlaybackError('电台目录已更新，请从当前目录重新选择电台。')
+      playerStore.togglePlay(false, { intent: 'passive' })
+      return attempt
+    }
+    const playlistUrl = radioMediaUrl(radioStation, 'playlist.m3u8')
 
     if (!continuation) {
       destroyCurrentHls()
@@ -699,10 +334,6 @@ export function createRadioAudioEngine({
       playerStore.clearPlaybackError()
       playerStore.setLoading(true)
       directStreamMode.value = ''
-      fallbackUrls = []
-      fallbackIndex = 0
-      fallbackStationId = stationId
-      directProbeWinner = null
     }
 
     if (radioStation && !options.radioTransport) {
@@ -741,74 +372,10 @@ export function createRadioAudioEngine({
       return attempt
     }
 
-    if (directStreamStationMap[stationId]) {
-      directStreamMode.value = 'direct'
-      if (setMainAudioSrc(attempt, directStreamStationMap[stationId].directUrl)) playAudioSafely(attempt)
-      return attempt
-    }
-
-    const directUrl = radioStation ? '' : getDirectUrl(stationId)
-    const hasLivePath = radioStation || playerStore.stationMap[stationId]?.livePath
-
-    if (directUrl && !hasLivePath) {
-      directStreamMode.value = 'direct'
-      fetchAllUrls(stationId, attempt).then((urls) => {
-        if (isAttemptActive(attempt) && fallbackStationId === stationId) fallbackUrls = urls
-      })
-      if (setMainAudioSrc(attempt, directUrl)) playAudioSafely(attempt)
-      return attempt
-    }
-
-    if (!hasLivePath && playerStore.stationMap[stationId]?.directPlay) {
-      ;(async () => {
-        const urls = await fetchAllUrls(stationId, attempt)
-        if (!isAttemptActive(attempt)) return
-
-        fallbackUrls = urls
-        fallbackIndex = 0
-
-        if (urls.length === 0) {
-          fallbackToProxyStream(stationId, attempt)
-          return
-        }
-
-        await tryFallbackUrls(attempt)
-      })()
-      return attempt
-    }
-
     if (Hls?.isSupported()) {
-      const canDirectPlay = playerStore.stationMap[stationId]?.directPlay
-      let triedDirect = false
-
       async function startHlsWithFallback() {
         if (!isAttemptActive(attempt)) return
         prepareAttemptMedia(attempt)
-        let hlsUrl = playlistUrl
-
-        if (canDirectPlay) {
-          try {
-            const stName = playerStore.stationMap[stationId]?.name || ''
-            const ctrl = new AbortController()
-            const timer = setTimer(() => ctrl.abort(), 5000)
-            const removeCleanup = addAttemptCleanup(attempt, () => ctrl.abort())
-            try {
-              const res = await fetchImpl(`${API_BASE}/api/${stationId}/stream-url?name=${encodeURIComponent(stName)}`, { signal: ctrl.signal, credentials: apiCredentials })
-              if (!isAttemptActive(attempt)) return
-              clearTimer(timer)
-              removeCleanup()
-              if (res.ok) {
-                const { url } = await res.json()
-                if (!isAttemptActive(attempt)) return
-                if (url) { hlsUrl = url; directStreamMode.value = 'direct' }
-              }
-            } finally {
-              clearTimer(timer)
-              removeCleanup()
-            }
-          } catch {}
-        }
-
         if (!isAttemptActive(attempt)) return
 
         const hls = new Hls({
@@ -823,7 +390,7 @@ export function createRadioAudioEngine({
         })
         attempt.mainHls = hls
         hlsRef.value = hls
-        hls.loadSource(hlsUrl)
+        hls.loadSource(playlistUrl)
         hls.attachMedia(audioRef.value)
 
         const onManifestParsed = () => { if (isAttemptActive(attempt)) playAudioSafely(attempt) }
@@ -832,24 +399,6 @@ export function createRadioAudioEngine({
           attempt.intent = 'recovery'
           logger.warn('HLS 播放发生致命错误。', data)
 
-          if (canDirectPlay && directStreamMode.value === 'direct' && !triedDirect) {
-            triedDirect = true
-            directStreamMode.value = 'proxy'
-            destroyAttemptHls(attempt)
-            startHlsWithFallback()
-            return
-          }
-          if (directUrl) {
-            destroyAttemptHls(attempt)
-            directStreamMode.value = 'direct'
-            if (setMainAudioSrc(attempt, directUrl)) playAudioSafely(attempt)
-            return
-          }
-          if (fallbackUrls.length > 1 && fallbackStationId === stationId) {
-            destroyAttemptHls(attempt)
-            tryFallbackUrls(attempt)
-            return
-          }
           playerStore.setPlaybackError('HLS 播放发生错误，请稍后重试。')
           playerStore.togglePlay(false, { intent: 'passive' })
         }
@@ -860,11 +409,6 @@ export function createRadioAudioEngine({
           hls.off?.(Hls.Events.ERROR, onHlsError)
         })
 
-        if (canDirectPlay) {
-          fetchAllUrls(stationId, attempt).then((urls) => {
-            if (isAttemptActive(attempt) && fallbackStationId === stationId) fallbackUrls = urls
-          })
-        }
       }
 
       startHlsWithFallback()
@@ -872,35 +416,11 @@ export function createRadioAudioEngine({
     }
 
     if (audioRef.value.canPlayType('application/vnd.apple.mpegurl')) {
-      const canDirectPlay = playerStore.stationMap[stationId]?.directPlay
-
       async function startSafariHls() {
         if (!isAttemptActive(attempt)) return
-        let hlsUrl = playlistUrl
-
-        if (canDirectPlay) {
-          try {
-            const stName = playerStore.stationMap[stationId]?.name || ''
-            const ctrl = new AbortController()
-            const timer = setTimer(() => ctrl.abort(), 5000)
-            const removeCleanup = addAttemptCleanup(attempt, () => ctrl.abort())
-            try {
-              const res = await fetchImpl(`${API_BASE}/api/${stationId}/stream-url?name=${encodeURIComponent(stName)}`, { signal: ctrl.signal, credentials: apiCredentials })
-              if (!isAttemptActive(attempt)) return
-              if (res.ok) {
-                const { url } = await res.json()
-                if (!isAttemptActive(attempt)) return
-                if (url) hlsUrl = url
-              }
-            } finally {
-              clearTimer(timer)
-              removeCleanup()
-            }
-          } catch {}
-        }
         if (!isAttemptActive(attempt)) return
 
-        if (!setMainAudioSrc(attempt, hlsUrl)) return
+        if (!setMainAudioSrc(attempt, playlistUrl)) return
         const onLoaded = () => playAudioSafely(attempt)
         audioRef.value.addEventListener('loadedmetadata', onLoaded, { once: true })
         addAttemptCleanup(attempt, () => audioRef.value?.removeEventListener('loadedmetadata', onLoaded))
@@ -921,10 +441,6 @@ export function createRadioAudioEngine({
     invalidateActiveAttempt()
     destroyCurrentHls()
     resetAudioSource()
-    fallbackUrls = []
-    fallbackIndex = 0
-    fallbackStationId = ''
-    directProbeWinner = null
     directStreamMode.value = ''
     clearRadioMediaSession()
   }
@@ -957,17 +473,13 @@ export function createRadioAudioEngine({
 
   return {
     activeAttemptInfo,
-    fallbackToProxyStream,
     handleAudioError,
     invalidateActiveAttempt,
     loadStation,
     pauseCurrentAudio,
     playAudioSafely,
-    playUrl,
-    probeParallel,
     setVolume,
     stopRadioAttempt,
-    tryFallbackUrls,
     updateMediaSessionForCurrentSubtitle,
   }
 }

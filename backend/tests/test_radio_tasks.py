@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+import asyncio
 from types import SimpleNamespace
 
 from radio_tasks import (
@@ -13,6 +14,25 @@ from radio_tasks import (
 
 
 class RadioTasksTest(unittest.TestCase):
+    def test_reconciliation_lock_is_owned_by_each_automation_service(self):
+        async def check():
+            async def configs():
+                await asyncio.sleep(0.01)
+                return []
+
+            service = SimpleNamespace(
+                registry=SimpleNamespace(list_definitions=lambda: []),
+                repository=SimpleNamespace(list_configs=configs),
+            )
+            subsystem = SimpleNamespace(service=SimpleNamespace(_active={}))
+            await asyncio.gather(
+                reconcile_radio_automation_tasks(service, subsystem),
+                reconcile_radio_automation_tasks(service, subsystem),
+            )
+
+        asyncio.run(check())
+        asyncio.run(check())
+
     def test_definitions_use_shared_automation_and_distinct_refresh_contracts(self):
         subsystem = object()
         catalog = create_radio_task_definition("org.waveflow/yunting", RADIO_CATALOG_TASK_TYPE, subsystem)
@@ -27,6 +47,7 @@ class RadioTasksTest(unittest.TestCase):
     def test_active_radio_features_are_projected_without_inventing_programme_tasks(self):
         def instance(identity, features, owned=True):
             return SimpleNamespace(
+                state="HEALTHY_ACTIVE", health="healthy",
                 manifest=SimpleNamespace(
                     provider_contracts=(SimpleNamespace(contract="radio_provider", features=frozenset(features)),),
                     owned_schemes=((identity.rsplit("/", 1)[-1], "radio_provider"),) if owned else (),
@@ -46,6 +67,7 @@ class RadioTasksTest(unittest.TestCase):
     def test_reconcile_creates_only_declared_feature_tasks(self):
         def active_instance(identity, features):
             return SimpleNamespace(
+                state="HEALTHY_ACTIVE", health="healthy",
                 manifest=SimpleNamespace(
                     provider_contracts=(SimpleNamespace(contract="radio_provider", features=frozenset(features)),),
                     owned_schemes=((identity.rsplit("/", 1)[-1], "radio_provider"),),

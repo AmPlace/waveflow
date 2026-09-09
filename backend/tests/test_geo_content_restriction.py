@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-import json
 import os
 import sys
 import tempfile
@@ -47,19 +46,6 @@ class GeoContentRestrictionRemovalTest(unittest.TestCase):
         config = asyncio.run(self.main.get_config())
         self.assertNotIn("geoRestrict", config)
         self.assertNotIn("blockedRegions", config)
-
-    def test_static_content_is_returned_regardless_of_region_tags(self):
-        original = self.main.STATIC_STATIONS
-        self.main.STATIC_STATIONS = [
-            {"id": "tw", "name": "TW", "tags": ["TW"]},
-            {"id": "cn", "name": "CN", "tags": ["CN"]},
-            {"id": "hk", "name": "HK", "tags": ["HK"]},
-        ]
-        try:
-            body = asyncio.run(self.main.get_stations()).body
-        finally:
-            self.main.STATIC_STATIONS = original
-        self.assertEqual({item["id"] for item in json.loads(body)}, {"tw", "cn", "hk"})
 
     def test_geo_visibility_caller_is_removed(self):
         self.assertFalse(hasattr(self.main, "_is_geo_blocked"))

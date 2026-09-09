@@ -164,8 +164,8 @@ class RadioResolver:
     def __init__(self, *, runtime=None, clock=time.time):
         self.runtime = runtime
         self.clock = clock
-        self._descriptor_cache: dict[tuple[str, str, str], tuple[float, dict[str, Any]]] = {}
-        self._programme_cache: dict[tuple[str, str], tuple[float, dict[str, Any]]] = {}
+        self._descriptor_cache: dict[tuple[str, str, str], tuple[float, dict[str, Any], Any]] = {}
+        self._programme_cache: dict[tuple[str, str], tuple[float, dict[str, Any], Any]] = {}
         self._locks: dict[tuple[str, str, str], asyncio.Lock] = {}
         self._programme_locks: dict[tuple[str, str], asyncio.Lock] = {}
 
@@ -202,6 +202,22 @@ class RadioResolver:
             self._programme_locks[key] = lock
         return lock
 
+    def _active_owner(self, source: dict, expected=None):
+        if self.runtime is None:
+            raise PluginError("PLUGIN_UNAVAILABLE", "Radio Plugin runtime is unavailable", category="lifecycle")
+        provider_key = str(source.get("provider_key") or "").strip().lower()
+        instance = self.runtime.registry.route(provider_key)
+        if instance.manifest.identity != str(source.get("owner_identity") or ""):
+            raise PluginError("SCHEME_CONFLICT", "Radio source owner does not match the active Plugin", category="routing")
+        owned = {scheme for scheme, contract in instance.manifest.owned_schemes if contract == "radio_provider"}
+        if provider_key not in owned:
+            raise PluginError("SCHEME_CONFLICT", "Active Plugin does not own this Radio scheme", category="routing")
+        if expected is not None and (
+            instance is not expected[0] or getattr(instance, "process", None) is not expected[1]
+        ):
+            raise PluginError("PLUGIN_CANDIDATE_CONFLICT", "Radio Plugin changed during resolve", category="lifecycle")
+        return instance
+
     async def resolve_source(self, source_id: str, *, station_id: str = "") -> dict[str, Any]:
         self._prune_caches()
         source = await database.get_radio_station_source(
@@ -209,36 +225,23 @@ class RadioResolver:
         )
         if source is None or source.get("lifecycle_state") == "expired":
             raise PluginError("RESOURCE_NOT_FOUND", "Radio source is unavailable", category="routing")
-        owner = str(source.get("owner_identity") or "")
+        instance = self._active_owner(source)
+        owner = (instance, getattr(instance, "process", None))
         provider_key = str(source.get("provider_key") or "").strip().lower()
         revision = str(source.get("source_revision") or "")
         key = (RADIO_DOMAIN, str(source_id), revision)
         now = float(self.clock())
         cached = self._descriptor_cache.get(key)
-        if cached and cached[0] > now:
+        if cached and cached[0] > now and cached[2][0] is owner[0] and cached[2][1] is owner[1]:
             return copy.deepcopy(cached[1])
-        if self.runtime is None:
-            raise PluginError("PLUGIN_UNAVAILABLE", "Radio Plugin runtime is unavailable", category="lifecycle")
 
         async with self._lock_for(key):
+            self._active_owner(source, owner)
             now = float(self.clock())
             cached = self._descriptor_cache.get(key)
-            if cached and cached[0] > now:
+            if cached and cached[0] > now and cached[2][0] is owner[0] and cached[2][1] is owner[1]:
                 return copy.deepcopy(cached[1])
             try:
-                instance = self.runtime.registry.route(provider_key)
-                if instance.manifest.identity != owner:
-                    raise PluginError(
-                        "SCHEME_CONFLICT", "Radio source owner does not match the active Plugin", category="routing",
-                    )
-                owned = {
-                    scheme for scheme, contract in instance.manifest.owned_schemes
-                    if contract == "radio_provider"
-                }
-                if provider_key not in owned:
-                    raise PluginError(
-                        "SCHEME_CONFLICT", "Active Plugin does not own this Radio scheme", category="routing",
-                    )
                 reference = source.get("reference") or {}
                 station_ref = reference.get("station_ref") if isinstance(reference, dict) else None
                 if not isinstance(station_ref, dict):
@@ -260,6 +263,7 @@ class RadioResolver:
                     raise PluginError(
                         "PLUGIN_CANDIDATE_CONFLICT", "Radio source changed during resolve", category="routing",
                     )
+                self._active_owner(current, owner)
                 # Keep the Radio projection aligned with the existing TV
                 # descriptor bridge. Domain/source fields are additive routing
                 # context; transport and generic metadata use one validator.
@@ -276,12 +280,13 @@ class RadioResolver:
                     else RADIO_DESCRIPTOR_CACHE_DEFAULT_TTL_SECONDS if ttl is None else 0
                 )
                 expires_at = now + cache_ttl if cache_ttl else now
-                if cache_ttl:
-                    self._descriptor_cache[key] = (expires_at, copy.deepcopy(bridged))
                 await database.update_radio_source_health(
                     source_id, expected_source_revision=revision,
                     success=True, resolve_expires_at=expires_at,
                 )
+                self._active_owner(current, owner)
+                if cache_ttl:
+                    self._descriptor_cache[key] = (expires_at, copy.deepcopy(bridged), owner)
                 return bridged
             except asyncio.CancelledError:
                 raise
@@ -306,15 +311,17 @@ class RadioResolver:
         )
         if source is None or source.get("lifecycle_state") == "expired":
             raise PluginError("RESOURCE_NOT_FOUND", "Radio source is unavailable", category="routing")
-        owner = str(source.get("owner_identity") or "")
+        instance = self._active_owner(source)
+        owner = (instance, getattr(instance, "process", None))
         provider_key = str(source.get("provider_key") or "").strip().lower()
         revision = str(source.get("source_revision") or "")
         key = (str(source_id), revision)
         now = float(self.clock())
         cached = self._programme_cache.get(key)
-        if cached and cached[0] > now:
+        if cached and cached[0] > now and cached[2][0] is owner[0] and cached[2][1] is owner[1]:
             return copy.deepcopy(cached[1])
         durable = await database.get_radio_programme_snapshot(source_id, now_unix=now)
+        self._active_owner(source, owner)
         if durable and str(durable.get("source_revision") or "") == revision:
             result = {
                 "domain": RADIO_DOMAIN,
@@ -329,30 +336,16 @@ class RadioResolver:
                 "programmes": durable.get("programmes") or [],
                 "expires_at": durable.get("expires_at_unix"),
             }
-            self._programme_cache[key] = (float(durable["expires_at_unix"]), copy.deepcopy(result))
+            self._programme_cache[key] = (float(durable["expires_at_unix"]), copy.deepcopy(result), owner)
             return result
-        if self.runtime is None:
-            raise PluginError("PLUGIN_UNAVAILABLE", "Radio Plugin runtime is unavailable", category="lifecycle")
 
         async with self._programme_lock_for(key):
+            self._active_owner(source, owner)
             now = float(self.clock())
             cached = self._programme_cache.get(key)
-            if cached and cached[0] > now:
+            if cached and cached[0] > now and cached[2][0] is owner[0] and cached[2][1] is owner[1]:
                 return copy.deepcopy(cached[1])
             try:
-                instance = self.runtime.registry.route(provider_key)
-                if instance.manifest.identity != owner:
-                    raise PluginError(
-                        "SCHEME_CONFLICT", "Radio source owner does not match the active Plugin", category="routing",
-                    )
-                owned = {
-                    scheme for scheme, contract in instance.manifest.owned_schemes
-                    if contract == "radio_provider"
-                }
-                if provider_key not in owned:
-                    raise PluginError(
-                        "SCHEME_CONFLICT", "Active Plugin does not own this Radio scheme", category="routing",
-                    )
                 reference = source.get("reference") or {}
                 station_ref = reference.get("station_ref") if isinstance(reference, dict) else None
                 if not isinstance(station_ref, dict):
@@ -381,6 +374,7 @@ class RadioResolver:
                     raise PluginError(
                         "PLUGIN_CANDIDATE_CONFLICT", "Radio source changed during programme resolve", category="routing",
                     )
+                self._active_owner(current, owner)
                 item_expiries = [
                     int(item["expires_at"])
                     for item in snapshot.get("programmes", [])
@@ -391,6 +385,7 @@ class RadioResolver:
                 persisted = await database.upsert_radio_programme_snapshot(
                     current, snapshot, updated_at_unix=now, ttl_seconds=ttl,
                 )
+                self._active_owner(current, owner)
                 result = {
                     "domain": RADIO_DOMAIN,
                     "station_id": current.get("station_id"),
@@ -401,7 +396,7 @@ class RadioResolver:
                     "programmes": snapshot["programmes"],
                     "expires_at": persisted["expires_at_unix"],
                 }
-                self._programme_cache[key] = (float(persisted["expires_at_unix"]), copy.deepcopy(result))
+                self._programme_cache[key] = (float(persisted["expires_at_unix"]), copy.deepcopy(result), owner)
                 return result
             except asyncio.CancelledError:
                 raise

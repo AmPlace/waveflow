@@ -448,12 +448,22 @@ class PluginMarketService:
         self._activation_expectations: dict[str, str] = {}
         self._shutdown_event = asyncio.Event()
         self.destructive_guard: Callable[[str], Awaitable[None]] | None = None
+        self.lifecycle_changed: Callable[[str], Awaitable[None]] | None = None
         self.workspaces_root = self.store.root / "workspaces"
         self.workspaces_root.mkdir(parents=True, exist_ok=True)
 
     def lifecycle_lock(self, identity: str) -> LifecycleLock:
         """Return the process-wide lifecycle lock for one canonical Plugin."""
         return self._locks.setdefault(str(identity), LifecycleLock())
+
+    async def _notify_lifecycle_changed(self, identity: str) -> None:
+        if self.lifecycle_changed is None or self._shutdown_event.is_set():
+            return
+        task = self._track_critical(
+            asyncio.create_task(self.lifecycle_changed(identity), name=f"plugin-domain-reconcile:{identity}"),
+            operation="domain_reconciliation", identity=identity,
+        )
+        await self._await_critical(task)
 
     def preparation_lock(self, identity: str) -> asyncio.Lock:
         """Serialize filesystem preparation/removal without blocking lifecycle state changes."""
@@ -1045,6 +1055,7 @@ class PluginMarketService:
         self, identity: str, instance: PluginInstance,
     ) -> None:
         self._active[identity] = instance
+        await self._notify_lifecycle_changed(identity)
 
     async def _reconcile_committed_activation(
         self, identity: str, instance: PluginInstance | None, old: PluginInstance | None,
@@ -1122,6 +1133,7 @@ class PluginMarketService:
         if instance:
             await self.runtime.disable(instance)
         await db.set_plugin_enabled(row["publisher_id"], row["plugin_id"], False, lifecycle_state="disabled")
+        await self._notify_lifecycle_changed(identity)
         return self._public(await db.get_plugin_installation(row["publisher_id"], row["plugin_id"]))
 
     async def enable(self, identity: str) -> dict:
@@ -1134,6 +1146,7 @@ class PluginMarketService:
             raise PluginError("PLUGIN_QUARANTINED", "Plugin requires explicit recovery", category="lifecycle")
         if identity in self._active:
             if self.installed_artifact_valid(row):
+                await self._notify_lifecycle_changed(identity)
                 return self._public(row)
             instance = self._active.pop(identity)
 
@@ -1143,6 +1156,7 @@ class PluginMarketService:
                     lifecycle_state="unavailable", error="Installed artifact integrity check failed",
                 )
                 await self.runtime.disable(instance)
+                await self._notify_lifecycle_changed(identity)
 
             task = self._track_critical(
                 asyncio.create_task(
@@ -1239,6 +1253,7 @@ class PluginMarketService:
             raise
         self._active[identity] = instance
         await db.set_plugin_enabled(row["publisher_id"], row["plugin_id"], True, lifecycle_state="active")
+        await self._notify_lifecycle_changed(identity)
         return self._public(await db.get_plugin_installation(row["publisher_id"], row["plugin_id"]))
 
     async def recover_quarantine(self, identity: str) -> dict:
@@ -1254,6 +1269,7 @@ class PluginMarketService:
             self.runtime.registry.recover(instance)
         if not await db.recover_quarantined_plugin(row["publisher_id"], row["plugin_id"]):
             raise PluginError("PLUGIN_UNAVAILABLE", "Plugin quarantine state changed", category="persistence")
+        await self._notify_lifecycle_changed(identity)
         return self._public(await db.get_plugin_installation(row["publisher_id"], row["plugin_id"]))
 
     async def uninstall(self, identity: str) -> bool:
@@ -1282,6 +1298,7 @@ class PluginMarketService:
         await asyncio.to_thread(self.store.remove_plugin, row["publisher_id"], row["plugin_id"])
         await asyncio.to_thread(shutil.rmtree,
                                 self._working_directory(validate_manifest(json.loads(row["manifest_json"])), create=False), True)
+        await self._notify_lifecycle_changed(identity)
         return removed
 
     async def recover_enabled(self) -> list[dict[str, Any]]:
@@ -1377,6 +1394,7 @@ class PluginMarketService:
             row["publisher_id"], row["plugin_id"], True,
             lifecycle_state="unavailable", error=f"PERMISSION_APPROVAL_REQUIRED: {permission}",
         )
+        await self._notify_lifecycle_changed(identity)
         return await permission_projection(manifest)
 
     async def dependency_projection(self, requirements: Iterable[dict[str, Any]]) -> dict[str, Any]:

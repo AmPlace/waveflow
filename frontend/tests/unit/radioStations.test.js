@@ -5,9 +5,7 @@ import { execFileSync } from 'node:child_process'
 
 import {
   fetchRadioCatalog,
-  fetchStaticRadioCatalog,
   fetchRadioProgramme,
-  fetchRadioStations,
   mapRadioStationForTest,
   summarizeRadioCatalogState,
 } from '../../src/api/radioStations.js'
@@ -26,10 +24,9 @@ test('Desktop catalog and programme requests use the configured credentialed Cor
       calls.push({ url, credentials: options.credentials })
       return { ok: true, json: async () => [] }
     }
-    await api.fetchStaticRadioCatalog({ fetchImpl })
     await api.fetchRadioCatalog({ fetchImpl })
     await api.fetchRadioProgramme({ radioStationId: 'station', radioSourceId: 'source' }, { fetchImpl })
-    assert.equal(calls.length, 3)
+    assert.equal(calls.length, 2)
     for (const call of calls) {
       assert.equal(new URL(call.url).origin, 'http://127.0.0.1:8000')
       assert.equal(call.credentials, 'include')
@@ -62,7 +59,7 @@ test('Radio catalog maps explicit station/source identity without upstream URLs'
 
 test('Radio catalog fetch uses the bounded domain endpoint and preserves duplicate names', async () => {
   const calls = []
-  const stations = await fetchRadioStations({
+  const result = await fetchRadioCatalog({
     fetchImpl: async (url) => {
       calls.push(String(url))
       return {
@@ -76,7 +73,7 @@ test('Radio catalog fetch uses the bounded domain endpoint and preserves duplica
   })
 
   assert.deepEqual(calls, ['/api/radio/stations'])
-  assert.deepEqual(stations.map((station) => station.id), ['radio_a', 'radio_b'])
+  assert.deepEqual(result.stations.map((station) => station.id), ['radio_a', 'radio_b'])
 })
 
 test('Radio catalog keeps provider state separate from the station projection', async () => {
@@ -116,10 +113,10 @@ test('Radio catalog maps transport failures to an error without clearing compati
   })
   assert.deepEqual(result, { status: 'error', errorKind: 'http' })
 
-  const stations = await fetchRadioStations({
+  const failed = await fetchRadioCatalog({
     fetchImpl: async () => { throw new Error('network unavailable') },
   })
-  assert.equal(stations, null)
+  assert.deepEqual(failed, { status: 'error', errorKind: 'network' })
 })
 
 test('Radio catalog timeout is an error while external cancellation remains silent', async () => {
@@ -174,22 +171,11 @@ test('Radio metadata never guesses a type or region from name/group and preserve
   const missing = mapRadioStationForTest(raw)
   assert.equal(missing.radioType, '')
   assert.equal(missing.radioRegion, 'ZZ')
-  assert.equal(missing.radioGroup, '北京')
+  assert.equal('radioGroup' in missing, false)
   assert.deepEqual(missing.tags, ['ZZ','北京'])
   const custom = mapRadioStationForTest({...raw,metadata:{tag:'自定义类型'}})
   assert.equal(custom.radioType, '自定义类型')
   assert.equal(custom.tags.at(-1), '自定义类型')
-})
-
-test('static catalog participates in bounded loading and distinguishes failure from valid empty', async () => {
-  assert.deepEqual(await fetchStaticRadioCatalog({fetchImpl:async(url,options)=>{
-    assert.equal(url,'/api/stations')
-    assert.equal(options.credentials,'same-origin')
-    assert.ok(options.signal)
-    return {ok:true,json:async()=>[]}
-  }}),{status:'success',stations:[]})
-  assert.deepEqual(await fetchStaticRadioCatalog({fetchImpl:async()=>({ok:false})}),{status:'error',errorKind:'http'})
-  assert.deepEqual(await fetchStaticRadioCatalog({fetchImpl:async()=>({ok:true,json:async()=>({})})}),{status:'error',errorKind:'invalid_response'})
 })
 
 test('programme failure cleans its timeout and Core reads retain credential policy', async () => {

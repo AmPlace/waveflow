@@ -17,7 +17,6 @@ RADIO_CATALOG_INTERVAL_SECONDS = 2 * 60 * 60
 RADIO_PROGRAMME_INTERVAL_SECONDS = 10 * 60
 RADIO_MINIMUM_INTERVAL_SECONDS = 60
 RADIO_MAXIMUM_INTERVAL_SECONDS = 31 * 24 * 60 * 60
-RADIO_RECONCILIATION_LOCK = asyncio.Lock()
 
 
 def _task_id(identity: str, kind: str) -> str:
@@ -103,6 +102,9 @@ def _active_radio_features(service: AutomationService) -> dict[str, frozenset[st
         return {}
     result: dict[str, frozenset[str]] = {}
     for identity, instance in active():
+        state = getattr(instance, "state", "")
+        if getattr(state, "value", state) != "HEALTHY_ACTIVE" or getattr(instance, "health", "") != "healthy":
+            continue
         manifest = getattr(instance, "manifest", None)
         contracts = getattr(manifest, "provider_contracts", ())
         radio_contract = next(
@@ -127,10 +129,18 @@ def _active_radio_features(service: AutomationService) -> dict[str, frozenset[st
     return result
 
 
-async def reconcile_radio_automation_tasks(service: AutomationService, subsystem) -> dict:
+async def reconcile_radio_automation_tasks(
+    service: AutomationService, subsystem, *, retained_owner_identities: set[str] | None = None,
+) -> dict:
     """Project current healthy Radio Plugin identities into Automation."""
+    # Independent AutomationService lifetimes must not share an event-loop lock.
+    lock = getattr(service, "_radio_reconciliation_lock", None)
+    if lock is None:
+        lock = asyncio.Lock()
+        service._radio_reconciliation_lock = lock
+
     async def reconcile() -> dict:
-        async with RADIO_RECONCILIATION_LOCK:
+        async with lock:
             expected: dict[str, set[str]] = {}
             active_service = getattr(subsystem, "service", None)
             if active_service is not None:
@@ -160,9 +170,13 @@ async def reconcile_radio_automation_tasks(service: AutomationService, subsystem
             }
             removed = 0
             for task_id in sorted((registered | persisted) - expected_task_ids):
+                retain_config = (
+                    retained_owner_identities is None
+                    or _identity_from_task_id(task_id) in retained_owner_identities
+                )
                 if task_id in registered:
-                    await service.remove_definition(task_id, delete_config=True)
-                elif task_id in persisted:
+                    await service.remove_definition(task_id, delete_config=not retain_config)
+                elif task_id in persisted and not retain_config:
                     await service.repository.delete_config(task_id)
                 removed += 1
 

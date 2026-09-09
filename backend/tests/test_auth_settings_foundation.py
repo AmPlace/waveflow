@@ -295,7 +295,7 @@ class AuthSettingsFoundationTest(unittest.TestCase):
         os.environ["WAVEFLOW_ANONYMOUS_PLAYBACK"] = "0"
         client = self._client()
 
-        self.assertEqual(client.get("/api/stations").status_code, 401)
+        self.assertEqual(client.get("/api/radio/stations").status_code, 401)
         self.assertEqual(client.get("/api/iptv/channels").status_code, 401)
         self.assertEqual(client.get("/api/media/proxy/playlist/missing").status_code, 401)
         self.assertEqual(client.get("/api/admin/settings/security").status_code, 401)
