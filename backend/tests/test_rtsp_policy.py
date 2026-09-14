@@ -34,7 +34,7 @@ def _rtsp_channel(url: str = "rtsp://camera.local/live") -> dict:
 
 
 class RtspPolicyTest(unittest.IsolatedAsyncioTestCase):
-    async def test_smart_rtsp_disabled_does_not_create_session(self):
+    async def test_shared_rtsp_disabled_does_not_create_session(self):
         old_channels = main._get_aggregated_iptv_channels
         main._get_aggregated_iptv_channels = mock.AsyncMock(
             return_value=([_rtsp_channel()], [])
@@ -43,7 +43,7 @@ class RtspPolicyTest(unittest.IsolatedAsyncioTestCase):
             with mock.patch.object(main, "config_rtsp_proxy_enabled", return_value=False), \
                     mock.patch.object(main, "_ensure_rtsp_hls_session", new=mock.AsyncMock()) as ensure:
                 with self.assertRaises(HTTPException) as ctx:
-                    await main.iptv_smart_playlist("camera", None)
+                    await main.serve_rtsp_playlist_response(upstream_url="rtsp://camera.local/live")
                 self.assertEqual(ctx.exception.status_code, 503)
                 ensure.assert_not_awaited()
         finally:
@@ -62,7 +62,7 @@ class RtspPolicyTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(ctx.exception.status_code, 503)
             ensure.assert_not_awaited()
 
-    async def test_smart_and_handle_paths_share_final_rtsp_boundary(self):
+    async def test_shared_and_handle_paths_share_final_rtsp_boundary(self):
         playlist = Path("/tmp/waveflow-rtsp-policy-test.m3u8")
         old_sessions = main.RTSP_HLS_SESSIONS
         main.RTSP_HLS_SESSIONS = {}
@@ -77,7 +77,7 @@ class RtspPolicyTest(unittest.IsolatedAsyncioTestCase):
                     mock.patch.object(main, "_ensure_rtsp_hls_session", new=mock.AsyncMock(
                         return_value=("a" * 24, playlist)
                     )) as ensure:
-                await main.iptv_smart_playlist("camera", None)
+                await main.serve_rtsp_playlist_response(upstream_url="rtsp://camera.local/live")
 
                 handle = issue_handle(kind="rtsp", url="rtsp://camera.local/live")
                 with mock.patch.dict(sys.modules, {"main": main}):

@@ -228,8 +228,6 @@
             <div class="grid grid-cols-1 gap-2 text-xs text-neutral-600 dark:text-neutral-300 sm:grid-cols-2">
               <label class="flex items-center gap-2"><input v-model="exportOptions.healthyOnly" type="checkbox"
                   class="size-3.5 rounded accent-neutral-950 dark:accent-white" />只导出可用源</label>
-              <label class="flex items-center gap-2"><input v-model="exportOptions.includeRtsp" type="checkbox"
-                  class="size-3.5 rounded accent-neutral-950 dark:accent-white" />纯直连包含 RTSP</label>
               <label class="flex items-center gap-2"><input v-model="exportOptions.includeEpg" type="checkbox"
                   class="size-3.5 rounded accent-neutral-950 dark:accent-white" />附带 EPG ID</label>
               <label class="flex items-center gap-2"><input v-model="exportOptions.includeLogo" type="checkbox"
@@ -353,12 +351,12 @@ const dialogRef = ref(null)
 const advancedOpen = ref(false)
 const copiedMode = ref('')
 const copyError = ref('')
-const exportOptions = ref({ healthyOnly: true, includeRtsp: false, includeEpg: true, includeLogo: true, groups: '' })
+const exportOptions = ref({ healthyOnly: true, includeEpg: true, includeLogo: true, groups: '' })
 const exportModes = [
-  { id: 'hybrid', title: '混合', subtitle: '直链优先 + 代理备选', badge: '推荐' },
-  { id: 'smart', title: 'Smart', subtitle: '每频道一条智能链接', badge: 'Beta' },
+  { id: 'smart', title: 'Smart', subtitle: '每频道一条智能链接，自动选择直连或代理', badge: '推荐' },
+  { id: 'hybrid', title: '混合', subtitle: '每个源只输出直连或代理之一', badge: '兼容' },
   { id: 'proxy', title: '代理', subtitle: '所有频道使用代理', badge: '' },
-  { id: 'direct', title: '直链', subtitle: '所有频道使用直链', badge: '' },
+  { id: 'direct', title: '直链', subtitle: '只输出真正可直连的源', badge: '' },
 ]
 let testTimer = null
 
@@ -502,7 +500,6 @@ function buildSubscriptionUrl(mode) {
   const params = new URLSearchParams()
   params.set('mode', mode)
   params.set('healthy_only', exportOptions.value.healthyOnly ? '1' : '0')
-  params.set('include_rtsp', exportOptions.value.includeRtsp ? '1' : '0')
   params.set('include_epg', exportOptions.value.includeEpg ? '1' : '0')
   params.set('include_logo', exportOptions.value.includeLogo ? '1' : '0')
   const groups = exportOptions.value.groups.trim()

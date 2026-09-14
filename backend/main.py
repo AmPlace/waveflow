@@ -4290,6 +4290,24 @@ def _source_has_export_credentials(source: dict) -> bool:
             return True
     return False
 
+
+def _source_direct_safe(source: dict) -> bool:
+    """Return whether an external M3U client may receive the raw source URL."""
+    source_type = _source_type(source)
+    if source_type not in {"hls", "mpegts", "http_flv", "audio_http"}:
+        return False
+    if urlparse(str(source.get("url") or "")).scheme.lower() not in {"http", "https"}:
+        return False
+    if any(source.get(key) for key in (
+        "force_proxy", "requires_headers", "requires_proxy_declared", "proxy_required_hint",
+        "custom_ua", "referer", "adapter", "adapter_provider", "headers",
+        "credential_refs", "volatile_url", "requires_proxy", "hidden_upstream",
+    )):
+        return False
+    if source.get("direct_playable") is False:
+        return False
+    return not _source_has_export_credentials(source)
+
 def _request_public_base_url(request: Request) -> str:
     proto = request.headers.get("x-forwarded-proto") or request.url.scheme
     host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
@@ -4327,10 +4345,19 @@ def _iptv_proxy_url_for_source(source: dict, request: Request, *, access: object
     ``access`` 应为 ``MediaAccessContext``（仅在确认为 credential 时透传 token）。
     """
     base = _absolute_api_url(request, _iptv_proxy_path_for_source(source))
+    source_id = str(source.get('source_id') or source_id_for(source))
+    base += f"?source_id={quote(source_id, safe='')}"
     token = getattr(access, 'propagated_access_token', None) or ""
     if not token:
         return base
-    return f"{base}?access_token={quote(token, safe='')}"
+    return f"{base}&access_token={quote(token, safe='')}"
+
+
+def _iptv_smart_url_for_channel(channel: dict, request: Request, *, access: object | None = None) -> str:
+    path = f'/api/iptv/smart/{quote(str(channel["canonical_key"]), safe="")}.m3u8'
+    base = _absolute_api_url(request, path)
+    token = getattr(access, 'propagated_access_token', None) or ""
+    return f"{base}?access_token={quote(token, safe='')}" if token else base
 
 
 def _m3u_attrs_for_channel(channel: dict, include_epg: bool, include_logo: bool) -> str:
@@ -4394,45 +4421,23 @@ def _subscription_urls_for_channel(
 
     if mode == 'smart':
         if sources:
-            return [(_absolute_api_url(request, f'/api/iptv/smart/{quote(channel["canonical_key"], safe="")}.m3u8'), None)]
+            return [(_iptv_smart_url_for_channel(channel, request, access=access), None)]
         return []
 
     if mode == 'direct':
-        out: list[tuple[str, dict | None]] = []
-        for source in sources:
-            if _source_type(source) == 'adapter':
-                continue
-            if not include_rtsp and _source_type(source) == 'rtsp':
-                continue
-            # direct 模式下保留 referer/custom_ua 的源——它们靠 EXTVLCOPT 直连
-            if source.get('force_proxy') or source.get('proxy_required_hint') or _source_has_export_credentials(source):
-                out.append((_iptv_proxy_url_for_source(source, request, access=access), None))
-            else:
-                out.append((source['url'], source))
-        return out
+        return [(source['url'], None) for source in sources if _source_direct_safe(source)]
 
     if mode == 'proxy':
-        return [(_iptv_proxy_url_for_source(source, request, access=access), None) for source in sources]
+        return [
+            (_iptv_proxy_url_for_source({**source, 'canonical_key': channel['canonical_key']}, request, access=access), None)
+            for source in sources
+        ]
 
-    direct_sources = []
-    proxy_only_sources = []
-    for source in sources:
-        source_type = _source_type(source)
-        if (
-            source_type in {'adapter', 'rtsp'}
-            or source.get('force_proxy')
-            or source.get('proxy_required_hint')
-            or _source_has_export_credentials(source)
-        ):
-            proxy_only_sources.append(source)
-        else:
-            direct_sources.append(source)
-
-    out: list[tuple[str, dict | None]] = []
-    out.extend((source['url'], source) for source in direct_sources)
-    out.extend((_iptv_proxy_url_for_source(source, request, access=access), None) for source in direct_sources)
-    out.extend((_iptv_proxy_url_for_source(source, request, access=access), None) for source in proxy_only_sources)
-    return out
+    return [
+        (source['url'], None) if _source_direct_safe(source)
+        else (_iptv_proxy_url_for_source({**source, 'canonical_key': channel['canonical_key']}, request, access=access), None)
+        for source in sources
+    ]
 
 
 @app.get("/api/iptv/subscription.m3u")
@@ -4446,7 +4451,7 @@ async def export_iptv_subscription(
     groups: str = '',
     access: object = Depends(resolve_media_access),
 ):
-    mode = (mode or 'hybrid').strip().lower()
+    mode = (mode or 'smart').strip().lower()
     if mode not in IPTV_SUBSCRIPTION_MODES:
         raise HTTPException(status_code=400, detail="无效导出模式")
 
@@ -4484,8 +4489,12 @@ async def export_iptv_subscription(
     )
 
 
-@app.get("/api/iptv/smart/{canonical_key}.m3u8", dependencies=[Depends(require_media_access)])
-async def iptv_smart_playlist(canonical_key: str, request: Request):
+@app.get("/api/iptv/smart/{canonical_key}.m3u8")
+async def iptv_smart_playlist(
+    canonical_key: str,
+    request: Request,
+    access=Depends(resolve_media_access),
+):
     channels, _groups = await _get_aggregated_iptv_channels()
     channel = next((ch for ch in channels if ch.get('canonical_key') == canonical_key), None)
     if not channel:
@@ -4500,22 +4509,16 @@ async def iptv_smart_playlist(canonical_key: str, request: Request):
         # 把 canonical_key 注入 source dict，让 _iptv_proxy_path_for_source 能匹配
         source_with_key = {**source, "canonical_key": canonical_key}
         try:
-            if source_type == 'rtsp':
-                playback_options = resolve_rtsp_playback_options(source)
-                return await serve_rtsp_playlist_response(
-                    upstream_url=source['url'],
-                    custom_ua=source.get('custom_ua', ''),
-                    playback_options=playback_options,
-                )
-            if source_type in {'mpegts', 'http_flv'}:
-                return RedirectResponse(_iptv_proxy_url_for_source(source_with_key, request), status_code=307)
-            if source_type == 'adapter':
-                return RedirectResponse(_iptv_proxy_url_for_source(source_with_key, request), status_code=307)
-            # HLS: 直接通过 channel 入口渲染
+            if _source_direct_safe(source):
+                await assert_safe_target_url(source['url'], allowed_schemes={"http", "https"})
+                return RedirectResponse(source['url'], status_code=307)
+            # Proxy fallback is deliberately opaque to the external client.
             return RedirectResponse(
-                f"/api/media/channel/{quote(canonical_key, safe='')}/playlist.m3u8",
+                _iptv_proxy_url_for_source(source_with_key, request, access=access),
                 status_code=307,
             )
+        except UnsafeTargetError:
+            continue
         except HTTPException:
             continue
 

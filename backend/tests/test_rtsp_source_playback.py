@@ -153,6 +153,8 @@ class RtspSignedHandleTest(unittest.TestCase):
 
 class RtspRoutePropagationTest(unittest.IsolatedAsyncioTestCase):
     async def test_formal_source_signs_timestamp_mode(self):
+        import main as current_main
+
         source = {
             "id": 1,
             "subscription_id": 2,
@@ -160,7 +162,7 @@ class RtspRoutePropagationTest(unittest.IsolatedAsyncioTestCase):
             "source_type": "rtsp",
             "rtsp_timestamp_mode": "pts_from_dts",
         }
-        with mock.patch.object(main, "config_rtsp_proxy_enabled", return_value=True):
+        with mock.patch.object(current_main, "config_rtsp_proxy_enabled", return_value=True):
             response = await media_proxy._serve_iptv_source_playlist(
                 source,
                 "camera",
@@ -194,13 +196,15 @@ class RtspRoutePropagationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(options.video_mode, RtspVideoMode.COPY)
         self.assertEqual(options.timestamp_mode, RtspTimestampMode.PTS_FROM_DTS)
 
-    async def test_smart_uses_source_playback_resolver(self):
+    async def test_smart_rtsp_redirect_preserves_source_and_credential(self):
+        from tests.test_subscription_export import _request
         source = {
             "url": "rtsp://camera.example/live",
             "source_type": "rtsp",
             "enabled": True,
             "is_working": 1,
             "rtsp_timestamp_mode": "pts_from_dts",
+            "source_id": "camera-source",
         }
         channel = {"canonical_key": "camera", "urls": [source]}
         with mock.patch.object(
@@ -212,9 +216,13 @@ class RtspRoutePropagationTest(unittest.IsolatedAsyncioTestCase):
             "serve_rtsp_playlist_response",
             new=mock.AsyncMock(return_value=SimpleNamespace(status_code=200)),
         ) as serve:
-            await main.iptv_smart_playlist("camera", None)
-        options = serve.await_args.kwargs["playback_options"]
-        self.assertEqual(options.timestamp_mode, RtspTimestampMode.PTS_FROM_DTS)
+            response = await main.iptv_smart_playlist(
+                "camera", _request(), MediaAccessContext(source="credential", propagated_access_token="fixture"),
+            )
+        serve.assert_not_awaited()
+        self.assertEqual(response.status_code, 307)
+        self.assertIn("source_id=camera-source", response.headers["location"])
+        self.assertIn("access_token=fixture", response.headers["location"])
 
 
 if __name__ == "__main__":
