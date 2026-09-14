@@ -267,6 +267,8 @@ async def _validate_handle_url_or_403(handle_url: str, *, allowed_schemes: set[s
 
 
 def _safe_decode(handle: str, *, expected_kind: str) -> "decoded":
+    if expected_kind == "chunk" and handle.endswith(".ts"):
+        handle = handle[:-3]
     try:
         return decode_for_kind(handle, expected_kind)
     except HandleSignatureError as exc:

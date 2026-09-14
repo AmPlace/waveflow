@@ -290,7 +290,8 @@ class MediaRedirectSecurityTest(IsolatedAsyncioTestCase):
             line for line in rewritten.splitlines()
             if line.startswith("/api/media/proxy/chunk/")
         )
-        payload = decode_for_kind(proxy_path.rsplit("/", 1)[-1].split("?", 1)[0], "chunk")
+        token = proxy_path.rsplit("/", 1)[-1].split("?", 1)[0].removesuffix(".ts")
+        payload = decode_for_kind(token, "chunk")
         self.assertEqual(payload.url, "https://cdn.example/live/seg.ts")
         self.assertIn("?wf_seq=0", proxy_path)
 

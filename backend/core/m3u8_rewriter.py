@@ -95,7 +95,11 @@ def _make_handle_url(
         src_id=ctx.src_id,
         compat=ctx.rtsp_compat if kind == "rtsp" else 0,
     )
-    proxy_url = f"{ctx.proxy_path_prefix}/{kind}/{handle}{_qs_token(ctx.propagated_access_token)}"
+    # Keep signed payloads opaque while giving strict external HLS clients a
+    # recognizable media suffix for chunk URLs. The proxy route strips this
+    # presentation suffix before verifying the handle.
+    handle_suffix = ".ts" if kind == "chunk" else ""
+    proxy_url = f"{ctx.proxy_path_prefix}/{kind}/{handle}{handle_suffix}{_qs_token(ctx.propagated_access_token)}"
     if internal_seq is not None and internal_seq >= 0:
         separator = "&" if "?" in proxy_url else "?"
         proxy_url = f"{proxy_url}{separator}wf_seq={internal_seq}"

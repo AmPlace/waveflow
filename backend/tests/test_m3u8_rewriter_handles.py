@@ -63,6 +63,8 @@ seg-100.ts?edge=1
         prefix = f"/api/media/proxy/{kind}/"
         self.assertTrue(uri.startswith(prefix), uri)
         handle = uri[len(prefix):].split("?", 1)[0]
+        if kind == "chunk" and handle.endswith(".ts"):
+            handle = handle[:-3]
         return decode_for_kind(handle, kind)
 
     def test_extensionless_master_variant_uses_playlist_handle(self):

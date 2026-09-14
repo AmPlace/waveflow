@@ -135,6 +135,7 @@ class IntegrationTestBase(unittest.IsolatedAsyncioTestCase):
     async def _decode_handle(self, path: str) -> dict:
         """解码一个 /api/media/proxy/chunk/xxx 的 handle payload。"""
         token = path.rsplit("/", 1)[-1].split("?")[0]
+        token = token.removesuffix(".ts")
         body, _, _sig = token.partition(".")
         pad = (-len(body)) % 4
         data = base64.urlsafe_b64decode(body + ("=" * pad))
