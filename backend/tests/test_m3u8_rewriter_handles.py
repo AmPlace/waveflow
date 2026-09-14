@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import re
 import os
 import sys
@@ -15,13 +16,22 @@ for mod in list(sys.modules):
     if mod in ("security.secrets", "security.proxy_handles", "core.m3u8_rewriter"):
         del sys.modules[mod]
 
-from core.m3u8_rewriter import RewriteContext, rewrite_m3u8
 from infrastructure.http_client import request_with_safe_redirects, stream_with_safe_redirects
-from security.proxy_handles import clear_handle_cache_for_tests, decode_for_kind
 
 
 class M3u8RewriterHandleTest(unittest.TestCase):
     def setUp(self):
+        # Other suites intentionally reload the security modules with isolated
+        # secrets. Keep the issuer and decoder from the same module generation.
+        global RewriteContext, rewrite_m3u8, clear_handle_cache_for_tests, decode_for_kind
+        for name in ("core.m3u8_rewriter", "security.proxy_handles", "security.secrets"):
+            sys.modules.pop(name, None)
+        proxy_handles = importlib.import_module("security.proxy_handles")
+        rewriter = importlib.import_module("core.m3u8_rewriter")
+        RewriteContext = rewriter.RewriteContext
+        rewrite_m3u8 = rewriter.rewrite_m3u8
+        clear_handle_cache_for_tests = proxy_handles.clear_handle_cache_for_tests
+        decode_for_kind = proxy_handles.decode_for_kind
         clear_handle_cache_for_tests()
 
     def test_same_upstream_uris_rewrite_to_stable_proxy_handles(self):

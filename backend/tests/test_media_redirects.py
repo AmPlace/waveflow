@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import importlib
+import sys
 import unittest
 from unittest import IsolatedAsyncioTestCase, mock
 
@@ -8,14 +10,21 @@ import httpx
 
 os.environ.setdefault("WAVEFLOW_PROXY_HANDLE_SECRET", "media-redirect-test-secret-32bytes")
 
-from core.m3u8_rewriter import RewriteContext, rewrite_m3u8
 from infrastructure import http_client as media_http
-from security.proxy_handles import clear_handle_cache_for_tests, decode_for_kind
 from ssrf_guard import UnsafeTargetError
 
 
 class MediaRedirectSecurityTest(IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        global RewriteContext, rewrite_m3u8, clear_handle_cache_for_tests, decode_for_kind
+        for name in ("core.m3u8_rewriter", "security.proxy_handles", "security.secrets"):
+            sys.modules.pop(name, None)
+        proxy_handles = importlib.import_module("security.proxy_handles")
+        rewriter = importlib.import_module("core.m3u8_rewriter")
+        RewriteContext = rewriter.RewriteContext
+        rewrite_m3u8 = rewriter.rewrite_m3u8
+        clear_handle_cache_for_tests = proxy_handles.clear_handle_cache_for_tests
+        decode_for_kind = proxy_handles.decode_for_kind
         clear_handle_cache_for_tests()
 
     async def _request(self, handler, *, headers=None, max_redirects=5, omit_headers=None):

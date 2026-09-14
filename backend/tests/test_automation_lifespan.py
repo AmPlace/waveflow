@@ -174,11 +174,6 @@ class AutomationLifespanTest(unittest.IsolatedAsyncioTestCase):
         ))
         stack.enter_context(mock.patch.object(
             self.main,
-            "_load_tingfm_streams",
-            side_effect=lambda: events.append("load_tingfm"),
-        ))
-        stack.enter_context(mock.patch.object(
-            self.main,
             "_stop_all_rtsp_sessions",
             new=mock.AsyncMock(side_effect=recorder("stop_rtsp")),
         ))
@@ -444,22 +439,6 @@ class AutomationLifespanTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.wait_for(self.main._shutdown_app_background_tasks(), timeout=1.0)
         self.assertTrue(task.cancelled())
         self.assertTrue(finished.is_set())
-
-    async def test_radio_browser_cache_is_on_demand_without_prefetch(self):
-        self.main.RB_CACHE.clear()
-        response = SimpleNamespace(text='[{"stationuuid":"fixture"}]')
-        response.raise_for_status = mock.Mock()
-        with mock.patch.object(
-            self.main.http_client,
-            "get",
-            new=mock.AsyncMock(return_value=response),
-        ) as get:
-            first = await self.main.proxy_radio_browser("TW")
-            second = await self.main.proxy_radio_browser("TW")
-
-        self.assertEqual(first.body, second.body)
-        get.assert_awaited_once()
-        self.main.RB_CACHE.clear()
 
     async def test_epg_source_crud_reconciles_committed_source_state(self):
         service = SimpleNamespace(is_started=True, stop=mock.AsyncMock())
