@@ -540,10 +540,111 @@
         "Provider"
       ],
       "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official Yunting Radio Provider.",
+      "name": "Yunting Radio Provider Plugin",
+      "plugin_id": "yunting",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/yunting",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供云听电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "yunting"],
+      "providers": ["Yunting"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official MyRadio Radio Provider.",
+      "name": "MyRadio Provider Plugin",
+      "plugin_id": "myradio",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/myradio",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供 MyRadio 电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "myradio"],
+      "providers": ["MyRadio"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official HitFM Radio Provider.",
+      "name": "HitFM Provider Plugin",
+      "plugin_id": "hitfm",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/hitfm",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供 HitFM 电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "hitfm"],
+      "providers": ["HitFM"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official HK/SG Radio Provider.",
+      "name": "HK/SG Radio Provider Plugin",
+      "plugin_id": "hk-sg-radio",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/hk_sg_radio",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供香港和新加坡电台目录及播放地址。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "HK", "SG", "Static Catalog"],
+      "regions": ["HK", "SG"],
+      "providers": ["RTHK", "Singapore Radio"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official RadioBrowser directory Provider.",
+      "name": "RadioBrowser Provider Plugin",
+      "plugin_id": "radiobrowser",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/radiobrowser",
+      "display": {
+        "subtitle": "Radio Directory Provider Plugin",
+        "summary": "为 WaveFlow 提供 RadioBrowser 国家筛选、搜索和分页目录。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Directory", "RadioBrowser"],
+      "providers": ["RadioBrowser"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
     }
   ],
   "publisher_id": "org.waveflow",
-  "release_version": "1.7.0",
+  "release_version": "1.8.0",
   "schema_version": 1,
-  "updated_at": "2026-08-12T00:00:00Z"
+  "updated_at": "2026-09-14T00:00:00Z"
 }

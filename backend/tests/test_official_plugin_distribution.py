@@ -11,6 +11,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -69,6 +70,40 @@ def _tree(root: Path) -> dict[str, bytes]:
 
 
 class OfficialReleaseBuildTest(unittest.TestCase):
+    def test_radio_release_plan_and_resource_backed_artifact(self):
+        from build_official_plugins import build_release
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key = Ed25519PrivateKey.generate()
+            key_path = root / "fixture-release-key.pem"
+            key_path.write_bytes(key.private_bytes(
+                serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption(),
+            ))
+            public = base64.b64encode(key.public_key().public_bytes(
+                serialization.Encoding.Raw, serialization.PublicFormat.Raw,
+            )).decode()
+            trust = root / "fixture-trust.json"
+            trust.write_text(json.dumps({
+                "schema_version": 1,
+                "publishers": [{"publisher_id": "org.waveflow", "keys": [{
+                    "key_id": "fixture-release-key", "public_key": public, "enabled": True,
+                }]}],
+            }))
+            build_release(
+                signing_key=key_path, key_id="fixture-release-key",
+                output=root / "release", trust_path=trust,
+            )
+            market = json.loads((root / "release" / "market.json").read_text())
+            radio_ids = {
+                item["plugin_manifest"]["plugin_id"]
+                for item in market["packages"]
+                if item["plugin_manifest"]["provider_contracts"][0]["contract"] == "radio_provider"
+            }
+            self.assertEqual(radio_ids, {"yunting", "myradio", "hitfm", "hk-sg-radio", "radiobrowser"})
+            with zipfile.ZipFile(root / "release" / "payloads" / "hk-sg-radio-1.0.0.pyz") as archive:
+                self.assertIn("stations.json", archive.namelist())
+
     def test_production_anchor_and_committed_packages_verify_without_private_material(self):
         from official_plugin_distribution import (
             OFFICIAL_DISTRIBUTION_ROOT, load_bundled_official_market, load_official_trust_rows,

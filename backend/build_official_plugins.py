@@ -90,6 +90,25 @@ def _dependency_sources(item: dict[str, Any], manifest: Any, staging: Path, plug
     return references
 
 
+def _copy_plugin_resources(source: Path, project: Path, entrypoint: str) -> None:
+    """Copy non-build Plugin resources into the isolated build project."""
+    excluded_files = {
+        "manifest.json", "dependency-lock.json", "requirements.in", "requirements.txt",
+        "README", "README.md", "README.rst", "README.txt",
+    }
+    excluded_dirs = {".git", "__pycache__", ".pytest_cache", "dist"}
+    entrypoint_path = (source / entrypoint).resolve()
+    for path in sorted(source.rglob("*")):
+        if not path.is_file() or path.resolve() == entrypoint_path or path.name in excluded_files:
+            continue
+        relative = path.relative_to(source)
+        if any(part in excluded_dirs for part in relative.parts) or path.name.startswith("."):
+            continue
+        target = project / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
+
+
 def _private_key(path: Path) -> Ed25519PrivateKey:
     resolved = path.expanduser().resolve(strict=True)
     if resolved.is_relative_to(REPOSITORY_ROOT):
@@ -147,6 +166,7 @@ def build_release(
             entrypoint = str(manifest.artifacts[0]["entrypoint"])
             shutil.copyfile(manifest_source, project / "manifest.json")
             shutil.copyfile(source / entrypoint, project / entrypoint)
+            _copy_plugin_resources(source, project, entrypoint)
             validate_project(project)
 
             artifact_name = f"{plugin_id}-{manifest.version}.pyz"
