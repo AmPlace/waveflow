@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import uuid
+import re
 from abc import ABC, abstractmethod
 from typing import Any, BinaryIO
 
@@ -66,7 +67,7 @@ class PluginApplication:
         self._output: BinaryIO = sys.stdout.buffer
 
     def register_tv(self, scheme: str, provider: TVProvider) -> "PluginApplication":
-        self._tv[scheme] = provider
+        self._register_scheme(self._tv, self._radio, scheme, provider, "TV")
         return self
 
     def register_tv_visual(self, scheme: str, provider: VisualMetadataProvider) -> "PluginApplication":
@@ -74,8 +75,18 @@ class PluginApplication:
         return self
 
     def register_radio(self, scheme: str, provider: RadioProvider) -> "PluginApplication":
-        self._radio[scheme] = provider
+        self._register_scheme(self._radio, self._tv, scheme, provider, "Radio")
         return self
+
+    @staticmethod
+    def _register_scheme(target: dict[str, Any], other: dict[str, Any], scheme: str,
+                         provider: Any, label: str) -> None:
+        normalized = str(scheme or "").strip().lower()
+        if not re.fullmatch(r"[a-z][a-z0-9+.-]{1,31}", normalized):
+            raise ValueError(f"{label} provider scheme is invalid")
+        if normalized in target or normalized in other:
+            raise ValueError(f"Provider scheme is registered twice: {normalized}")
+        target[normalized] = provider
 
     def register_channel_catalog(self, provider: ChannelCatalogProvider) -> "PluginApplication":
         self._channel_catalog = provider

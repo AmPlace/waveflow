@@ -64,6 +64,20 @@ PluginApplication(identity=identity, version=version, permissions=["network"]).r
 
 
 class PluginSDKCLITest(unittest.IsolatedAsyncioTestCase):
+    def test_application_rejects_invalid_and_duplicate_provider_schemes(self):
+        from waveflow_plugin_sdk import PluginApplication, TVProvider, StreamDescriptor
+
+        class Provider(TVProvider):
+            def resolve_stream(self, reference, context):
+                return StreamDescriptor.hls("https://example.invalid/live.m3u8")
+
+        app = PluginApplication(identity="org.example/sdk", version="1.0.0")
+        app.register_tv("Demo+1", Provider())
+        with self.assertRaises(ValueError):
+            app.register_tv("demo+1", Provider())
+        with self.assertRaises(ValueError):
+            app.register_radio("bad scheme", Provider())
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
