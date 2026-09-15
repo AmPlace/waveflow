@@ -581,8 +581,10 @@ waveflow-plugin test dist/manifest.json
 waveflow-plugin sign dist/manifest.json --key <ed25519.pem> --key-id <key-id>
 ```
 
-Then enable Developer Mode in WaveFlow and install `dist/` from
-Settings → Plugins → Developer install.
+To try it in WaveFlow, open Settings → Plugins → 开发者选项, enable
+Developer Mode, then paste the absolute path to dist/manifest.json into
+安装本地 Plugin. That entry does not upload files — use a path the WaveFlow
+server can read (a container path on NAS/Docker, a local path on desktop).
 
 ## Dependencies
 
