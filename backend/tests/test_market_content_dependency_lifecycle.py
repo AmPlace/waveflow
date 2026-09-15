@@ -407,6 +407,26 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(await self.service.uninstall(IDENTITY))
 
+    async def test_delisted_dependent_content_package_can_still_be_removed(self):
+        """The refusal guard must not become a dead end.
+
+        A dependent Content Package can disappear from the Market while its
+        install row persists.  Removal must still work, after which the Plugin
+        uninstall proceeds without force.
+        """
+        await self._install_plugin("1.0.0")
+        await self._import_canary("1.0.0")
+
+        self._stop_serving()
+        self.market._market_cache["packages"] = []
+        self.assertEqual(
+            (await self.service.reverse_dependency_projection(IDENTITY))["dependents"], [self.content_id],
+        )
+
+        self.assertTrue((await self.market.uninstall_package(self.content_id))["uninstalled"])
+        self.assertIsNone(await self.db.get_market_install(self.content_id))
+        self.assertTrue(await self.service.uninstall(IDENTITY))
+
     # ── identity contract ───────────────────────────────────────────────────
 
     async def test_dependency_identity_must_match_the_installed_manifest(self):
