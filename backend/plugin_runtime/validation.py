@@ -426,6 +426,11 @@ def validate_stream_descriptor(value: Any) -> dict[str, Any]:
     refs = value["credential_refs"]
     if not isinstance(refs, list) or any(not isinstance(v, str) or not v for v in refs):
         raise invalid_response("Invalid credential references")
+    if refs:
+        # V1 has no Core-owned credential store or descriptor-to-media
+        # injection path. Accepting these references would make a Plugin look
+        # valid while silently dropping its credentials at playback time.
+        raise invalid_response("Credential references are not supported in SDK V1")
     ttl = value["ttl_seconds"]
     if ttl is not None and (not isinstance(ttl, int) or isinstance(ttl, bool) or ttl < 0):
         raise invalid_response("Invalid stream TTL")

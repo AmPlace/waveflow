@@ -173,6 +173,14 @@ class ValidationPermissionRegistryTest(unittest.TestCase):
             validate_stream_descriptor(bad)
         self.assertEqual(raised.exception.code, "INVALID_PLUGIN_RESPONSE")
 
+    def test_credential_refs_fail_closed_until_core_injection_exists(self):
+        value = descriptor()
+        value["credential_refs"] = ["media.primary"]
+        with self.assertRaises(PluginError) as raised:
+            validate_stream_descriptor(value)
+        self.assertEqual(raised.exception.code, "INVALID_PLUGIN_RESPONSE")
+        self.assertIn("not supported", raised.exception.message)
+
     def test_descriptor_metadata_is_bounded_json_data(self):
         valid = {"identity": {"channel_id": "channel-1", "revision": 2}, "live": True,
                  "values": [None, 1, 1.5, "safe"]}

@@ -273,6 +273,23 @@ class PluginRuntimeProcessTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual({key: diagnostics[key] for key in ("secret", "path")},
                              {"secret": "", "path": "/usr/bin"})
 
+    def test_plugin_stderr_redaction_removes_header_values_and_url_credentials(self):
+        from security.redact import redact_text
+
+        raw = (
+            "GET https://api.example/live.m3u8?access_token=token-value&x=1 "
+            "https://api.example/token/opaque-token-value-123456789012345678901234567890 "
+            "Authorization: Bearer auth-value Cookie: sid=cookie-value "
+            "secret=secret-value"
+        )
+        safe = redact_text(raw)
+        for secret in (
+            "token-value", "opaque-token-value-123456789012345678901234567890",
+            "auth-value", "cookie-value", "secret-value",
+        ):
+            self.assertNotIn(secret, safe)
+        self.assertIn("api.example", safe)
+
     async def test_metadata_survives_ipc_bridge_and_restart_without_authority(self):
         from provider_resolver import ProviderResolver
 

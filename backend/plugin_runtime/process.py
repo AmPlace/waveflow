@@ -11,6 +11,7 @@ from typing import Any
 
 from .errors import PluginError, invalid_response
 from .protocol import LEGACY_PROTOCOL_VERSION, PROTOCOL_VERSION, SUPPORTED_PROTOCOL_VERSIONS, encode_frame, read_frame
+from security.redact import redact_text
 
 
 logger = logging.getLogger("waveflow.plugin_runtime")
@@ -314,7 +315,7 @@ class PluginProcess:
             if not line:
                 return
             text = line.decode("utf-8", "replace").strip()
-            sanitized = text[:500].replace("Authorization", "[redacted-header]").replace("Cookie", "[redacted-header]")
+            sanitized = redact_text(text, limit=500)
             self.stderr_lines.append(sanitized)
             self.stderr_lines[:] = self.stderr_lines[-100:]
 
