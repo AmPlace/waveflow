@@ -253,17 +253,23 @@ class PluginApplication:
         except PluginError as exc:
             self._provider_response(request, error=exc)
         except Exception:
-            # The failure is reported through the contract with a generic
-            # message; the real cause goes to stderr only.  Plugin stderr is
-            # captured, bounded and sanitized by Core, is never part of
-            # ``as_contract``, and is surfaced solely by the SDK ``test``
-            # harness and the developer-local install log.  A swallowed
-            # traceback is why a missing packaged resource used to look like an
-            # opaque upstream failure.
+            # An exception that is not a ``PluginError`` is a defect in the
+            # Plugin, not a transient upstream condition: retrying the same
+            # request can only fail the same way.  It is reported as a
+            # non-retryable ``PLUGIN_CRASHED`` so Core stops probing instead of
+            # burning retries on a deterministic failure.  A Plugin that really
+            # hit a transient condition must say so explicitly by raising one of
+            # the retryable SDK errors (``UpstreamFailure``, ``TemporaryFailure``,
+            # ``RateLimited``, ``NotLive``).
+            #
+            # The message stays generic; the real cause goes to stderr only.
+            # Plugin stderr is captured, bounded and sanitized by Core, is never
+            # part of ``as_contract``, and is surfaced solely by the SDK ``test``
+            # harness and the developer-local install log.
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
             self._provider_response(request, error=PluginError(
-                "TEMPORARY_UPSTREAM_FAILURE", "Provider handler failed", retryable=True,
+                "PLUGIN_CRASHED", "Provider handler failed", retryable=False, category="provider",
             ))
         finally:
             with self._active_lock:

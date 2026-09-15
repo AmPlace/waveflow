@@ -347,6 +347,79 @@ class ProviderContractTest(unittest.TestCase):
                 self.assertEqual(caught.exception.code, "RESOURCE_NOT_FOUND")
 
 
+class ProviderFailureContractTest(unittest.TestCase):
+    """How provider failures are reported, and who decides retryability."""
+
+    def _resolve(self, exc: Exception) -> dict:
+        class Provider(TVProvider):
+            def resolve_stream(self, reference, context):
+                raise exc
+
+        app = PluginApplication(identity="org.waveflow/fixture", version="1.0.0")
+        app.register_tv("fixture", Provider())
+        [response] = _drive(app, "tv.resolve_stream",
+                            {"scheme": "fixture", "resource_id": "1"})
+        self.assertEqual(response["status"], "error")
+        return response["error"]
+
+    def test_uncaught_exception_is_a_non_retryable_plugin_defect(self):
+        error = self._resolve(RuntimeError("fixture-secret-must-not-cross-ipc"))
+        self.assertEqual((error["code"], error["retryable"]), ("PLUGIN_CRASHED", False))
+        self.assertNotIn("fixture-secret", error["message"])
+
+    def test_transient_failures_must_be_declared_explicitly(self):
+        for exc, code in (
+            (UpstreamFailure("upstream blipped"), "TEMPORARY_UPSTREAM_FAILURE"),
+            (TemporaryFailure("try again shortly"), "TEMPORARY_UPSTREAM_FAILURE"),
+            (RateLimited("slow down"), "RATE_LIMITED"),
+            (NotLive("off air"), "NOT_LIVE"),
+        ):
+            with self.subTest(code=code):
+                error = self._resolve(exc)
+                self.assertEqual((error["code"], error["retryable"]), (code, True))
+
+    def test_permanent_failures_stay_non_retryable(self):
+        error = self._resolve(InvalidResource("no such channel"))
+        self.assertEqual((error["code"], error["retryable"]), ("RESOURCE_NOT_FOUND", False))
+
+    def test_uncaught_defect_is_not_mistaken_for_an_upstream_failure(self):
+        # Guard the regression: this used to be reported as a *retryable*
+        # TEMPORARY_UPSTREAM_FAILURE, so Core retried deterministic Plugin bugs.
+        self.assertNotEqual(self._resolve(RuntimeError("boom"))["code"],
+                            "TEMPORARY_UPSTREAM_FAILURE")
+
+
+class ProviderRegistrationContractTest(unittest.TestCase):
+    """The SDK accepts duck-typed providers; it does not isinstance-check.
+
+    ``tests/test_plugin_visual_metadata.py`` registers a plain, unsubclassed
+    class through both ``register_tv`` and ``register_tv_visual``, so structural
+    typing is part of the current contract.  These tests pin that behaviour so
+    adding a strict type check becomes a deliberate, reviewable change rather
+    than an accident.  ``register_radio`` is the exception -- see the report.
+    """
+
+    def test_register_tv_accepts_a_duck_typed_provider(self):
+        class Duck:
+            def resolve_stream(self, reference, context):
+                return StreamDescriptor.hls("https://example.invalid/live.m3u8")
+
+        app = PluginApplication(identity="org.waveflow/fixture", version="1.0.0")
+        app.register_tv("fixture", Duck())
+        [response] = _drive(app, "tv.resolve_stream", {"scheme": "fixture", "resource_id": "1"})
+        self.assertEqual(response["status"], "ok")
+
+    def test_register_tv_visual_accepts_a_duck_typed_provider(self):
+        class Duck:
+            def visual_metadata(self, reference, context):
+                return VisualMetadata(ttl_seconds=60)
+
+        app = PluginApplication(identity="org.waveflow/fixture", version="1.0.0")
+        app.register_tv_visual("fixture", Duck())
+        [response] = _drive(app, "tv.visual_metadata", {"scheme": "fixture", "resource_id": "1"})
+        self.assertEqual(response["status"], "ok")
+
+
 class InternalLeakageTest(unittest.TestCase):
     """Third parties must be able to build against the SDK alone."""
 

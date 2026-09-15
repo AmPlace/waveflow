@@ -116,7 +116,10 @@ class PluginSDKCLITest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((raised.exception.code, raised.exception.retryable), ("RESOURCE_NOT_FOUND", False))
             with self.assertRaises(PluginError) as exploded:
                 await process.call("tv.resolve_stream", {"scheme": "sdkfixture", "resource_id": "explode"})
-            self.assertEqual(exploded.exception.code, "TEMPORARY_UPSTREAM_FAILURE")
+            # An uncaught exception is a Plugin defect, not a transient upstream
+            # condition: it must not be advertised as retryable.
+            self.assertEqual((exploded.exception.code, exploded.exception.retryable),
+                             ("PLUGIN_CRASHED", False))
             self.assertNotIn("fixture-secret", exploded.exception.message)
         finally:
             await process.call("runtime.shutdown", {})
