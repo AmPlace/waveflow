@@ -13,12 +13,14 @@ SDK plus a review of the matching assertion here.
 """
 from __future__ import annotations
 
+import ast
 import inspect
 import io
 import json
 import re
 import time
 import unittest
+from pathlib import Path
 
 from plugin_capabilities import CoreCapabilityDispatcher
 from plugin_runtime import (
@@ -63,6 +65,29 @@ SDK_LIFECYCLE_CODES = ("PLUGIN_CANCELLED", "PLUGIN_TIMEOUT")
 STABLE_ERROR_CLASSES = (
     InvalidResource, NotLive, UpstreamFailure, TemporaryFailure, RateLimited,
 )
+
+
+BACKEND = Path(__file__).parents[1]
+SDK_DIR = BACKEND / "waveflow_plugin_sdk"
+
+
+def _absolute_import_roots(paths) -> set[str]:
+    """Top-level modules imported absolutely by the given files."""
+    roots: set[str] = set()
+    for path in paths:
+        for node in ast.walk(ast.parse(Path(path).read_text())):
+            mods = []
+            if isinstance(node, ast.Import):
+                mods = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                mods = [node.module]
+            roots.update(mod.split(".")[0] for mod in mods)
+    return roots
+
+
+def _backend_modules(roots: set[str]) -> set[str]:
+    """Which of those roots are modules that live in the backend tree."""
+    return {r for r in roots if (BACKEND / f"{r}.py").exists() or (BACKEND / r).is_dir()}
 
 
 def _dispatcher_methods() -> set[str]:
@@ -320,6 +345,31 @@ class ProviderContractTest(unittest.TestCase):
                 with self.assertRaises(sdk.PluginError) as caught:
                     call()
                 self.assertEqual(caught.exception.code, "RESOURCE_NOT_FOUND")
+
+
+class InternalLeakageTest(unittest.TestCase):
+    """Third parties must be able to build against the SDK alone."""
+
+    def test_sdk_package_imports_nothing_from_the_backend(self):
+        # The SDK is packaged standalone inside the .pyz artifact and cannot
+        # import Core at Plugin runtime.  A backend import would therefore only
+        # surface as an ImportError inside a third-party Plugin, far from the
+        # change that introduced it -- so assert it here instead.
+        roots = _absolute_import_roots(sorted(SDK_DIR.glob("*.py")))
+        self.assertEqual(set(), _backend_modules(roots))
+        self.assertTrue(roots)  # the scan must actually have found imports
+
+    def test_bundled_plugins_import_no_core_internals(self):
+        roots = _absolute_import_roots(sorted((BACKEND / "bundled_plugins").glob("*/plugin.py")))
+        leaked = _backend_modules(roots) - {"waveflow_plugin_sdk"}
+        self.assertEqual(set(), leaked)
+
+    def test_sdk_grammar_is_duplicated_not_imported(self):
+        # The scheme grammar must stay duplicated (SDK ships standalone) rather
+        # than imported from Core; the pattern-equality guard above is what
+        # keeps the two copies honest.
+        roots = _absolute_import_roots(sorted(SDK_DIR.glob("*.py")))
+        self.assertNotIn("plugin_runtime", roots)
 
 
 if __name__ == "__main__":
