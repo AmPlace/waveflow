@@ -420,6 +420,76 @@ class ProviderRegistrationContractTest(unittest.TestCase):
         self.assertEqual(response["status"], "ok")
 
 
+class RadioProgrammeCapabilityTest(unittest.TestCase):
+    """``programme`` is optional and must only be advertised when implemented.
+
+    A duck-typed provider has no ``programme`` attribute at all, and a subclass
+    may keep the inherited ``RadioProvider.programme`` stub; neither implements
+    the capability, and the attribute used to be read in a way that raised
+    ``AttributeError`` inside ``hello`` for the duck-typed case.
+    """
+
+    STREAM = "https://example.invalid/radio.m3u8"
+
+    @staticmethod
+    def _declare(provider) -> tuple[list[str], list[str]]:
+        app = PluginApplication(identity="org.waveflow/fixture", version="1.0.0")
+        app.register_radio("fixture", provider)
+        hello = app.hello()
+        contract = next(c for c in hello["provider_contracts"] if c["contract"] == "radio_provider")
+        return contract["features"], hello["capabilities"]
+
+    @classmethod
+    def _duck(cls, **extra):
+        body = {"resolve_stream": lambda self, reference, context: StreamDescriptor.hls(cls.STREAM)}
+        body.update(extra)
+        return type("Duck", (), body)()
+
+    def test_duck_typed_provider_without_programme_does_not_declare_it(self):
+        # Used to raise AttributeError inside hello().
+        features, capabilities = self._declare(self._duck())
+        self.assertEqual(features, ["catalog", "resolve_stream"])
+        self.assertNotIn("radio.programme", capabilities)
+
+    def test_duck_typed_provider_with_programme_declares_it(self):
+        duck = self._duck(programme=lambda self, reference, context: {"items": []})
+        features, capabilities = self._declare(duck)
+        self.assertIn("programme", features)
+        self.assertIn("radio.programme", capabilities)
+
+    def test_subclass_using_the_inherited_stub_does_not_declare_it(self):
+        class Provider(RadioProvider):
+            def resolve_stream(self, reference, context):
+                return StreamDescriptor.hls(RadioProgrammeCapabilityTest.STREAM)
+
+        features, capabilities = self._declare(Provider())
+        self.assertEqual(features, ["catalog", "resolve_stream"])
+        self.assertNotIn("radio.programme", capabilities)
+
+    def test_subclass_overriding_programme_declares_it(self):
+        class Provider(RadioProvider):
+            def resolve_stream(self, reference, context):
+                return StreamDescriptor.hls(RadioProgrammeCapabilityTest.STREAM)
+
+            def programme(self, reference, context):
+                return {"items": []}
+
+        features, capabilities = self._declare(Provider())
+        self.assertIn("programme", features)
+        self.assertIn("radio.programme", capabilities)
+
+    def test_declared_programme_is_actually_served(self):
+        # The other direction: advertising the capability and then answering
+        # radio.programme with a crash would be worse than omitting it.
+        duck = self._duck(programme=lambda self, reference, context: {"items": [{"name": "Show"}]})
+        app = PluginApplication(identity="org.waveflow/fixture", version="1.0.0")
+        app.register_radio("fixture", duck)
+        [response] = _drive(app, "radio.programme",
+                            {"station_ref": {"provider_key": "fixture", "provider_station_id": "1"}})
+        self.assertEqual(response["status"], "ok")
+        self.assertEqual(response["result"], {"items": [{"name": "Show"}]})
+
+
 class InternalLeakageTest(unittest.TestCase):
     """Third parties must be able to build against the SDK alone."""
 

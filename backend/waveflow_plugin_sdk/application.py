@@ -75,6 +75,23 @@ class RadioProvider(ABC):
         raise PluginError("RESOURCE_NOT_FOUND", "Radio programme is not implemented")
 
 
+def _overrides_programme(provider: Any) -> bool:
+    """Whether a Radio provider really implements ``programme``.
+
+    Two shapes count as "not implemented" and must not be advertised: a
+    duck-typed provider that has no ``programme`` attribute at all, and a
+    subclass that keeps the inherited ``RadioProvider.programme`` stub (which
+    raises ``RESOURCE_NOT_FOUND``).  Only a genuinely distinct implementation --
+    an override or a duck-typed method -- earns the capability.
+
+    Reading through ``getattr`` rather than ``type(provider).programme`` keeps
+    duck typing working: the contract never required subclassing, and the
+    attribute access used to raise ``AttributeError`` inside ``hello`` for a
+    duck-typed Radio provider.
+    """
+    return getattr(type(provider), "programme", None) not in (None, RadioProvider.programme)
+
+
 class PluginApplication:
     def __init__(self, *, identity: str, version: str, permissions: list[str] | None = None):
         self.identity = identity
@@ -291,7 +308,7 @@ class PluginApplication:
             capabilities.append("tv.visual_metadata")
         if self._radio:
             features = ["catalog", "resolve_stream"]
-            if any(type(provider).programme is not RadioProvider.programme for provider in self._radio.values()):
+            if any(_overrides_programme(provider) for provider in self._radio.values()):
                 features.append("programme")
             contracts.append({"contract": "radio_provider", "contract_version": "1.0", "features": features})
             capabilities.extend(["radio.catalog", "radio.resolve_stream"])
