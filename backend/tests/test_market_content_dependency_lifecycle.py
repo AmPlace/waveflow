@@ -407,6 +407,46 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(await self.service.uninstall(IDENTITY))
 
+    async def test_forced_uninstall_still_respects_scheme_ownership(self):
+        """``force`` overrides only the Content dependency guard, never ownership.
+
+        Without this, ``force`` would let an operator delete a Plugin that still
+        owns a scheme and leave an ownership row naming a Plugin that no longer
+        exists.
+        """
+        from plugin_capabilities import CapabilityGateway, CoreCapabilityDispatcher
+        from plugin_production import ProductionPluginSubsystem
+        from provider_resolver import ProviderResolver
+
+        await self._install_plugin("1.0.0")
+        subsystem = ProductionPluginSubsystem(
+            service=self.service,
+            trust_policy=self.service.trust_policy,
+            download_root=Path(self.tmp.name) / "downloads",
+            http_client=self.client,
+            provider_resolver=ProviderResolver(runtime=self.runtime),
+            capability_gateway=CoreCapabilityDispatcher(CapabilityGateway(client=self.client)),
+        )
+        await subsystem.set_ownership("fjtv", "plugin", IDENTITY)
+
+        with self.assertRaises(self.pm.PluginError) as blocked:
+            await subsystem.uninstall(IDENTITY, force=True)
+        self.assertEqual(blocked.exception.code, "SCHEME_CONFLICT")
+        self.assertIsNotNone(await self.db.get_plugin_installation("org.waveflow", "fjtv"))
+        self.assertEqual(
+            [row["plugin_identity"] for row in await self.db.list_plugin_scheme_ownership()],
+            [IDENTITY],
+        )
+
+        await subsystem.set_ownership("fjtv", "legacy")
+        self.assertTrue(await subsystem.uninstall(IDENTITY, force=True))
+        # The scheme keeps its legacy row (that is the durable desired state),
+        # but nothing references the Plugin that no longer exists.
+        self.assertEqual(
+            [row["plugin_identity"] for row in await self.db.list_plugin_scheme_ownership()],
+            [""],
+        )
+
     async def test_delisted_dependent_content_package_can_still_be_removed(self):
         """The refusal guard must not become a dead end.
 
