@@ -242,6 +242,59 @@ class PluginManagementApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.json()["detail"]["code"], "PLUGIN_INCOMPATIBLE")
         self.subsystem.install.assert_not_awaited()
 
+    @staticmethod
+    def content_package(version_range: str = ">=1.0.0 <2.0.0") -> dict:
+        return {
+            "id": "official::content", "name": "Content", "package_type": "content_package",
+            "requires_plugins": [{
+                "plugin": "org.waveflow/fixture", "version_range": version_range,
+                "contract": "tv_provider", "required_schemes": ["fixture"],
+            }],
+        }
+
+    async def test_content_update_ensures_plugin_dependencies_before_updating(self):
+        self.set_packages(self.content_package(), plugin_package())
+        self.service.dependency_projection.return_value = {
+            "status": "dependency_missing", "dependencies": [],
+        }
+        with mock.patch.object(self.market, "update_installed_package", new=mock.AsyncMock(
+            return_value={"ok": True, "channel_count": 2},
+        )) as updater:
+            response = await self.client.post(
+                "/api/admin/market/packages/official%3A%3Acontent/update"
+            )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["installed_plugins"], ["org.waveflow/fixture"])
+        self.subsystem.install.assert_awaited_once()
+        updater.assert_awaited_once()
+
+    async def test_content_update_reports_incompatible_plugin_without_reinstall(self):
+        self.set_packages(self.content_package(">=2.0.0 <3.0.0"), plugin_package())
+        self.service.dependency_projection.return_value = {
+            "status": "plugin_incompatible",
+            "dependencies": [{"plugin": "org.waveflow/fixture", "status": "plugin_incompatible"}],
+        }
+        with mock.patch.object(self.market, "update_installed_package", new=mock.AsyncMock()) as updater:
+            response = await self.client.post(
+                "/api/admin/market/packages/official%3A%3Acontent/update"
+            )
+
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["detail"]["code"], "PLUGIN_INCOMPATIBLE")
+        self.subsystem.install.assert_not_awaited()
+        updater.assert_not_awaited()
+
+    async def test_market_uninstall_forwards_force_to_the_plugin_subsystem(self):
+        self.set_packages(plugin_package())
+        self.main.app.state.automation_service = SimpleNamespace()
+        with mock.patch("plugin_tasks.reconcile_plugin_update_task", new=mock.AsyncMock()):
+            removed = await self.client.delete(
+                "/api/admin/market/packages/official%3A%3Afixture-plugin/install?force=1"
+            )
+        self.assertEqual(removed.status_code, 200, removed.text)
+        self.subsystem.uninstall.assert_awaited_once_with("org.waveflow/fixture", force=True)
+
     async def test_plugin_admin_projects_ownership_permissions_and_market_link(self):
         package = plugin_package()
         self.set_packages(package)
