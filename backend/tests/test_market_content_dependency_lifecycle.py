@@ -636,16 +636,39 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_disabled_plugin_dependency_is_provider_unavailable_not_missing(self):
+        """An installed-but-disabled Plugin is unavailable, not missing.
+
+        The distinction must survive all the way to the error code: the Market
+        layer has no request context, so it derives the code from the projection
+        status itself.  Reporting ``DEPENDENCY_MISSING`` here would tell the
+        operator to install a Plugin that is already installed, and would
+        disagree with the code the install/update route raises for the same
+        condition.
+        """
         await self._install_plugin("1.0.0")
         await self.service.disable(IDENTITY)
         self.assertEqual(
             (await self.service.dependency_projection([self._requirement()]))["status"],
             "provider_unavailable",
         )
+
+        package = await self._offer()
+        preview = await self.market.build_preview(package["id"])
+        with self.assertRaises(self.pm.PluginError) as blocked:
+            await self.market.import_package(package["id"], preview_id=preview["preview_id"])
+        self.assertEqual(blocked.exception.code, "PLUGIN_UNAVAILABLE")
+        self.assertEqual(blocked.exception.details["status"], "provider_unavailable")
+        self.assertIsNone(await self.db.get_market_install(self.content_id))
+
         await self.service.enable(IDENTITY)
         self.assertEqual(
             (await self.service.dependency_projection([self._requirement()]))["status"], "ready",
         )
+        result = await self.market.import_package(package["id"], preview_id=preview["preview_id"])
+        self.assertEqual(
+            (await self.db.get_market_install(self.content_id))["installed_version"], "1.0.0",
+        )
+        self.assertEqual(result["subscription_id"] is not None, True)
 
 
 if __name__ == "__main__":

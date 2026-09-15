@@ -445,6 +445,18 @@ def _normalize_plugin_requirements(value: Any) -> list[dict[str, Any]]:
 
 _CONTENT_DEPENDENCY_VALIDATOR: Any = None
 
+# One status -> one error code, matching the install/update route layer in
+# ``main._ensure_content_plugin_dependencies``.  Without this the same condition
+# would surface as a different code depending on whether a request context was
+# present: an installed-but-disabled Plugin reached the API as
+# ``PLUGIN_UNAVAILABLE`` (503) and Market automation as ``DEPENDENCY_MISSING``
+# (409).
+_DEPENDENCY_ERROR_CODES = {
+    "dependency_missing": "DEPENDENCY_MISSING",
+    "plugin_incompatible": "PLUGIN_INCOMPATIBLE",
+    "provider_unavailable": "PLUGIN_UNAVAILABLE",
+}
+
 
 def set_content_dependency_validator(validator: Any) -> None:
     """Wire the live Plugin dependency evaluator into the Market module.
@@ -465,7 +477,9 @@ async def assert_content_plugin_dependencies(package: dict[str, Any]) -> None:
     Validation is read-only: V1 never installs, enables or upgrades a Plugin from
     here.  Resolving a missing or incompatible dependency is an explicit operator
     action (the import/update route does that before reaching this point), so a
-    mismatch here simply aborts the Market operation.
+    mismatch here simply aborts the Market operation.  The raised code follows
+    ``_DEPENDENCY_ERROR_CODES`` so this path reports the same code the
+    install/update route raises for the same projection status.
     """
     requirements = package.get("requires_plugins") or []
     if not requirements or _CONTENT_DEPENDENCY_VALIDATOR is None:
@@ -478,7 +492,7 @@ async def assert_content_plugin_dependencies(package: dict[str, Any]) -> None:
 
     identity = ", ".join(sorted({str(item.get("plugin") or "") for item in requirements}))
     raise PluginError(
-        "PLUGIN_INCOMPATIBLE" if status == "plugin_incompatible" else "DEPENDENCY_MISSING",
+        _DEPENDENCY_ERROR_CODES.get(status, "DEPENDENCY_MISSING"),
         f"Content Package requires Plugin {identity} which is {status or 'unavailable'}",
         category="dependency",
         details={"status": status, "dependencies": projection.get("dependencies", [])},
