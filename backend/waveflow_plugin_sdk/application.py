@@ -25,6 +25,22 @@ SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]{1,31}$")
 SCHEME_FORMAT = "2-32 chars, [a-z] followed by [a-z0-9+.-]"
 
 
+def _normalize_scheme(scheme: str, label: str) -> str:
+    """Normalize and validate a single provider scheme.
+
+    Every registration entry point funnels through this helper so ``register_tv``,
+    ``register_radio`` and ``register_tv_visual`` cannot drift apart.  Core
+    re-validates the same grammar from the manifest and again when the Plugin
+    hello declares its owned schemes, so a scheme accepted here must also be
+    accepted there -- otherwise registration succeeds and the Plugin is rejected
+    later with an unrelated manifest error.
+    """
+    normalized = str(scheme or "").strip().lower()
+    if not SCHEME_RE.fullmatch(normalized):
+        raise ValueError(f"{label} provider scheme is invalid ({SCHEME_FORMAT}): {scheme!r}")
+    return normalized
+
+
 class TVProvider(ABC):
     @abstractmethod
     def resolve_stream(self, reference: TVReference, context: ResolveContext) -> StreamDescriptor:
@@ -81,7 +97,14 @@ class PluginApplication:
         return self
 
     def register_tv_visual(self, scheme: str, provider: VisualMetadataProvider) -> "PluginApplication":
-        self._tv_visual[str(scheme).lower()] = provider
+        # Visual schemes are validated like any other scheme: Core requires the
+        # manifest to declare every one of them and rejects the hello when they
+        # do not match.  Duplicates are rejected here rather than silently
+        # overwriting an earlier provider.
+        normalized = _normalize_scheme(scheme, "TV visual")
+        if normalized in self._tv_visual:
+            raise ValueError(f"Provider scheme is registered twice: {normalized}")
+        self._tv_visual[normalized] = provider
         return self
 
     def register_radio(self, scheme: str, provider: RadioProvider) -> "PluginApplication":
@@ -91,9 +114,7 @@ class PluginApplication:
     @staticmethod
     def _register_scheme(target: dict[str, Any], other: dict[str, Any], scheme: str,
                          provider: Any, label: str) -> None:
-        normalized = str(scheme or "").strip().lower()
-        if not SCHEME_RE.fullmatch(normalized):
-            raise ValueError(f"{label} provider scheme is invalid ({SCHEME_FORMAT}): {scheme!r}")
+        normalized = _normalize_scheme(scheme, label)
         if normalized in target or normalized in other:
             raise ValueError(f"Provider scheme is registered twice: {normalized}")
         target[normalized] = provider

@@ -72,4 +72,9 @@ PREVIEW_SURFACE = frozenset({
     "ChannelCatalogProvider",
 })
 
-__all__ = sorted(V1_PUBLIC_SURFACE | {"PREVIEW_SURFACE", "V1_PUBLIC_SURFACE"})
+# ``import *`` exports the frozen V1 contract plus the two surface markers, so a
+# caller can introspect the split.  Preview names are deliberately *not* in the
+# star-import surface: they stay reachable through an explicit import, which is
+# the speed bump that keeps "implemented but unstable" from becoming an
+# accidental third-party dependency.  A conformance test asserts this shape.
+__all__ = sorted(V1_PUBLIC_SURFACE | {"V1_PUBLIC_SURFACE", "PREVIEW_SURFACE"})
