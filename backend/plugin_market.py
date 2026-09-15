@@ -424,6 +424,15 @@ def evaluate_dependency(
         for instance in instances
     ):
         return {**base, "status": "provider_unavailable", "version": version}
+    # Same asymmetry for version: the durable row already satisfied the range,
+    # but the instance answering the request may still be an older one during a
+    # commit that has not finished projecting.
+    try:
+        serving_ok = all(_range_allows(instance.manifest.version, expression) for instance in instances)
+    except ValueError:
+        serving_ok = False
+    if not serving_ok:
+        return {**base, "status": "provider_unavailable", "version": version}
     return {**base, "status": "ready", "version": version}
 
 

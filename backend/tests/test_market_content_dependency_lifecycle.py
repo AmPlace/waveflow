@@ -510,6 +510,43 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         evaluation = self.pm.evaluate_dependency(self._requirement(), row, runtime_with(stripped))
         self.assertEqual(evaluation["status"], "provider_unavailable")
 
+    async def test_dependency_version_must_hold_on_the_runtime_projection(self):
+        """The durable row can be inside the range while the serving instance is not.
+
+        A commit that has not finished projecting leaves the old instance
+        answering the scheme.  The dependency is only satisfied when the instance
+        that will serve the request is inside the required range.
+        """
+        import dataclasses
+        from types import SimpleNamespace
+
+        await self._install_plugin("1.0.0")
+        row = await self.db.get_plugin_installation("org.waveflow", "fjtv")
+        manifest = self.pm.validate_manifest(json.loads(row["manifest_json"]))
+
+        def runtime_with(instance_manifest):
+            return SimpleNamespace(
+                registry=SimpleNamespace(route=lambda _scheme: SimpleNamespace(manifest=instance_manifest))
+            )
+
+        serving = dataclasses.replace(manifest, version="1.0.0")
+        self.assertEqual(
+            self.pm.evaluate_dependency(self._requirement(), row, runtime_with(serving))["status"],
+            "ready",
+        )
+        stale = dataclasses.replace(manifest, version="3.0.0")
+        self.assertEqual(
+            self.pm.evaluate_dependency(self._requirement(), row, runtime_with(stale))["status"],
+            "provider_unavailable",
+        )
+        # A wider range that contains the serving instance is still satisfied.
+        self.assertEqual(
+            self.pm.evaluate_dependency(
+                self._requirement(">=1.0.0 <4.0.0"), row, runtime_with(stale),
+            )["status"],
+            "ready",
+        )
+
     async def test_dependency_rejects_wrong_contract_and_unowned_scheme(self):
         await self._install_plugin("1.0.0")
         wrong_contract = {**self._requirement(), "contract": "radio_provider"}
