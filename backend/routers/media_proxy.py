@@ -42,7 +42,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 
 import database as db
-from core.m3u8_rewriter import RewriteContext, rewrite_m3u8
+from core.m3u8_rewriter import CHUNK_URL_SUFFIXES, RewriteContext, rewrite_m3u8
 from security.dependencies import (
     MediaAccessContext,
     require_admin,
@@ -267,8 +267,10 @@ async def _validate_handle_url_or_403(handle_url: str, *, allowed_schemes: set[s
 
 
 def _safe_decode(handle: str, *, expected_kind: str) -> "decoded":
-    if expected_kind == "chunk" and handle.endswith(".ts"):
-        handle = handle[:-3]
+    if expected_kind == "chunk" and handle.count('.') == 2:
+        token, suffix = handle.rsplit('.', 1)
+        if '.' + suffix in CHUNK_URL_SUFFIXES:
+            handle = token
     try:
         return decode_for_kind(handle, expected_kind)
     except HandleSignatureError as exc:

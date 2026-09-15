@@ -45,6 +45,7 @@ _PLAYLIST_EXTENSIONS = (".m3u8", ".m3u")
 _SEGMENT_EXTENSIONS = (
     ".ts", ".m4s", ".mp4", ".fmp4", ".m4v", ".aac", ".mp3", ".webm", ".cmfa", ".cmfv", ".vtt",
 )
+CHUNK_URL_SUFFIXES = frozenset((*_SEGMENT_EXTENSIONS, '.key'))
 
 _MEDIA_SEQ_RE = re.compile(r"^\s*#EXT-X-MEDIA-SEQUENCE\s*:\s*(\d+)", re.IGNORECASE)
 
@@ -78,6 +79,7 @@ def _make_handle_url(
     upstream_url: str,
     ctx: RewriteContext,
     internal_seq: int | None = None,
+    fallback_suffix: str = '.ts',
 ) -> str:
     ttl = None
     if kind == "playlist":
@@ -98,7 +100,8 @@ def _make_handle_url(
     # Keep signed payloads opaque while giving strict external HLS clients a
     # recognizable media suffix for chunk URLs. The proxy route strips this
     # presentation suffix before verifying the handle.
-    handle_suffix = ".ts" if kind == "chunk" else ""
+    path = urlparse(upstream_url).path.lower()
+    handle_suffix = next((suffix for suffix in CHUNK_URL_SUFFIXES if path.endswith(suffix)), fallback_suffix) if kind == "chunk" else ""
     proxy_url = f"{ctx.proxy_path_prefix}/{kind}/{handle}{handle_suffix}{_qs_token(ctx.propagated_access_token)}"
     if internal_seq is not None and internal_seq >= 0:
         separator = "&" if "?" in proxy_url else "?"
@@ -131,7 +134,8 @@ def _rewrite_tag_line(line: str, ctx: RewriteContext) -> str:
         kind = "playlist" if tag_name in _PLAYLIST_URI_TAGS else "chunk"
         if kind == "chunk" and not ctx.proxy_segments:
             return f"{head}{absolute}{tail}"
-        return f"{head}{_make_handle_url(kind=kind, upstream_url=absolute, ctx=ctx)}{tail}"
+        fallback_suffix = '.key' if tag_name in {'EXT-X-KEY', 'EXT-X-SESSION-KEY'} else '.mp4' if tag_name == 'EXT-X-MAP' else '.m4s' if tag_name in {'EXT-X-PART', 'EXT-X-PRELOAD-HINT'} else '.ts'
+        return f"{head}{_make_handle_url(kind=kind, upstream_url=absolute, ctx=ctx, fallback_suffix=fallback_suffix)}{tail}"
 
     return _HLS_URI_RE.sub(_replace, line)
 
@@ -149,6 +153,7 @@ def rewrite_m3u8(text: str, ctx: RewriteContext) -> str:
     current_seq = 0
     seen_media_seq = False
     expects_variant_uri = False
+    media_suffix = '.m4s' if any(line.strip().startswith('#EXT-X-MAP:') for line in text.splitlines()) else '.ts'
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
         if not stripped:
@@ -190,6 +195,7 @@ def rewrite_m3u8(text: str, ctx: RewriteContext) -> str:
                     upstream_url=absolute,
                     ctx=ctx,
                     internal_seq=current_seq,
+                    fallback_suffix=media_suffix,
                 ))
                 current_seq += 1
             else:
@@ -203,6 +209,7 @@ def rewrite_m3u8(text: str, ctx: RewriteContext) -> str:
                     upstream_url=absolute,
                     ctx=ctx,
                     internal_seq=current_seq,
+                    fallback_suffix=media_suffix,
                 ))
                 current_seq += 1
             else:

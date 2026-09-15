@@ -147,7 +147,7 @@ segment-1.ts
                     base_url="https://edge.example/tvb/news/index.m3u8", src_id="tvb:I-NEWS"
                 ),
             )
-        self.assertIn('URI="/api/media/proxy/chunk/fixture-chunk"', rewritten)
+        self.assertIn('URI="/api/media/proxy/chunk/fixture-chunk.key"', rewritten)
         self.assertIn("/api/media/proxy/chunk/fixture-chunk", rewritten)
         self.assertNotIn("keys/live.key", rewritten)
 
