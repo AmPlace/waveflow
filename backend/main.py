@@ -4416,8 +4416,7 @@ def _subscription_urls_for_channel(
     所有 header / proxy 语义已经编码到 url 内部，不需要也不能再附加注解。
 
     RTSP 在所有模式下都是 Core-only：``_source_direct_safe`` 不接受 ``rtsp``，
-    因此 RTSP 源只会走 Core 频道入口，历史上用于放开 RTSP 直出的
-    ``include_rtsp`` 参数已不再参与选择。
+    因此 RTSP 源只会走 Core 频道入口，不存在把它直出到外部 M3U 的导出开关。
     """
     sources = _sorted_sources([
         source for source in channel.get('urls', [])
@@ -4451,7 +4450,6 @@ async def export_iptv_subscription(
     request: Request,
     mode: str = 'smart',
     healthy_only: bool = True,
-    include_rtsp: bool = False,  # 兼容保留：RTSP 在全部模式下都是 Core-only，此参数不再生效
     include_epg: bool = True,
     include_logo: bool = True,
     groups: str = '',

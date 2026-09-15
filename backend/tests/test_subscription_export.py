@@ -173,9 +173,9 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
             main._iptv_proxy_url_for_channel("", _source("https://example.test/a"), _request())
         self.assertEqual(ctx.exception.status_code, 500)
 
-    async def test_include_rtsp_query_cannot_re_enable_raw_rtsp_export(self):
-        """The legacy include_rtsp parameter stays accepted but is inert: RTSP is
-        Core-only in every export mode.
+    async def test_raw_rtsp_never_reaches_any_export_mode(self):
+        """RTSP is a Core-internal transport, so no export mode can put a raw
+        rtsp:// URL into an external M3U. There is no export switch for it.
         """
         import main
 
@@ -188,15 +188,29 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
             ],
         }
         access = types.SimpleNamespace(propagated_access_token="")
-        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
-            return_value=([channel], []),
-        )):
-            response = await main.export_iptv_subscription(
-                request=_request(), mode="direct", include_rtsp=True, access=access,
-            )
-        body = response.body.decode()
-        self.assertIn("https://direct.example/live.m3u8", body)
-        self.assertNotIn("rtsp://", body)
+        for mode in ("direct", "hybrid", "proxy", "smart"):
+            with self.subTest(mode=mode):
+                with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+                    return_value=([channel], []),
+                )):
+                    response = await main.export_iptv_subscription(
+                        request=_request(), mode=mode, access=access,
+                    )
+                body = response.body.decode()
+                self.assertNotIn("rtsp://", body)
+                if mode == "direct":
+                    self.assertIn("https://direct.example/live.m3u8", body)
+
+    async def test_export_contract_no_longer_declares_include_rtsp(self):
+        """The inert include_rtsp parameter was removed from the export contract
+        rather than kept as an accepted no-op.
+        """
+        import inspect
+
+        import main
+
+        params = inspect.signature(main.export_iptv_subscription).parameters
+        self.assertNotIn("include_rtsp", params)
 
     async def test_smart_error_semantics_are_core_shaped(self):
         """Unknown channel -> 404; a channel with no eligible source -> 503.
