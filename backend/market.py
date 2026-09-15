@@ -464,8 +464,9 @@ def set_content_dependency_validator(validator: Any) -> None:
     ``market`` must not import the Plugin subsystem, but a Content Package
     update that runs from Market automation has no request context and would
     otherwise skip dependency validation entirely.  Production registers the
-    Plugin service projection here at startup; without a validator the update
-    path is unchanged.
+    Plugin service projection here at startup.  Passing ``None`` is a real
+    state — it is what the startup-failure path installs — and it fails closed
+    for any package that declares a dependency.
     """
     global _CONTENT_DEPENDENCY_VALIDATOR
     _CONTENT_DEPENDENCY_VALIDATOR = validator
@@ -482,8 +483,23 @@ async def assert_content_plugin_dependencies(package: dict[str, Any]) -> None:
     install/update route raises for the same projection status.
     """
     requirements = package.get("requires_plugins") or []
-    if not requirements or _CONTENT_DEPENDENCY_VALIDATOR is None:
+    if not requirements:
         return
+    if _CONTENT_DEPENDENCY_VALIDATOR is None:
+        # Subscription refresh, the auto-update loop and the Market update task
+        # have no request context and rely on this validator alone.  Without it
+        # the declared dependency cannot be verified, so fail closed exactly like
+        # the install/update route does rather than import Content whose provider
+        # was never checked.  Packages declaring no dependency are unaffected, so
+        # a deployment without Plugins still installs its Content.
+        from plugin_runtime import PluginError
+
+        raise PluginError(
+            "PLUGIN_UNAVAILABLE",
+            "Plugin subsystem is unavailable; Content Package dependencies cannot be verified",
+            category="dependency",
+            details={"dependencies": list(requirements)},
+        )
     projection = await _CONTENT_DEPENDENCY_VALIDATOR(list(requirements))
     status = str(projection.get("status") or "")
     if status == "ready":

@@ -670,6 +670,39 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result["subscription_id"] is not None, True)
 
+    async def test_unverifiable_dependency_fails_closed_without_a_validator(self):
+        """No validator means no verification, which must not mean approval.
+
+        Subscription refresh, the auto-update loop and the Market update task
+        have no request context and rely on this validator alone, so a Plugin
+        subsystem that failed to start must not let unverified Content through.
+        """
+        blocked = await self._import_without_validator(self._canary_raw())
+        self.assertEqual(blocked, "PLUGIN_UNAVAILABLE")
+        self.assertIsNone(await self.db.get_market_install(self.content_id))
+
+        # A package declaring no dependency is unaffected: a deployment without
+        # Plugins must still be able to install its Content.
+        plain = self._canary_raw()
+        del plain["requires_plugins"]
+        self.assertIsNone(await self._import_without_validator(plain))
+        self.assertEqual(
+            (await self.db.get_market_install(self.content_id))["installed_version"], "1.0.0",
+        )
+
+    async def _import_without_validator(self, index_raw: dict) -> str | None:
+        """Import with no wired validator; return the raised code, or None."""
+        package = await self._offer(index_raw=index_raw)
+        preview = await self.market.build_preview(package["id"])
+        self.market.set_content_dependency_validator(None)
+        try:
+            await self.market.import_package(package["id"], preview_id=preview["preview_id"])
+        except self.pm.PluginError as exc:
+            return exc.code
+        finally:
+            self.market.set_content_dependency_validator(self.service.dependency_projection)
+        return None
+
 
 if __name__ == "__main__":
     unittest.main()

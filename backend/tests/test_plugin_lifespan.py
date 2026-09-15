@@ -66,6 +66,48 @@ class PluginLifespanTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.main.app.state.plugin_subsystem)
         self.assertIsNone(self.main.app.state.provider_resolver)
 
+    async def test_lifespan_wires_and_clears_the_market_dependency_validator(self):
+        """Three Market paths have no request context and rely on this wiring.
+
+        Subscription refresh, the auto-update loop and the Market update task
+        reach Content dependency validation only through the validator the
+        lifespan installs, so both the wiring and the teardown are load-bearing.
+        """
+        service = SimpleNamespace(dependency_projection=mock.AsyncMock())
+        subsystem = SimpleNamespace(
+            service=service,
+            provider_resolver=object(),
+            startup=mock.AsyncMock(return_value=[]),
+            shutdown=mock.AsyncMock(),
+        )
+        automation = SimpleNamespace(
+            registry=SimpleNamespace(), start=mock.AsyncMock(), stop=mock.AsyncMock(),
+        )
+        with self.patches(automation), mock.patch.object(
+            self.main.ProductionPluginSubsystem, "create", new=mock.AsyncMock(return_value=subsystem),
+        ), mock.patch.object(self.main.database, "list_plugin_installations", new=mock.AsyncMock(return_value=[])):
+            async with self.main.lifespan(self.main.app):
+                self.assertIs(
+                    self.main._market._CONTENT_DEPENDENCY_VALIDATOR, service.dependency_projection,
+                )
+        self.assertIsNone(self.main._market._CONTENT_DEPENDENCY_VALIDATOR)
+
+    async def test_startup_failure_clears_a_stale_dependency_validator(self):
+        """A subsystem that failed to start must not stay reachable through Market."""
+        stale = mock.AsyncMock()
+        self.main._market.set_content_dependency_validator(stale)
+        automation = SimpleNamespace(
+            registry=SimpleNamespace(), start=mock.AsyncMock(), stop=mock.AsyncMock(),
+        )
+        with self.patches(automation), mock.patch.object(
+            self.main.ProductionPluginSubsystem, "create", new=mock.AsyncMock(side_effect=RuntimeError("bad plugin")),
+        ), mock.patch.object(
+            self.main.database, "list_plugin_scheme_ownership", new=mock.AsyncMock(return_value=[]),
+        ):
+            async with self.main.lifespan(self.main.app):
+                self.assertIsNone(self.main._market._CONTENT_DEPENDENCY_VALIDATOR)
+        self.assertIsNone(self.main._market._CONTENT_DEPENDENCY_VALIDATOR)
+
     async def test_bad_plugin_subsystem_does_not_block_core_startup(self):
         automation = SimpleNamespace(registry=SimpleNamespace(), start=mock.AsyncMock(), stop=mock.AsyncMock())
         with self.patches(automation), mock.patch.object(
