@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "official::fjtv-content-canary",
+  "name": "FJTV Content Canary",
+  "description": "Channel payload for the Content dependency canary. Every channel resolves through the fjtv scheme owned by org.waveflow/fjtv.",
+  "kind": "playlist",
+  "package_type": "content_package",
+  "version": "1.0.0",
+  "updated_at": "2026-09-15T00:00:00Z",
+  "defaults": {
+    "source": {
+      "requires_proxy": false
+    }
+  },
+  "channel_sources": [
+    {
+      "type": "inline_channels",
+      "channels": [
+        {
+          "name": "福建综合频道",
+          "group_name": "地方",
+          "sources": [{"url": "fjtv://fjzhpd"}]
+        },
+        {
+          "name": "厦门卫视",
+          "group_name": "地方",
+          "sources": [{"url": "fjtv://xmws"}]
+        }
+      ]
+    }
+  ]
+}

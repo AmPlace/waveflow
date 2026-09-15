@@ -305,7 +305,12 @@ class MarketPluginLifecycleTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.service.installed_content_dependency_projection("tv-content-fixture"))["status"], "ready")
 
         instance_id = self.service._active["org.waveflow/fixture-multi-provider"].instance_id
-        self.assertTrue(await self.service.uninstall("org.waveflow/fixture-multi-provider"))
+        # V1 refuses to uninstall a Plugin an installed Content Package still
+        # declares; forcing keeps this test focused on Content rows surviving.
+        with self.assertRaises(self.pm.PluginError) as blocked:
+            await self.service.uninstall("org.waveflow/fixture-multi-provider")
+        self.assertEqual(blocked.exception.code, "PLUGIN_DEPENDENCY_ACTIVE")
+        self.assertTrue(await self.service.uninstall("org.waveflow/fixture-multi-provider", force=True))
         self.assertNotIn(instance_id, self.runtime.registry.instances)
         install_after = await self.db.get_market_install("tv-content-fixture")
         self.assertEqual(install_after["installed_subscription_id"], install_before["installed_subscription_id"])

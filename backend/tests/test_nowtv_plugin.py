@@ -251,7 +251,13 @@ class NOWTVPluginTest(unittest.IsolatedAsyncioTestCase):
         await self.service.disable(IDENTITY)
         self.assertEqual((await projection("nowtv-content-fixture"))["status"], "provider_unavailable")
         await self.service.enable(IDENTITY)
-        self.assertTrue(await self.service.uninstall(IDENTITY))
+        # The Content fixture still declares this Plugin: V1 refuses the
+        # uninstall and reports the dependent instead of cascading.
+        with self.assertRaises(self.pm.PluginError) as blocked:
+            await self.service.uninstall(IDENTITY)
+        self.assertEqual(blocked.exception.code, "PLUGIN_DEPENDENCY_ACTIVE")
+        self.assertEqual(blocked.exception.details["dependents"], ["nowtv-content-fixture"])
+        self.assertTrue(await self.service.uninstall(IDENTITY, force=True))
         self.assertEqual((await projection("nowtv-content-fixture"))["status"], "dependency_missing")
 
     async def test_production_ownership_guard_persistence_and_rollback(self):

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "name": "WaveFlow Content Dependency Canary",
+  "market_version": "1",
+  "updated_at": "2026-09-15T00:00:00Z",
+  "packages": [
+    {
+      "id": "official::fjtv-content-canary",
+      "original_id": "fjtv-content-canary",
+      "name": "FJTV Content Canary",
+      "description": "Minimal real Content Package used to exercise the Content -> Plugin dependency contract. It declares requires_plugins for org.waveflow/fjtv and can only be imported while that Plugin is installed, enabled and owning the fjtv scheme.",
+      "kind": "playlist",
+      "package_type": "content_package",
+      "version": "1.0.0",
+      "updated_at": "2026-09-15T00:00:00Z",
+      "manifest_url": "fjtv-content-canary.manifest.json",
+      "regions": [{"global": true}],
+      "operators": [],
+      "providers": ["FJTV"],
+      "languages": ["zh"],
+      "categories": ["地方"],
+      "tags": ["canary", "dependency"],
+      "status": "stable",
+      "source_origin": "official",
+      "source_policy": "official",
+      "risk_level": "low",
+      "importable": true,
+      "previewable": true,
+      "supported_in_v1": true,
+      "display": {"subtitle": "Content dependency canary"},
+      "publisher": {"id": "org.waveflow", "name": "WaveFlow"},
+      "published_at": "2026-09-15T00:00:00Z",
+      "compatibility": {"core": ">=0.1.0"},
+      "replacement": null,
+      "links": {"homepage": "https://market.waveflow.tv/packages/fjtv-content-canary"},
+      "catalog": {"sort_weight": 0, "featured": false},
+      "requires_plugins": [
+        {
+          "plugin": "org.waveflow/fjtv",
+          "version_range": ">=1.0.0 <2.0.0",
+          "contract": "tv_provider",
+          "required_schemes": ["fjtv"]
+        }
+      ]
+    }
+  ]
+}

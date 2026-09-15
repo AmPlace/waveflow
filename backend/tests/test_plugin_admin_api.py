@@ -136,7 +136,7 @@ class PluginAdminApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(disabled.status_code, 200, disabled.text)
         self.assertEqual(removed.json(), {"removed": True})
         self.subsystem.disable.assert_awaited_once_with("org.example/fixture")
-        self.subsystem.uninstall.assert_awaited_once_with("org.example/fixture")
+        self.subsystem.uninstall.assert_awaited_once_with("org.example/fixture", force=False)
 
     async def test_ownership_preflight_unavailable_is_reported_as_service_blocker(self):
         async def admin():

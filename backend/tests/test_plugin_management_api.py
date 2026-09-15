@@ -170,7 +170,7 @@ class PluginManagementApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(installed.json()["package_type"], "plugin_package")
         self.assertTrue(removed.json()["uninstalled"])
         self.assertEqual(self.subsystem.install.await_count, 2)
-        self.subsystem.uninstall.assert_awaited_once_with("org.waveflow/fixture")
+        self.subsystem.uninstall.assert_awaited_once_with("org.waveflow/fixture", force=False)
         self.assertEqual(reconcile.await_count, 3)
 
     async def test_content_install_ensures_plugin_dependencies_before_import(self):
