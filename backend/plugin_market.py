@@ -396,6 +396,12 @@ def evaluate_dependency(
         manifest = validate_manifest(json.loads(installation["manifest_json"]))
     except (KeyError, TypeError, json.JSONDecodeError, PluginError):
         return {**base, "status": "plugin_incompatible"}
+    # The installation row is addressed by publisher/plugin_id, but nothing else
+    # guarantees the persisted manifest actually declares that identity.  A row
+    # whose manifest identity disagrees must not satisfy a dependency on the
+    # address that found it.
+    if manifest.identity != identity:
+        return {**base, "status": "plugin_incompatible", "manifest_identity": manifest.identity}
     contract = str(requirement.get("contract") or "")
     required_schemes = {str(value) for value in requirement.get("required_schemes", [])}
     contracts = {item.contract for item in manifest.provider_contracts}
@@ -411,6 +417,46 @@ def evaluate_dependency(
     if any(instance.manifest.identity != identity for instance in instances):
         return {**base, "status": "provider_unavailable", "version": version}
     return {**base, "status": "ready", "version": version}
+
+
+async def content_dependents(identity: str) -> list[str]:
+    """Return installed Content Package ids whose ``requires_plugins`` names ``identity``.
+
+    V1 is deliberately a reverse-lookup over the persisted Content install
+    metadata: no new dependency schema is introduced and no distribution
+    dependency is inferred from a source URL or scheme.  V1 also refuses to
+    cascade — the caller decides whether to remove the dependent Content
+    Package or force the uninstall.
+    """
+    dependents: set[str] = set()
+    for install in await db.list_market_installs():
+        package_id = str(install.get("package_id") or "").strip()
+        if not package_id:
+            continue
+        try:
+            metadata = json.loads(install.get("metadata_json") or "{}")
+        except (TypeError, json.JSONDecodeError):
+            continue
+        requirements = metadata.get("requires_plugins") if isinstance(metadata, dict) else None
+        if not isinstance(requirements, list):
+            continue
+        if any(
+            isinstance(item, dict) and str(item.get("plugin") or "") == identity
+            for item in requirements
+        ):
+            dependents.add(package_id)
+    return sorted(dependents)
+
+
+async def assert_no_content_dependents(identity: str) -> None:
+    dependents = await content_dependents(identity)
+    if dependents:
+        raise PluginError(
+            "PLUGIN_DEPENDENCY_ACTIVE",
+            "Installed Content packages still require this Plugin",
+            category="dependency",
+            details={"plugin": identity, "dependents": dependents},
+        )
 
 
 class PluginMarketService:
@@ -1272,12 +1318,18 @@ class PluginMarketService:
         await self._notify_lifecycle_changed(identity)
         return self._public(await db.get_plugin_installation(row["publisher_id"], row["plugin_id"]))
 
-    async def uninstall(self, identity: str) -> bool:
+    async def uninstall(self, identity: str, *, force: bool = False) -> bool:
         # Filesystem preparation/removal always takes this order.  Permission
         # revoke/disable only need the lifecycle lock and therefore cannot form
         # the reverse edge of a deadlock.
         async with self.preparation_lock(identity):
             async with self.lifecycle_lock(identity):
+                # Removing a Plugin does not remove the Content Packages that
+                # declare it.  V1 refuses by default and reports the dependents;
+                # ``force`` is the explicit operator override that leaves the
+                # dependent Content Packages in place, unresolved.
+                if not force:
+                    await assert_no_content_dependents(identity)
                 if self.destructive_guard is not None:
                     await self.destructive_guard(identity)
                 return await self._uninstall_unlocked(identity)
@@ -1422,6 +1474,11 @@ class PluginMarketService:
         if not isinstance(requirements, list):
             raise PluginError("INVALID_PLUGIN_RESPONSE", "Installed Content package dependencies are invalid", category="persistence")
         return await self.dependency_projection(requirements)
+
+    async def reverse_dependency_projection(self, identity: str) -> dict[str, Any]:
+        """List installed Content Packages that still declare ``identity``."""
+        dependents = await content_dependents(identity)
+        return {"plugin": identity, "status": "blocked" if dependents else "clear", "dependents": dependents}
 
     async def _row(self, identity: str) -> dict:
         publisher, separator, plugin_id = identity.partition("/")

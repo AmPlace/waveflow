@@ -1065,6 +1065,12 @@ async def lifespan(app: FastAPI):
                 root=default_plugin_root(), http_client=http_client,
             )
             app.state.plugin_subsystem = plugin_subsystem
+            # Content Package updates that run through Market automation never see
+            # this request, so the Content dependency contract is enforced inside
+            # ``market`` through a validator wired to the live Plugin subsystem.
+            plugin_service = getattr(plugin_subsystem, "service", None)
+            if plugin_service is not None:
+                _market.set_content_dependency_validator(plugin_service.dependency_projection)
             app.state.provider_resolver = plugin_subsystem.provider_resolver
             app.state.radio_resolver = getattr(
                 plugin_subsystem, "radio_resolver", RadioResolver(runtime=None),
@@ -1082,6 +1088,7 @@ async def lifespan(app: FastAPI):
                     logger.exception("Plugin subsystem cleanup after startup failure failed")
             plugin_subsystem = None
             app.state.plugin_subsystem = None
+            _market.set_content_dependency_validator(None)
             app.state.radio_resolver = RadioResolver(runtime=None)
             try:
                 app.state.provider_resolver = ProviderResolver.from_ownership_rows(
@@ -1845,6 +1852,10 @@ def _market_http_error(exc: Exception):
             "PLUGIN_UNTRUSTED": 403, "CAPABILITY_DENIED": 403,
             "SCHEME_CONFLICT": 409, "PLUGIN_CANDIDATE_CONFLICT": 409,
             "PERMISSION_APPROVAL_REQUIRED": 409,
+            # A Content Package dependency is a precondition of the Market
+            # operation, not a malformed request: the operator resolves it (or
+            # explicitly forces the uninstall) and retries.
+            "DEPENDENCY_MISSING": 409, "PLUGIN_DEPENDENCY_ACTIVE": 409,
             "PLUGIN_UNAVAILABLE": 503,
             "PLUGIN_INCOMPATIBLE": 422, "PLATFORM_UNSUPPORTED": 422,
             "PYTHON_RUNTIME_UNSUPPORTED": 422, "DEPENDENCY_LOCK_INVALID": 422,
@@ -2173,10 +2184,15 @@ async def update_market_package(package_id: str, request: Request):
                 from plugin_tasks import reconcile_plugin_update_task
                 await reconcile_plugin_update_task(automation, subsystem)
             return {"ok": True, "package_type": "plugin_package", **result}
+        # An update replaces the Content Package payload, and the new version may
+        # declare different Plugin requirements than the installed one.  V1
+        # re-validates on the update path exactly like the import path instead of
+        # assuming the previously installed dependencies still hold.
+        dependencies = await _ensure_content_plugin_dependencies(request, package)
         result = await _market.update_installed_package(package_id)
         from core.cover_cache import invalidate_all_covers
         invalidate_all_covers()
-        return result
+        return {**result, "installed_plugins": dependencies}
     except Exception as exc:
         _market_http_error(exc)
 
@@ -2216,13 +2232,14 @@ async def run_market_updates(request: Request):
 @app.delete("/api/admin/market/packages/{package_id}/install", dependencies=[Depends(require_admin)])
 async def uninstall_market_package(package_id: str, request: Request):
     try:
+        force = _truthy_query(request.query_params.get("force", False))
         package = await _market_package_with_private_artifacts(package_id)
         if package.get("package_type") == _market.PLUGIN_PACKAGE_TYPE:
             subsystem = getattr(request.app.state, "plugin_subsystem", None)
             if subsystem is None:
                 from plugin_runtime import PluginError
                 raise PluginError("PLUGIN_UNAVAILABLE", "Plugin subsystem is unavailable", category="runtime")
-            removed = await subsystem.uninstall(_plugin_identity_from_package(package))
+            removed = await subsystem.uninstall(_plugin_identity_from_package(package), force=force)
             automation = getattr(request.app.state, "automation_service", None)
             if automation is not None:
                 from plugin_tasks import reconcile_plugin_update_task

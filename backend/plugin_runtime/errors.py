@@ -15,6 +15,11 @@ ERROR_CODES = frozenset({
     "AUTH_REQUIRED", "AUTH_FAILED", "RATE_LIMITED", "REGION_BLOCKED",
     "RESOURCE_NOT_FOUND", "NOT_LIVE", "TEMPORARY_UPSTREAM_FAILURE",
     "CAPABILITY_DENIED", "INVALID_CAPABILITY_REQUEST", "INVALID_PLUGIN_RESPONSE",
+    # ``PLUGIN_DEPENDENCY_ACTIVE`` is raised when an installed Content Package
+    # still declares a ``requires_plugins`` entry for the Plugin being
+    # uninstalled.  V1 refuses the uninstall instead of cascading; the operator
+    # removes the dependent Content Package first, or passes an explicit force.
+    "PLUGIN_DEPENDENCY_ACTIVE",
     "ARTIFACT_NOT_FOUND", "ARTIFACT_INVALID", "ARTIFACT_INTEGRITY_FAILED",
     "ARTIFACT_SIGNATURE_INVALID", "PLUGIN_UNTRUSTED", "PLATFORM_UNSUPPORTED",
     "PLUGIN_CANDIDATE_CONFLICT",

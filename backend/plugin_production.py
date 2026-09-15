@@ -1106,8 +1106,8 @@ class ProductionPluginSubsystem:
             "errors": errors[:32],
         }
 
-    async def uninstall(self, identity: str) -> bool:
-        removed = await self.service.uninstall(identity)
+    async def uninstall(self, identity: str, *, force: bool = False) -> bool:
+        removed = await self.service.uninstall(identity, force=force)
         if removed:
             self.channel_catalog.remove_plugin(identity)
         if removed and identity.startswith(f"{OFFICIAL_PUBLISHER_ID}/"):

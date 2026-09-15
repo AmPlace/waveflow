@@ -76,6 +76,7 @@ def _error(exc: PluginError) -> HTTPException:
         "DEPENDENCY_ARTIFACT_NOT_FOUND": 404,
         "PERMISSION_APPROVAL_REQUIRED": 409,
         "DEVELOPER_MODE_REQUIRED": 403,
+        "PLUGIN_DEPENDENCY_ACTIVE": 409, "DEPENDENCY_MISSING": 409,
     }
     return HTTPException(status_code=statuses.get(exc.code, 400), detail=exc.as_contract())
 
@@ -385,9 +386,11 @@ async def recover_plugin(publisher_id: str, plugin_id: str, request: Request) ->
 
 
 @router.delete("/{publisher_id}/{plugin_id}")
-async def uninstall_plugin(publisher_id: str, plugin_id: str, request: Request) -> dict[str, Any]:
+async def uninstall_plugin(
+    publisher_id: str, plugin_id: str, request: Request, force: bool = False
+) -> dict[str, Any]:
     try:
-        removed = await _subsystem(request).uninstall(f"{publisher_id}/{plugin_id}")
+        removed = await _subsystem(request).uninstall(f"{publisher_id}/{plugin_id}", force=force)
         automation = getattr(request.app.state, "automation_service", None)
         if automation is not None:
             await reconcile_plugin_update_task(automation, _subsystem(request))

@@ -443,6 +443,48 @@ def _normalize_plugin_requirements(value: Any) -> list[dict[str, Any]]:
     return result
 
 
+_CONTENT_DEPENDENCY_VALIDATOR: Any = None
+
+
+def set_content_dependency_validator(validator: Any) -> None:
+    """Wire the live Plugin dependency evaluator into the Market module.
+
+    ``market`` must not import the Plugin subsystem, but a Content Package
+    update that runs from Market automation has no request context and would
+    otherwise skip dependency validation entirely.  Production registers the
+    Plugin service projection here at startup; without a validator the update
+    path is unchanged.
+    """
+    global _CONTENT_DEPENDENCY_VALIDATOR
+    _CONTENT_DEPENDENCY_VALIDATOR = validator
+
+
+async def assert_content_plugin_dependencies(package: dict[str, Any]) -> None:
+    """Fail closed when a Content Package's declared Plugin dependencies are not ready.
+
+    Validation is read-only: V1 never installs, enables or upgrades a Plugin from
+    here.  Resolving a missing or incompatible dependency is an explicit operator
+    action (the import/update route does that before reaching this point), so a
+    mismatch here simply aborts the Market operation.
+    """
+    requirements = package.get("requires_plugins") or []
+    if not requirements or _CONTENT_DEPENDENCY_VALIDATOR is None:
+        return
+    projection = await _CONTENT_DEPENDENCY_VALIDATOR(list(requirements))
+    status = str(projection.get("status") or "")
+    if status == "ready":
+        return
+    from plugin_runtime import PluginError
+
+    identity = ", ".join(sorted({str(item.get("plugin") or "") for item in requirements}))
+    raise PluginError(
+        "PLUGIN_INCOMPATIBLE" if status == "plugin_incompatible" else "DEPENDENCY_MISSING",
+        f"Content Package requires Plugin {identity} which is {status or 'unavailable'}",
+        category="dependency",
+        details={"status": status, "dependencies": projection.get("dependencies", [])},
+    )
+
+
 async def ensure_market_sources() -> list[dict]:
     official = await db.get_market_source_by_key(OFFICIAL_MARKET_SOURCE_KEY)
     if not official:
@@ -2608,6 +2650,10 @@ async def _import_package_locked(
     package = await get_package(package_id, include_internal=True)
     if not package.get("importable"):
         raise MarketError(package.get("unsupported_reason") or "该包当前版本不可导入", 400)
+    # Single enforcement point shared by install and update: the payload about to
+    # be imported decides the requirements, so both paths re-validate the same
+    # way instead of inheriting whatever the previous version needed.
+    await assert_content_plugin_dependencies(package)
 
     installed = await db.get_market_install(package_id)
     preserved_auto_update = int(installed.get("auto_update") or 0) if installed else 0
