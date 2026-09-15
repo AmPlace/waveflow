@@ -138,6 +138,36 @@ class PluginAdminApiTest(unittest.IsolatedAsyncioTestCase):
         self.subsystem.disable.assert_awaited_once_with("org.example/fixture")
         self.subsystem.uninstall.assert_awaited_once_with("org.example/fixture", force=False)
 
+    async def test_uninstall_forwards_explicit_force(self):
+        """The reverse-dependency refusal is only escapable through the query flag."""
+        async def admin():
+            return {"id": 1, "role": "admin"}
+        self.main.app.dependency_overrides[self.main.require_admin] = admin
+        removed = await self.client.delete("/api/admin/plugins/org.example/fixture?force=true")
+        self.assertEqual(removed.status_code, 200, removed.text)
+        self.assertEqual(removed.json(), {"removed": True})
+        self.subsystem.uninstall.assert_awaited_once_with("org.example/fixture", force=True)
+
+    async def test_uninstall_reports_an_active_content_dependency_as_conflict(self):
+        """An operator must be able to see *what* still depends on the Plugin."""
+        async def admin():
+            return {"id": 1, "role": "admin"}
+        self.main.app.dependency_overrides[self.main.require_admin] = admin
+        from plugin_runtime import PluginError
+        self.subsystem.uninstall.side_effect = PluginError(
+            "PLUGIN_DEPENDENCY_ACTIVE",
+            "Installed Content packages still require this Plugin",
+            category="dependency",
+            details={"plugin": "org.example/fixture", "dependents": ["official::content"]},
+        )
+
+        response = await self.client.delete("/api/admin/plugins/org.example/fixture")
+
+        self.assertEqual(response.status_code, 409, response.text)
+        detail = response.json()["detail"]
+        self.assertEqual(detail["code"], "PLUGIN_DEPENDENCY_ACTIVE")
+        self.assertEqual(detail["details"]["dependents"], ["official::content"])
+
     async def test_ownership_preflight_unavailable_is_reported_as_service_blocker(self):
         async def admin():
             return {"id": 1, "role": "admin"}

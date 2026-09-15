@@ -295,6 +295,27 @@ class PluginManagementApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(removed.status_code, 200, removed.text)
         self.subsystem.uninstall.assert_awaited_once_with("org.waveflow/fixture", force=True)
 
+    async def test_market_uninstall_reports_an_active_content_dependency_as_conflict(self):
+        """The Market surface must expose the refusal the same way the Plugin one does."""
+        self.set_packages(plugin_package())
+        self.main.app.state.automation_service = SimpleNamespace()
+        from plugin_runtime import PluginError
+        self.subsystem.uninstall.side_effect = PluginError(
+            "PLUGIN_DEPENDENCY_ACTIVE",
+            "Installed Content packages still require this Plugin",
+            category="dependency",
+            details={"plugin": "org.waveflow/fixture", "dependents": ["official::content"]},
+        )
+
+        response = await self.client.delete(
+            "/api/admin/market/packages/official%3A%3Afixture-plugin/install"
+        )
+
+        self.assertEqual(response.status_code, 409, response.text)
+        detail = response.json()["detail"]
+        self.assertEqual(detail["code"], "PLUGIN_DEPENDENCY_ACTIVE")
+        self.assertEqual(detail["details"]["dependents"], ["official::content"])
+
     async def test_plugin_admin_projects_ownership_permissions_and_market_link(self):
         package = plugin_package()
         self.set_packages(package)
