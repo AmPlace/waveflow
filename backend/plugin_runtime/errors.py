@@ -5,7 +5,12 @@ from typing import Any
 
 ERROR_CODES = frozenset({
     "DEPENDENCY_MISSING",
-    "PLUGIN_UNAVAILABLE", "PLUGIN_INCOMPATIBLE", "PLUGIN_CRASHED", "PLUGIN_TIMEOUT", "PLUGIN_QUARANTINED",
+    # ``PLUGIN_CANCELLED`` is raised by the Plugin SDK when Core cancels an
+    # in-flight provider request.  It must stay in this set: an unknown code is
+    # rewritten to ``INVALID_PLUGIN_RESPONSE`` below, which would erase the
+    # cancellation signal and make Core retry work the caller already gave up on.
+    "PLUGIN_UNAVAILABLE", "PLUGIN_INCOMPATIBLE", "PLUGIN_CRASHED", "PLUGIN_CANCELLED",
+    "PLUGIN_TIMEOUT", "PLUGIN_QUARANTINED",
     "SCHEME_UNOWNED", "SCHEME_CONFLICT",
     "AUTH_REQUIRED", "AUTH_FAILED", "RATE_LIMITED", "REGION_BLOCKED",
     "RESOURCE_NOT_FOUND", "NOT_LIVE", "TEMPORARY_UPSTREAM_FAILURE",
