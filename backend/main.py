@@ -4317,8 +4317,8 @@ def _absolute_api_url(request: Request, path: str) -> str:
     return f"{_request_public_base_url(request)}{path}"
 
 
-def _iptv_proxy_path_for_source(source: dict) -> str:
-    """用于 M3U 导出：按 source 的 canonical_key 生成 media API 入口。
+def _iptv_proxy_path_for_channel(canonical_key: str) -> str:
+    """用于 M3U 导出：按频道的 canonical_key 生成 media API 入口。
 
     不再把 raw upstream URL / Header 明文编入 query。
     导出的 .m3u 中每条频道地址都是：
@@ -4326,25 +4326,26 @@ def _iptv_proxy_path_for_source(source: dict) -> str:
         /api/media/channel/{canonical_key}/playlist.m3u8
 
     外部播放器通过 ``?access_token=wbm_...`` 传递 Media Credential。
-    canonical_key 从频道聚合表中取，source dict 上没有该字段时回退到
-    旧 ``source['url']`` 产生一个 channel-key-hash 的中间入口（极少触发）。
+
+    canonical_key 是频道聚合表的稳定身份，必须由调用方从聚合上下文显式传入。
+    早期版本在缺失时按 source URL hash 造一个 ``src_<hash>`` 入口，那个入口在
+    Core 里永远匹配不到频道（404），属于静默坏链，已删除：现在缺身份直接报错。
     """
-    canonical_key = str(source.get('canonical_key') or '')
-    if not canonical_key:
-        # 极少数 source 脱离了聚合上下文（不到一轮）；回退到按 url hash 的入口
-        import hashlib
-        canonical_key = "src_" + hashlib.sha256(
-            str(source.get('url') or '').encode()
-        ).hexdigest()[:20]
-    return f"/api/media/channel/{quote(canonical_key, safe='')}/playlist.m3u8"
+    key = str(canonical_key or '').strip()
+    if not key:
+        raise HTTPException(status_code=500, detail="频道身份缺失")
+    return f"/api/media/channel/{quote(key, safe='')}/playlist.m3u8"
 
 
-def _iptv_proxy_url_for_source(source: dict, request: Request, *, access: object | None = None) -> str:
+def _iptv_proxy_url_for_channel(
+    canonical_key: str, source: dict, request: Request, *, access: object | None = None
+) -> str:
     """对外 URL + 可选 Media Credential 附加。
 
+    ``canonical_key`` 决定频道入口，``source`` 只提供 source 身份（``source_id``）。
     ``access`` 应为 ``MediaAccessContext``（仅在确认为 credential 时透传 token）。
     """
-    base = _absolute_api_url(request, _iptv_proxy_path_for_source(source))
+    base = _absolute_api_url(request, _iptv_proxy_path_for_channel(canonical_key))
     source_id = str(source.get('source_id') or source_id_for(source))
     base += f"?source_id={quote(source_id, safe='')}"
     token = getattr(access, 'propagated_access_token', None) or ""
@@ -4405,7 +4406,7 @@ def _format_m3u_options(source: dict | None) -> list[str]:
 
 
 def _subscription_urls_for_channel(
-    channel: dict, mode: str, request: Request, healthy_only: bool, include_rtsp: bool, *, access: object = None
+    channel: dict, mode: str, request: Request, healthy_only: bool, *, access: object = None
 ) -> list[tuple[str, dict | None]]:
     """返回 [(url, source_for_options), ...]。
 
@@ -4413,11 +4414,16 @@ def _subscription_urls_for_channel(
     导出 m3u 时需要附加 EXTVLCOPT/KODIPROP/WAVEFLOW（让 VLC/Kodi 直连也能播）。
     为 None 时，表示这条 url 已经是 proxy/adapter/smart 包装地址，
     所有 header / proxy 语义已经编码到 url 内部，不需要也不能再附加注解。
+
+    RTSP 在所有模式下都是 Core-only：``_source_direct_safe`` 不接受 ``rtsp``，
+    因此 RTSP 源只会走 Core 频道入口，历史上用于放开 RTSP 直出的
+    ``include_rtsp`` 参数已不再参与选择。
     """
     sources = _sorted_sources([
         source for source in channel.get('urls', [])
         if _is_supported_export_source(source, healthy_only=healthy_only)
     ])
+    canonical_key = str(channel.get('canonical_key') or '')
 
     if mode == 'smart':
         if sources:
@@ -4429,13 +4435,13 @@ def _subscription_urls_for_channel(
 
     if mode == 'proxy':
         return [
-            (_iptv_proxy_url_for_source({**source, 'canonical_key': channel['canonical_key']}, request, access=access), None)
+            (_iptv_proxy_url_for_channel(canonical_key, source, request, access=access), None)
             for source in sources
         ]
 
     return [
         (source['url'], None) if _source_direct_safe(source)
-        else (_iptv_proxy_url_for_source({**source, 'canonical_key': channel['canonical_key']}, request, access=access), None)
+        else (_iptv_proxy_url_for_channel(canonical_key, source, request, access=access), None)
         for source in sources
     ]
 
@@ -4445,7 +4451,7 @@ async def export_iptv_subscription(
     request: Request,
     mode: str = 'smart',
     healthy_only: bool = True,
-    include_rtsp: bool = False,
+    include_rtsp: bool = False,  # 兼容保留：RTSP 在全部模式下都是 Core-only，此参数不再生效
     include_epg: bool = True,
     include_logo: bool = True,
     groups: str = '',
@@ -4461,14 +4467,13 @@ async def export_iptv_subscription(
         channels = [ch for ch in channels if ch.get('group_name') in selected_groups]
 
     healthy = _truthy_query(healthy_only)
-    rtsp = _truthy_query(include_rtsp)
     epg = _truthy_query(include_epg)
     logo = _truthy_query(include_logo)
 
     lines = ["#EXTM3U"]
     exported = 0
     for channel in channels:
-        urls = _subscription_urls_for_channel(channel, mode, request, healthy, rtsp, access=access)
+        urls = _subscription_urls_for_channel(channel, mode, request, healthy, access=access)
         if not urls:
             continue
         attrs = _m3u_attrs_for_channel(channel, include_epg=epg, include_logo=logo)
@@ -4495,32 +4500,41 @@ async def iptv_smart_playlist(
     request: Request,
     access=Depends(resolve_media_access),
 ):
+    """Smart 频道级投递入口（Subscription Export V1 的稳定契约）。
+
+    只做两件事：按 ``canonical_key`` 选一个当前 source，然后 307 重定向。
+    直连安全（``_source_direct_safe``）的源直接重定向到上游 URL；其余全部交给
+    canonical Core 频道入口 ``/api/media/channel/{canonical_key}/playlist.m3u8``，
+    并带上显式 ``source_id``。
+
+    Smart 不拥有播放实现：不建 RTSP session、不做 Plugin/Adapter resolve、
+    不签 handle、不做 URL fallback，也不复制 Core 的 source selection。
+    RTSP 只是 Core 内部的一种 transport，因此没有第二条 Smart RTSP 路由。
+    """
     channels, _groups = await _get_aggregated_iptv_channels()
     channel = next((ch for ch in channels if ch.get('canonical_key') == canonical_key), None)
     if not channel:
         raise HTTPException(status_code=404, detail="频道不存在")
 
+    # 候选集与导出侧共用同一个 eligibility 谓词；健康只影响顺序
+    # （``_sorted_sources`` 把在线源排前面），不作为硬门槛——否则频道级入口会比
+    # 它委派的 Core 频道入口更严格，在探针误报时给出假的 503。
     sources = _sorted_sources([
         source for source in channel.get('urls', [])
-        if _is_supported_export_source(source, healthy_only=True)
+        if _is_supported_export_source(source, healthy_only=False)
     ])
     for source in sources:
-        source_type = _source_type(source)
-        # 把 canonical_key 注入 source dict，让 _iptv_proxy_path_for_source 能匹配
-        source_with_key = {**source, "canonical_key": canonical_key}
-        try:
-            if _source_direct_safe(source):
+        if _source_direct_safe(source):
+            try:
                 await assert_safe_target_url(source['url'], allowed_schemes={"http", "https"})
-                return RedirectResponse(source['url'], status_code=307)
-            # Proxy fallback is deliberately opaque to the external client.
-            return RedirectResponse(
-                _iptv_proxy_url_for_source(source_with_key, request, access=access),
-                status_code=307,
-            )
-        except UnsafeTargetError:
-            continue
-        except HTTPException:
-            continue
+            except UnsafeTargetError:
+                continue
+            return RedirectResponse(source['url'], status_code=307)
+        # Proxy fallback is deliberately opaque to the external client.
+        return RedirectResponse(
+            _iptv_proxy_url_for_channel(canonical_key, source, request, access=access),
+            status_code=307,
+        )
 
     raise HTTPException(status_code=503, detail="没有可用播放源")
 

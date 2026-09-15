@@ -159,7 +159,7 @@ class ChannelDataCorrectnessGoal2Test(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(main._source_has_export_credentials(source))
         urls = main._subscription_urls_for_channel(
             {'canonical_key': 'cctv5', 'urls': [source]},
-            'hybrid', request, healthy_only=True, include_rtsp=False,
+            'hybrid', request, healthy_only=True,
         )
         self.assertTrue(urls)
         self.assertTrue(all('fixture-secret' not in url for url, _ in urls))

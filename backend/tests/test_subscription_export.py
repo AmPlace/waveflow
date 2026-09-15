@@ -40,16 +40,16 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
         access = types.SimpleNamespace(propagated_access_token="credential-token")
 
         smart = main._subscription_urls_for_channel(
-            channel, "smart", request, True, False, access=access,
+            channel, "smart", request, True, access=access,
         )
         hybrid = main._subscription_urls_for_channel(
-            channel, "hybrid", request, True, False, access=access,
+            channel, "hybrid", request, True, access=access,
         )
         direct = main._subscription_urls_for_channel(
-            channel, "direct", request, True, False, access=access,
+            channel, "direct", request, True, access=access,
         )
         proxy = main._subscription_urls_for_channel(
-            channel, "proxy", request, True, False, access=access,
+            channel, "proxy", request, True, access=access,
         )
 
         self.assertEqual(len(smart), 1)
@@ -91,7 +91,7 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
             _source('https://example.test/a', source_id='a'),
             _source('https://example.test/b', source_id='b'),
         ]}
-        urls = main._subscription_urls_for_channel(channel, 'proxy', _request(), True, False)
+        urls = main._subscription_urls_for_channel(channel, 'proxy', _request(), True)
         self.assertEqual(len({url for url, _ in urls}), 2)
         self.assertIn('source_id=a', urls[0][0])
         self.assertIn('source_id=b', urls[1][0])
@@ -104,6 +104,99 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
                              ('direct_playable', False), ('hidden_upstream', True)]:
             with self.subTest(field=field):
                 self.assertFalse(main._source_direct_safe(_source('https://example.test/a', **{field: value})))
+
+    async def test_smart_prefers_healthy_source_but_does_not_require_it(self):
+        """Health is ordering, not a gate: a channel whose only source is not yet
+        marked healthy must still get the stable Smart URL instead of a false 503.
+        """
+        import main
+
+        request = _request()
+        access = types.SimpleNamespace(propagated_access_token="")
+        unhealthy_only = {
+            "canonical_key": "unhealthy",
+            "urls": [_source("https://only.example/live.m3u8", is_working=0)],
+        }
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([unhealthy_only], []),
+        )), mock.patch.object(main, "assert_safe_target_url", new=mock.AsyncMock()):
+            response = await main.iptv_smart_playlist("unhealthy", request, access)
+        self.assertEqual(response.status_code, 307)
+        self.assertEqual(response.headers["location"], "https://only.example/live.m3u8")
+
+        # A healthy source still wins over an unhealthy one.
+        mixed = {
+            "canonical_key": "mixed",
+            "urls": [
+                _source("https://stale.example/live.m3u8", is_working=0, source_id="stale"),
+                _source("https://fresh.example/live.m3u8", is_working=1, source_id="fresh"),
+            ],
+        }
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([mixed], []),
+        )), mock.patch.object(main, "assert_safe_target_url", new=mock.AsyncMock()):
+            response = await main.iptv_smart_playlist("mixed", request, access)
+        self.assertEqual(response.status_code, 307)
+        self.assertEqual(response.headers["location"], "https://fresh.example/live.m3u8")
+
+    async def test_smart_proxy_redirect_keeps_channel_key_and_source_identity(self):
+        """The proxy fallback must carry the aggregated channel key plus the
+        explicit source_id, and must never leak the upstream URL.
+        """
+        import main
+
+        request = _request()
+        access = types.SimpleNamespace(propagated_access_token="credential-token")
+        channel = {
+            "canonical_key": "cctv5",
+            "urls": [_source("https://hidden.example/live.m3u8", custom_ua="UA/1", source_id="src-abc")],
+        }
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([channel], []),
+        )):
+            response = await main.iptv_smart_playlist("cctv5", request, access)
+        location = response.headers["location"]
+        self.assertEqual(response.status_code, 307)
+        self.assertIn("/api/media/channel/cctv5/playlist.m3u8", location)
+        self.assertIn("source_id=src-abc", location)
+        self.assertIn("access_token=credential-token", location)
+        self.assertNotIn("hidden.example", location)
+
+    async def test_channel_proxy_url_requires_explicit_channel_identity(self):
+        """canonical_key is the channel boundary; a missing key must fail loudly
+        instead of fabricating an unresolvable URL-hash channel entry.
+        """
+        import main
+        from fastapi import HTTPException
+
+        with self.assertRaises(HTTPException) as ctx:
+            main._iptv_proxy_url_for_channel("", _source("https://example.test/a"), _request())
+        self.assertEqual(ctx.exception.status_code, 500)
+
+    async def test_include_rtsp_query_cannot_re_enable_raw_rtsp_export(self):
+        """The legacy include_rtsp parameter stays accepted but is inert: RTSP is
+        Core-only in every export mode.
+        """
+        import main
+
+        channel = {
+            "canonical_key": "camera",
+            "name": "Camera",
+            "urls": [
+                _source("https://direct.example/live.m3u8", source_id="direct"),
+                _source("rtsp://camera.example/live", source_type="rtsp", source_id="camera"),
+            ],
+        }
+        access = types.SimpleNamespace(propagated_access_token="")
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([channel], []),
+        )):
+            response = await main.export_iptv_subscription(
+                request=_request(), mode="direct", include_rtsp=True, access=access,
+            )
+        body = response.body.decode()
+        self.assertIn("https://direct.example/live.m3u8", body)
+        self.assertNotIn("rtsp://", body)
 
 
 if __name__ == "__main__":
