@@ -105,9 +105,15 @@ class PluginRuntime:
             if activate:
                 self.registry.activate(instance)
                 await self._emit_lifecycle("healthy_active", instance)
-        except BaseException:
+        except BaseException as exc:
+            # Capture the Plugin's own stderr before the process goes away.  It
+            # never reaches ``as_contract``; developer-local callers and the SDK
+            # test harness opt in explicitly.
+            tail = process.diagnostic_tail()
             await process.stop(graceful=False)
             self.registry.mark_unhealthy(instance)
+            if tail and isinstance(exc, PluginError):
+                exc.internal_diagnostics = {**dict(exc.internal_diagnostics or {}), "plugin_stderr": tail}
             raise
 
     def _validate_hello(self, instance: PluginInstance, hello: Any) -> None:
@@ -144,7 +150,14 @@ class PluginRuntime:
             raise PluginError("PLUGIN_QUARANTINED", "Plugin is quarantined", category="lifecycle")
         if instance.state != LifecycleState.HEALTHY_ACTIVE or not instance.process:
             raise PluginError("PLUGIN_UNAVAILABLE", "Plugin is unavailable", retryable=True, category="lifecycle")
-        result = await instance.process.call(method, payload, timeout=timeout)
+        try:
+            result = await instance.process.call(method, payload, timeout=timeout)
+        except PluginError as exc:
+            if instance.process is not None and instance.process.exit_code is not None:
+                tail = instance.process.diagnostic_tail()
+                if tail:
+                    exc.internal_diagnostics = {**dict(exc.internal_diagnostics or {}), "plugin_stderr": tail}
+            raise
         if method in {"tv.resolve_stream", "radio.resolve_stream"}:
             return validate_stream_descriptor(result)
         if method == "tv.visual_metadata":

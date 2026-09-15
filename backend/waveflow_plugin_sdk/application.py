@@ -5,6 +5,7 @@ import json
 import sys
 import threading
 import time
+import traceback
 import uuid
 import re
 from abc import ABC, abstractmethod
@@ -13,6 +14,15 @@ from typing import Any, BinaryIO
 from .capabilities import CapabilityClient, capability_error
 from .errors import PluginError
 from .models import ChannelCatalog, RadioReference, ResolveContext, StreamDescriptor, TVReference, VisualMetadata
+
+
+#: Canonical scheme grammar shared with Core.  It must stay identical to
+#: ``plugin_runtime.manifest.SCHEME_RE``; the SDK ships standalone inside the
+#: built ``.pyz`` artifact and cannot import Core.  A test asserts the two
+#: patterns remain equal, because a divergence makes a manifest pass
+#: ``validate`` and then crash when the Plugin registers its provider.
+SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]{1,31}$")
+SCHEME_FORMAT = "2-32 chars, [a-z] followed by [a-z0-9+.-]"
 
 
 class TVProvider(ABC):
@@ -82,8 +92,8 @@ class PluginApplication:
     def _register_scheme(target: dict[str, Any], other: dict[str, Any], scheme: str,
                          provider: Any, label: str) -> None:
         normalized = str(scheme or "").strip().lower()
-        if not re.fullmatch(r"[a-z][a-z0-9+.-]{1,31}", normalized):
-            raise ValueError(f"{label} provider scheme is invalid")
+        if not SCHEME_RE.fullmatch(normalized):
+            raise ValueError(f"{label} provider scheme is invalid ({SCHEME_FORMAT}): {scheme!r}")
         if normalized in target or normalized in other:
             raise ValueError(f"Provider scheme is registered twice: {normalized}")
         target[normalized] = provider
@@ -172,9 +182,10 @@ class PluginApplication:
             context = self._context(request)
             if method == "tv.resolve_stream":
                 reference = TVReference.from_payload(payload)
-                provider = self._tv.get(reference.scheme) or (next(iter(self._tv.values())) if len(self._tv) == 1 else None)
+                provider = self._tv.get(reference.scheme)
                 if provider is None:
-                    raise PluginError("RESOURCE_NOT_FOUND", "TV Provider scheme is not registered")
+                    raise PluginError("RESOURCE_NOT_FOUND",
+                                      f"TV Provider scheme is not registered: {reference.scheme[:32]}")
                 result = provider.resolve_stream(reference, context)
                 self._provider_response(request, result.as_contract())
             elif method == "tv.visual_metadata":
@@ -185,21 +196,31 @@ class PluginApplication:
                 result = provider.visual_metadata(reference, context)
                 self._provider_response(request, result.as_contract() if isinstance(result, VisualMetadata) else result)
             elif method == "radio.catalog":
-                provider = next(iter(self._radio.values())) if len(self._radio) == 1 else None
+                # Core addresses the Plugin for a catalog query; the payload
+                # carries no provider key, so a Plugin owning exactly one Radio
+                # provider is unambiguous.  More than one provider is a
+                # programming error rather than something to guess our way out of.
+                provider = next(iter(self._radio.values()), None) if len(self._radio) == 1 else None
                 if provider is None:
                     raise PluginError("RESOURCE_NOT_FOUND", "Radio Provider is not registered")
                 self._provider_response(request, provider.catalog(payload, context))
             elif method == "radio.resolve_stream":
                 reference = RadioReference.from_payload(payload)
-                provider = self._radio.get(reference.provider_key) or (next(iter(self._radio.values())) if len(self._radio) == 1 else None)
+                provider = self._radio.get(reference.provider_key)
                 if provider is None:
-                    raise PluginError("RESOURCE_NOT_FOUND", "Radio Provider is not registered")
+                    raise PluginError(
+                        "RESOURCE_NOT_FOUND",
+                        f"Radio Provider is not registered: {reference.provider_key[:32]}",
+                    )
                 self._provider_response(request, provider.resolve_stream(reference, context).as_contract())
             elif method == "radio.programme":
                 reference = RadioReference.from_payload(payload)
-                provider = self._radio.get(reference.provider_key) or (next(iter(self._radio.values())) if len(self._radio) == 1 else None)
+                provider = self._radio.get(reference.provider_key)
                 if provider is None:
-                    raise PluginError("RESOURCE_NOT_FOUND", "Radio Provider is not registered")
+                    raise PluginError(
+                        "RESOURCE_NOT_FOUND",
+                        f"Radio Provider is not registered: {reference.provider_key[:32]}",
+                    )
                 self._provider_response(request, provider.programme(reference, context))
             elif method == "channel_catalog.discover":
                 if self._channel_catalog is None:
@@ -211,6 +232,15 @@ class PluginApplication:
         except PluginError as exc:
             self._provider_response(request, error=exc)
         except Exception:
+            # The failure is reported through the contract with a generic
+            # message; the real cause goes to stderr only.  Plugin stderr is
+            # captured, bounded and sanitized by Core, is never part of
+            # ``as_contract``, and is surfaced solely by the SDK ``test``
+            # harness and the developer-local install log.  A swallowed
+            # traceback is why a missing packaged resource used to look like an
+            # opaque upstream failure.
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
             self._provider_response(request, error=PluginError(
                 "TEMPORARY_UPSTREAM_FAILURE", "Provider handler failed", retryable=True,
             ))

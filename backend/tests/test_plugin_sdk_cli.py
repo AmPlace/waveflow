@@ -18,6 +18,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from plugin_runtime import PluginError, load_manifest, validate_stream_descriptor
 from plugin_runtime.process import PluginProcess
 from waveflow_plugin_cli import (
+    CANONICAL_PLATFORMS,
     build_project,
     init_project,
     lock_dependencies,
@@ -39,9 +40,10 @@ def manifest(plugin_id: str = "sdk-fixture") -> dict:
         "capabilities": ["tv.resolve_stream"],
         "permissions": {"network": {"managed": True, "allowed_hosts": ["api.example"]}},
         "runtime": {"type": "subprocess", "ipc": "stdio_framed_json_v1"},
-        "artifacts": [{"os": "linux", "arch": "x86_64", "runtime": "python", "entrypoint": "provider.py",
+        "artifacts": [{"os": os_name, "arch": arch, "runtime": "python", "entrypoint": "provider.py",
             "sha256": "0" * 64, "size_bytes": 1,
-            "signature": {"algorithm": "ed25519", "key_id": "fixture-key", "value": "UNSIGNED"}}],
+            "signature": {"algorithm": "ed25519", "key_id": "fixture-key", "value": "UNSIGNED"}}
+            for os_name, arch in CANONICAL_PLATFORMS],
         "dependencies": [], "state_schema_version": 1}
 
 

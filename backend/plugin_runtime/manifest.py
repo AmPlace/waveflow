@@ -15,7 +15,14 @@ SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(
 RANGE_PART_RE = re.compile(r"^(<=|>=|<|>|=)(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z.-]+))?$")
 IDENTITY_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 PLUGIN_ID_RE = re.compile(r"^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$")
-SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*$")
+# Canonical scheme grammar: 2-32 characters, lowercase alphanumeric plus
+# ``+`` ``.`` ``-``.  The Python SDK enforces the same pattern when a Plugin
+# registers a provider; the SDK ships standalone inside the ``.pyz`` artifact and
+# cannot import this module, so the pattern is duplicated on purpose and a test
+# asserts both copies stay identical.  Divergence here is what made a manifest
+# pass ``validate`` and then crash at runtime.
+SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]{1,31}$")
+SCHEME_FORMAT = "2-32 chars, [a-z] followed by [a-z0-9+.-]"
 API_VERSION = "1.0"
 SUPPORTED_CONTRACTS = frozenset({"tv_provider", "tv_visual_provider", "radio_provider", "channel_catalog"})
 SUPPORTED_PERMISSIONS = frozenset({
@@ -106,7 +113,7 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
     if not isinstance(data["display_name"], str) or not 1 <= len(data["display_name"]) <= 200:
         raise _malformed("Invalid display_name")
     if not isinstance(data["version"], str) or not SEMVER_RE.fullmatch(data["version"]):
-        raise _malformed("Invalid plugin SemVer")
+        raise _malformed(f"Invalid plugin SemVer (expected X.Y.Z): {data['version']!r}")
     if data["plugin_api_version"] != API_VERSION:
         raise PluginError("PLUGIN_INCOMPATIBLE", "Incompatible plugin API version", category="compatibility")
     expression = data["core_version_range"]
@@ -115,7 +122,10 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
     except ValueError:
         allowed = False
     if not isinstance(expression, str) or not all(RANGE_PART_RE.fullmatch(p) for p in expression.split()):
-        raise _malformed("Invalid Core version range")
+        raise _malformed(
+            f"Invalid Core version range: {expression!r} "
+            "(expected space-separated parts like '>=0.1.0 <1.0.0')",
+        )
     if not allowed:
         raise PluginError("PLUGIN_INCOMPATIBLE", "Plugin does not support this WaveFlow Core version", category="compatibility")
 
@@ -159,10 +169,15 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
     seen: set[str] = set()
     for item in schemes_raw:
         if not isinstance(item, dict) or set(item) != {"scheme", "contract"}:
-            raise _malformed("Invalid scheme declaration")
+            raise _malformed(f"Invalid scheme declaration (expected object with only 'scheme' and 'contract'): {item!r}")
         scheme, contract = item["scheme"], item["contract"]
-        if not isinstance(scheme, str) or not SCHEME_RE.fullmatch(scheme) or contract not in contract_names:
-            raise _malformed("Invalid scheme declaration")
+        if not isinstance(scheme, str) or not SCHEME_RE.fullmatch(scheme):
+            raise _malformed(f"Invalid scheme declaration ({SCHEME_FORMAT}): {scheme!r}")
+        if contract not in contract_names:
+            raise _malformed(
+                f"Scheme {scheme!r} references contract {contract!r}, which is not declared in provider_contracts "
+                f"{sorted(contract_names)}",
+            )
         if contract == "channel_catalog":
             raise _malformed("Channel catalog contract does not declare owned schemes")
         if scheme in seen:
@@ -201,12 +216,21 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
                 or ("allowed_hosts" in network and
                     (not isinstance(network["allowed_hosts"], list)
                      or any(not isinstance(value, str) or not value for value in network["allowed_hosts"])) )):
-            raise _malformed("Invalid network permission declaration")
+            raise _malformed(
+                "Invalid network permission declaration: allowed keys are "
+                "managed, direct, allow_http, allowed_hosts, allow_private "
+                f"(booleans except allowed_hosts); got {network!r}",
+            )
         if network.get("allow_http") is True and network.get("managed") is not True:
             raise _malformed("Plain HTTP permission requires managed network")
     runtime = data["runtime"]
     if not isinstance(runtime, dict) or runtime.get("ipc") != "stdio_framed_json_v1":
-        raise PluginError("PLUGIN_INCOMPATIBLE", "Unsupported plugin runtime", category="compatibility")
+        raise PluginError(
+            "PLUGIN_INCOMPATIBLE",
+            "Unsupported plugin runtime: ipc must be 'stdio_framed_json_v1', got "
+            f"{(runtime or {}).get('ipc') if isinstance(runtime, dict) else runtime!r}",
+            category="compatibility",
+        )
     runtime_type = runtime.get("type")
     if runtime_type == "subprocess":
         if set(runtime) != {"type", "ipc"}:
@@ -224,14 +248,21 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
             raise _malformed("Invalid Python entrypoint")
         _validate_dependency_lock(runtime.get("dependency_lock"))
     else:
-        raise PluginError("PLUGIN_INCOMPATIBLE", "Unsupported plugin runtime", category="compatibility")
+        raise PluginError(
+            "PLUGIN_INCOMPATIBLE",
+            f"Unsupported plugin runtime type: {runtime_type!r} (expected 'python' or 'subprocess')",
+            category="compatibility",
+        )
     artifacts = data["artifacts"]
     if not isinstance(artifacts, list) or not artifacts:
         raise _malformed("At least one plugin artifact is required")
     for artifact in artifacts:
         artifact_fields = {"os", "arch", "runtime", "entrypoint", "sha256", "size_bytes", "signature"}
         if not isinstance(artifact, dict) or set(artifact) != artifact_fields:
-            raise _malformed("Invalid plugin artifact")
+            raise _malformed(
+                f"Invalid plugin artifact: expected exactly {sorted(artifact_fields)}, got "
+                f"{sorted(artifact) if isinstance(artifact, dict) else artifact!r}",
+            )
         signature = artifact.get("signature")
         if (artifact.get("os") not in SUPPORTED_OS or artifact.get("arch") not in SUPPORTED_ARCH
                 or not isinstance(artifact.get("runtime"), str) or not artifact["runtime"]
@@ -242,7 +273,13 @@ def validate_manifest(data: Any, *, core_version: str = "0.1.0") -> PluginManife
                 or set(signature) != {"algorithm", "key_id", "value"}
                 or signature.get("algorithm") != "ed25519"
                 or not all(isinstance(signature.get(key), str) and signature[key] for key in ("key_id", "value"))):
-            raise _malformed("Invalid plugin artifact")
+            raise _malformed(
+                f"Invalid plugin artifact for {artifact.get('os')!r}/{artifact.get('arch')!r}: "
+                "os must be one of "
+                f"{sorted(SUPPORTED_OS)}, arch one of {sorted(SUPPORTED_ARCH)}, sha256 a 64-char lowercase hex "
+                "digest, size_bytes a positive integer, and signature an ed25519 "
+                "{'algorithm', 'key_id', 'value'} object",
+            )
     if runtime_type == "python" and any(artifact["entrypoint"] != runtime["entrypoint"] for artifact in artifacts):
         raise _malformed("Python runtime entrypoint does not match its artifact")
     dependencies = data["dependencies"]

@@ -170,7 +170,7 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
 
             if scheme in {"nmtv", "sdtv"}:
                 dependency_result = await subsystem.service.runtime.request(
-                    instance, "tv.resolve_stream", {"resource_id": reference.rsplit("/", 1)[-1]},
+                    instance, "tv.resolve_stream", {"scheme": scheme, "resource_id": reference.rsplit("/", 1)[-1]},
                 )
                 origin = dependency_result.get("provider_diagnostics", {}).get("dependency_origin", "")
                 self.assertIn(str(subsystem.service.python_environments.environments_root), origin)

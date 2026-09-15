@@ -127,7 +127,7 @@ class PTBTVPluginTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(pending.exception.code, "PERMISSION_APPROVAL_REQUIRED")
         await self.approve_install()
         instance = self.runtime.registry.route("ptbtv")
-        result = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "pt1"})
+        result = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": "pt1"})
         self.assertEqual((result["url"], result["ttl_seconds"], result["volatile_url"], result["requires_proxy"]),
                          (STREAM, 180, True, False))
         origin = result["provider_diagnostics"]["dependency_origin"]
@@ -140,17 +140,17 @@ class PTBTVPluginTest(unittest.IsolatedAsyncioTestCase):
         await self.approve_install()
         instance = self.runtime.registry.route("ptbtv")
         for resource, channel_id in (("1", "4"), ("ptbtv-2", "5"), ("xy", "6")):
-            result = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": resource})
+            result = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": resource})
             self.assertEqual(result["url"], STREAM)
             self.assertEqual(dict(self.requests[-1].url.params), {"channel_id": channel_id})
         with self.assertRaises(PluginError) as unknown:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "unknown"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": "unknown"})
         self.assertEqual((unknown.exception.code, unknown.exception.retryable), ("RESOURCE_NOT_FOUND", False))
         for mode in ("http_error", "timeout", "invalid_json", "empty", "missing", "invalid_url"):
             with self.subTest(mode=mode):
                 self.mode = mode
                 with self.assertRaises(PluginError) as failed:
-                    await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "1"})
+                    await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": "1"})
                 self.assertIn(failed.exception.code, {"TEMPORARY_UPSTREAM_FAILURE", "PLUGIN_TIMEOUT"})
                 self.assertTrue(failed.exception.retryable)
         source = SOURCE.read_text(encoding="utf-8")

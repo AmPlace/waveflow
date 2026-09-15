@@ -51,6 +51,19 @@ class PluginProcess:
         self.exit_code: int | None = None
         self.protocol_version = LEGACY_PROTOCOL_VERSION
 
+    def diagnostic_tail(self, limit: int = 20) -> list[str]:
+        """Return the bounded, sanitized tail of the Plugin's own stderr output.
+
+        This buffer exists for developer diagnosis.  Callers must decide whether
+        the consumer is inside the developer's trust boundary: plugin stderr may
+        contain upstream URLs or credentials the Plugin author never intended to
+        publish.  ``PluginError.as_contract`` never serializes it, so routing it
+        through ``internal_diagnostics`` keeps it off the public API surface.
+        """
+        if limit < 1:
+            return []
+        return list(self.stderr_lines[-limit:])
+
     def negotiate_protocol(self, version: str) -> None:
         if version not in SUPPORTED_PROTOCOL_VERSIONS:
             raise PluginError("PLUGIN_INCOMPATIBLE", "Plugin protocol version is incompatible",
@@ -308,6 +321,12 @@ class PluginProcess:
     async def _wait_loop(self) -> None:
         assert self.process
         self.exit_code = await self.process.wait()
+        # Drain the tail of the Plugin's stderr before the exit is reported, so
+        # a startup crash carries the traceback that caused it.  The pipe is at
+        # EOF once the process is gone, so this returns immediately in practice;
+        # the timeout only bounds the pathological case.
+        if self._stderr_task is not None and not self._stderr_task.done():
+            await asyncio.wait({self._stderr_task}, timeout=1.0)
         await self._cancel_all_capabilities()
         if not self._stopping:
             self._fail_pending(PluginError("PLUGIN_CRASHED", "Plugin process exited unexpectedly", retryable=True,

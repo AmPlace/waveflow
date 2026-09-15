@@ -165,17 +165,17 @@ class NOWTVPluginTest(unittest.IsolatedAsyncioTestCase):
         await self.install()
         instance = self.runtime.registry.route("nowtv")
         for resource, content_id in (("NEWS", "331"), ("finance", "332"), ("LIVE", "333"), ("999", "999")):
-            result = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": resource})
+            result = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nowtv", "resource_id": resource})
             self.assertEqual((result["url"], result["requires_proxy"], result["ttl_seconds"]), (STREAM, True, 300))
             self.assertEqual(json.loads(self.requests[-1].content)["contentId"], content_id)
         with self.assertRaises(PluginError) as unknown:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "unknown"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nowtv", "resource_id": "unknown"})
         self.assertEqual(unknown.exception.code, "RESOURCE_NOT_FOUND")
         for mode in ("business_error", "missing_response_code", "empty_asset", "missing_asset",
                      "malformed_asset", "malformed_url", "invalid_json", "http_error", "timeout"):
             self.mode = mode
             with self.assertRaises(PluginError) as raised:
-                await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "NEWS"})
+                await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nowtv", "resource_id": "NEWS"})
             self.assertIn(raised.exception.code, {"TEMPORARY_UPSTREAM_FAILURE", "PLUGIN_TIMEOUT"}, mode)
 
     async def test_legacy_and_plugin_failure_semantics_are_retryable_upstream_errors(self):
@@ -191,7 +191,7 @@ class NOWTVPluginTest(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(AdapterResolveError) as legacy:
                     await self.legacy_resolver("nowtv://NEWS", self.client)
                 with self.assertRaises(PluginError) as plugin:
-                    await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "NEWS"})
+                    await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nowtv", "resource_id": "NEWS"})
                 self.assertTrue(legacy.exception.retryable)
                 self.assertEqual(legacy.exception.status_code, 502)
                 self.assertTrue(plugin.exception.retryable)
@@ -208,7 +208,7 @@ class NOWTVPluginTest(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("artifact_references", card)
         await self.service.install_from_packages([self.package(managed_network=False)], IDENTITY)
         with self.assertRaises(PluginError) as denied:
-            await self.runtime.request(self.runtime.registry.route("nowtv"), "tv.resolve_stream", {"resource_id": "NEWS"})
+            await self.runtime.request(self.runtime.registry.route("nowtv"), "tv.resolve_stream", {"scheme": "nowtv", "resource_id": "NEWS"})
         self.assertEqual(denied.exception.code, "CAPABILITY_DENIED")
         source = SOURCE.read_text(encoding="utf-8")
         for forbidden in ("import backend", "import httpx", "import requests", "os.environ", "FastAPI"):

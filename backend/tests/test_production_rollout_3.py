@@ -275,7 +275,7 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         await self._install_approved(subsystem, ptbtv, packages)
         instance = subsystem.service.runtime.registry.route("ptbtv")
         diagnostics = await subsystem.service.runtime.request(
-            instance, "tv.resolve_stream", {"resource_id": "pt1"},
+            instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": "pt1"},
         )
         self.assertEqual(diagnostics["url"], STREAMS["ptbtv"])
         self.assertIn(

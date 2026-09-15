@@ -176,7 +176,7 @@ class FJTVPluginTest(unittest.IsolatedAsyncioTestCase):
         expected = {"xmws": "https://www.fjtv.net/", "xmtv-1": "https://www.xmtv.cn/",
                     "jjtv": "https://www.ijjnews.com/", "sstv": "https://www.chinashishi.net/"}
         for resource, referer in expected.items():
-            result = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": resource})
+            result = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": resource})
             self.assertEqual((result["url"], result["headers"]["Referer"]), (STREAM, referer))
         for mode, codes in (("not_live", {"NOT_LIVE"}), ("error", {"TEMPORARY_UPSTREAM_FAILURE"}),
                            ("timeout", {"TEMPORARY_UPSTREAM_FAILURE", "PLUGIN_TIMEOUT"}),
@@ -184,12 +184,12 @@ class FJTVPluginTest(unittest.IsolatedAsyncioTestCase):
                            ("business_error", "TEMPORARY_UPSTREAM_FAILURE")):
             self.mode = mode
             with self.assertRaises(PluginError) as raised:
-                await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "fjzh"})
+                await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": "fjzh"})
             expected_codes = codes if isinstance(codes, set) else {codes}
             self.assertIn(raised.exception.code, expected_codes)
         self.mode = "success"
         with self.assertRaises(PluginError) as missing:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "unknown"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": "unknown"})
         self.assertEqual(missing.exception.code, "RESOURCE_NOT_FOUND")
 
     async def test_managed_network_permission_is_required(self):
@@ -197,7 +197,7 @@ class FJTVPluginTest(unittest.IsolatedAsyncioTestCase):
         await self.service.install_from_packages([self.package(managed_network=False)], IDENTITY)
         instance = self.runtime.registry.route("fjtv")
         with self.assertRaises(PluginError) as denied:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "fjzh"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": "fjzh"})
         self.assertEqual(denied.exception.code, "CAPABILITY_DENIED")
 
     async def test_dependency_update_failure_recovery_disable_and_uninstall(self):
@@ -334,10 +334,10 @@ class FJTVPluginTest(unittest.IsolatedAsyncioTestCase):
         instance.process.process.kill()
         await instance.process.process.wait()
         with self.assertRaises(PluginError) as crashed:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "fjzh"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": "fjzh"})
         self.assertIn(crashed.exception.code, {"PLUGIN_CRASHED", "PLUGIN_UNAVAILABLE"})
         peer_result = await self.runtime.request(
-            peer, "tv.resolve_stream", {"resource_id": "channel/one"},
+            peer, "tv.resolve_stream", {"scheme": "fjtv", "resource_id": "channel/one"},
         )
         self.assertTrue(peer_result["url"].endswith(".m3u8"))
         legacy = await self.legacy_resolver("fjtv://fjzh", self.client)

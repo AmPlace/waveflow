@@ -146,7 +146,7 @@ class NMTVPluginTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(dict(request.url.params), {"size": "100", "type": "1"})
         self.assertEqual(request.headers["referer"], "https://www.nmtv.cn/")
         instance = self.runtime.registry.route("nmtv")
-        descriptor = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "nmws"})
+        descriptor = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "nmws"})
         origin = descriptor["provider_diagnostics"]["dependency_origin"]
         self.assertTrue(str(self.envs.environments_root) in origin, origin)
         self.assertNotIn(str(Path(sys.prefix) / "lib"), origin)
@@ -186,15 +186,15 @@ class NMTVPluginTest(unittest.IsolatedAsyncioTestCase):
         from plugin_runtime import PluginError, PermissionPolicy, PluginRuntime
         await self.install()
         instance = self.runtime.registry.route("nmtv")
-        result = await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "262"})
+        result = await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "262"})
         self.assertEqual(result["url"], STREAM)
         with self.assertRaises(PluginError) as invalid:
-            await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "unknown"})
+            await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "unknown"})
         self.assertEqual(invalid.exception.code, "RESOURCE_NOT_FOUND")
         for mode in ("http_error", "malformed", "missing", "empty"):
             self.mode = mode
             with self.assertRaises(PluginError) as failed:
-                await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "nmws"})
+                await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "nmws"})
             self.assertEqual(failed.exception.code, "TEMPORARY_UPSTREAM_FAILURE")
         self.mode = "success"
         await self.install("1.1.0")
@@ -236,7 +236,7 @@ class NMTVPluginTest(unittest.IsolatedAsyncioTestCase):
             sys.executable, str(FIXTURE), "--scheme", "dependency-isolation-peer", "--tv-only",
             "--identity", "org.waveflow/dependency-isolation-peer", "--version", "1.0.0"])
         await self.runtime.enable(peer)
-        self.assertTrue((await self.runtime.request(peer, "tv.resolve_stream", {"resource_id": "one"}))["url"].endswith(".m3u8"))
+        self.assertTrue((await self.runtime.request(peer, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "one"}))["url"].endswith(".m3u8"))
 
     async def test_legacy_and_plugin_errors_remain_retryable_upstream_failures(self):
         from adapters import AdapterResolveError
@@ -249,7 +249,7 @@ class NMTVPluginTest(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaises(AdapterResolveError) as legacy:
                     await self.legacy("nmtv://nmws", self.client)
                 with self.assertRaises(PluginError) as plugin:
-                    await self.runtime.request(instance, "tv.resolve_stream", {"resource_id": "nmws"})
+                    await self.runtime.request(instance, "tv.resolve_stream", {"scheme": "nmtv", "resource_id": "nmws"})
                 self.assertEqual((legacy.exception.status_code, legacy.exception.retryable), (502, True))
                 self.assertEqual((plugin.exception.code, plugin.exception.retryable),
                                  ("TEMPORARY_UPSTREAM_FAILURE", True))

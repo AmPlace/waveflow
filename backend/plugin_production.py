@@ -1167,6 +1167,15 @@ class ProductionPluginSubsystem:
         identity = manifest.identity
         try:
             return await self.service.install_developer_local([prepared], identity)
+        except PluginError as exc:
+            # Developer-local installs are the author's own package on the
+            # author's own machine.  Surfacing the Plugin's sanitized stderr in
+            # the server log is the difference between "PLUGIN_CRASHED" and a
+            # usable traceback; it is never returned through the API.
+            tail = (exc.internal_diagnostics or {}).get("plugin_stderr") or []
+            if tail:
+                logger.warning("Developer-local Plugin %s failed to start:\n%s", identity, "\n".join(tail))
+            raise
         finally:
             await asyncio.to_thread(shutil.rmtree, staging_root, True)
 

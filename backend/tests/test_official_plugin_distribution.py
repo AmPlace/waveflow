@@ -722,7 +722,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
 
                 if plugin_id == "ptbtv":
                     descriptor = await subsystem.service.runtime.request(
-                        instance, "tv.resolve_stream", {"resource_id": "pt1"},
+                        instance, "tv.resolve_stream", {"scheme": "ptbtv", "resource_id": "pt1"},
                     )
                     self.assertEqual(
                         (descriptor["url"], descriptor["transport"], descriptor["ttl_seconds"],
