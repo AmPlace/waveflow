@@ -1143,6 +1143,10 @@ async def lifespan(app: FastAPI):
                     await plugin_subsystem.shutdown()
             finally:
                 app.state.plugin_subsystem = None
+                # The validator is a module global bound to this subsystem; clear
+                # it with the subsystem itself so a later lifespan never reaches a
+                # shut-down service through the Market module.
+                _market.set_content_dependency_validator(None)
                 app.state.provider_resolver = None
                 app.state.radio_resolver = None
                 await http_client.aclose()
