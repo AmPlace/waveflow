@@ -198,6 +198,83 @@ class SubscriptionExportContractTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn("https://direct.example/live.m3u8", body)
         self.assertNotIn("rtsp://", body)
 
+    async def test_smart_error_semantics_are_core_shaped(self):
+        """Unknown channel -> 404; a channel with no eligible source -> 503.
+        Both stay stable because the route owns the contract, not the transport.
+        """
+        import main
+        from fastapi import HTTPException
+
+        request = _request()
+        access = types.SimpleNamespace(propagated_access_token="")
+
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([], []),
+        )):
+            with self.assertRaises(HTTPException) as missing:
+                await main.iptv_smart_playlist("nope", request, access)
+        self.assertEqual(missing.exception.status_code, 404)
+
+        # A YouTube-only channel is not export-eligible in any mode, so Smart has
+        # no candidate and must fail closed rather than redirect something raw.
+        youtube_only = {
+            "canonical_key": "yt",
+            "urls": [_source("https://www.youtube.com/watch?v=fixture", source_type="youtube")],
+        }
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([youtube_only], []),
+        )):
+            with self.assertRaises(HTTPException) as unavailable:
+                await main.iptv_smart_playlist("yt", request, access)
+        self.assertEqual(unavailable.exception.status_code, 503)
+
+        # A disabled source is not eligible either.
+        disabled = {
+            "canonical_key": "off",
+            "urls": [_source("https://off.example/live.m3u8", enabled=False)],
+        }
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([disabled], []),
+        )):
+            with self.assertRaises(HTTPException) as disabled_error:
+                await main.iptv_smart_playlist("off", request, access)
+        self.assertEqual(disabled_error.exception.status_code, 503)
+
+    async def test_smart_skips_ssrf_rejected_direct_source(self):
+        """A direct-safe source still has to pass the SSRF check before Smart
+        hands its raw URL to an external client. A rejected source must fall
+        through to the next candidate, and a channel whose only candidate is
+        rejected must fail closed instead of redirecting it anyway.
+        """
+        import main
+        from fastapi import HTTPException
+
+        request = _request()
+        access = types.SimpleNamespace(propagated_access_token="")
+        blocked = _source("https://blocked.example/live.m3u8", source_id="blocked")
+        fallback = _source("https://fallback.example/live.m3u8", source_id="fallback")
+        channel = {"canonical_key": "mixed", "urls": [blocked, fallback]}
+
+        def reject(url, **_kwargs):
+            if "blocked.example" in url:
+                raise main.UnsafeTargetError("unsafe target")
+            return None
+
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([channel], []),
+        )), mock.patch.object(main, "assert_safe_target_url", new=mock.AsyncMock(side_effect=reject)):
+            response = await main.iptv_smart_playlist("mixed", request, access)
+        self.assertEqual(response.status_code, 307)
+        self.assertEqual(response.headers["location"], "https://fallback.example/live.m3u8")
+
+        only_blocked = {"canonical_key": "blocked", "urls": [blocked]}
+        with mock.patch.object(main, "_get_aggregated_iptv_channels", new=mock.AsyncMock(
+            return_value=([only_blocked], []),
+        )), mock.patch.object(main, "assert_safe_target_url", new=mock.AsyncMock(side_effect=reject)):
+            with self.assertRaises(HTTPException) as rejected:
+                await main.iptv_smart_playlist("blocked", request, access)
+        self.assertEqual(rejected.exception.status_code, 503)
+
 
 if __name__ == "__main__":
     unittest.main()

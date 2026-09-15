@@ -67,6 +67,10 @@ class AccessControlTest(unittest.TestCase):
             401,
         )
         self.assertEqual(client.get("/api/iptv/subscription.m3u").status_code, 401)
+        self.assertEqual(
+            client.get("/api/iptv/smart/test-canonical-key.m3u8").status_code,
+            401,
+        )
 
     def test_admin_session_allows_browse_endpoint_when_anonymous_disabled(self):
         client = self._client()
