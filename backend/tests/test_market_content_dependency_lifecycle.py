@@ -483,6 +483,33 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(evaluation["status"], "plugin_incompatible")
         self.assertEqual(evaluation["manifest_identity"], "org.waveflow/fjtv-renamed")
 
+    async def test_dependency_contract_must_hold_on_the_runtime_projection(self):
+        """The persisted manifest is not enough: the serving instance must agree.
+
+        A row can declare `tv_provider` while the instance actually registered to
+        answer the scheme advertises something else.  The dependency is only
+        satisfied when both the durable manifest and the runtime projection hold.
+        """
+        import dataclasses
+        from types import SimpleNamespace
+
+        await self._install_plugin("1.0.0")
+        row = await self.db.get_plugin_installation("org.waveflow", "fjtv")
+        manifest = self.pm.validate_manifest(json.loads(row["manifest_json"]))
+
+        def runtime_with(instance_manifest):
+            return SimpleNamespace(
+                registry=SimpleNamespace(route=lambda _scheme: SimpleNamespace(manifest=instance_manifest))
+            )
+
+        self.assertEqual(
+            self.pm.evaluate_dependency(self._requirement(), row, runtime_with(manifest))["status"],
+            "ready",
+        )
+        stripped = dataclasses.replace(manifest, provider_contracts=[])
+        evaluation = self.pm.evaluate_dependency(self._requirement(), row, runtime_with(stripped))
+        self.assertEqual(evaluation["status"], "provider_unavailable")
+
     async def test_dependency_rejects_wrong_contract_and_unowned_scheme(self):
         await self._install_plugin("1.0.0")
         wrong_contract = {**self._requirement(), "contract": "radio_provider"}

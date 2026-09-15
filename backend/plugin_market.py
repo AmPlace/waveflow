@@ -416,6 +416,14 @@ def evaluate_dependency(
         return {**base, "status": "provider_unavailable", "version": version}
     if any(instance.manifest.identity != identity for instance in instances):
         return {**base, "status": "provider_unavailable", "version": version}
+    # The persisted manifest is what was installed; the runtime instance is what
+    # is actually serving.  A dependency must hold against both, so the contract
+    # is re-checked on the projection that will answer the request.
+    if any(
+        contract not in {item.contract for item in instance.manifest.provider_contracts}
+        for instance in instances
+    ):
+        return {**base, "status": "provider_unavailable", "version": version}
     return {**base, "status": "ready", "version": version}
 
 
