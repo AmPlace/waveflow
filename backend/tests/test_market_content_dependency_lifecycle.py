@@ -620,6 +620,54 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
             "ready",
         )
 
+    async def test_dependency_identity_must_hold_on_the_runtime_projection(self):
+        """A live instance registered under another identity must not satisfy it.
+
+        The persisted row is addressed by publisher/plugin_id, but the instance
+        answering the scheme is looked up separately.  Checking only the durable
+        manifest would let a renamed instance serve a dependency it never
+        declared.
+        """
+        import dataclasses
+        from types import SimpleNamespace
+
+        await self._install_plugin("1.0.0")
+        row = await self.db.get_plugin_installation("org.waveflow", "fjtv")
+        manifest = self.pm.validate_manifest(json.loads(row["manifest_json"]))
+
+        def runtime_with(instance_manifest):
+            return SimpleNamespace(
+                registry=SimpleNamespace(route=lambda _scheme: SimpleNamespace(manifest=instance_manifest))
+            )
+
+        renamed = dataclasses.replace(manifest, plugin_id="fjtv-renamed")
+        self.assertEqual(renamed.identity, "org.waveflow/fjtv-renamed")
+        self.assertEqual(
+            self.pm.evaluate_dependency(self._requirement(), row, runtime_with(renamed))["status"],
+            "provider_unavailable",
+        )
+
+    async def test_dependency_scheme_must_be_routable_on_the_runtime_projection(self):
+        """The manifest can own a scheme the live registry does not serve.
+
+        `required_schemes` is satisfied by the durable manifest as soon as the
+        scheme appears in `owned_schemes`.  Only routing it through the live
+        registry proves something is actually answering it.
+        """
+        from types import SimpleNamespace
+
+        await self._install_plugin("1.0.0")
+        row = await self.db.get_plugin_installation("org.waveflow", "fjtv")
+
+        def unroutable(_scheme):
+            raise self.pm.PluginError("RESOURCE_NOT_FOUND", "scheme is not routed", category="routing")
+
+        runtime = SimpleNamespace(registry=SimpleNamespace(route=unroutable))
+        self.assertEqual(
+            self.pm.evaluate_dependency(self._requirement(), row, runtime)["status"],
+            "provider_unavailable",
+        )
+
     async def test_dependency_rejects_wrong_contract_and_unowned_scheme(self):
         await self._install_plugin("1.0.0")
         wrong_contract = {**self._requirement(), "contract": "radio_provider"}
