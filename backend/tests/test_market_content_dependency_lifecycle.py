@@ -2,9 +2,10 @@
 
 The canary is a real Market index document (``fixtures/market_content_canary``)
 that declares ``requires_plugins`` for the real bundled ``org.waveflow/fjtv``
-Plugin.  The Plugin is built, installed and executed for real (subprocess SDK
-artifact, mocked upstream HTTP only), so the install / update / uninstall
-lifecycle below exercises production code paths rather than stubs.
+Plugin.  The Plugins (``fjtv``, plus ``jstv`` for the multi-dependency cases) are
+built, installed and executed for real (subprocess SDK artifact, mocked upstream
+HTTP only), so the install / update / uninstall lifecycle below exercises
+production code paths rather than stubs.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 
-PLUGIN_SOURCE = Path(__file__).parents[1] / "bundled_plugins" / "fjtv" / "plugin.py"
+PLUGIN_ROOT = Path(__file__).parents[1] / "bundled_plugins"
 CANARY_DIR = Path(__file__).parent / "fixtures" / "market_content_canary"
 CANARY_MARKET = CANARY_DIR / "market.json"
 CANARY_MANIFEST = CANARY_DIR / "fjtv-content-canary.manifest.json"
@@ -58,10 +59,10 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         self.db = database
         self.market = market
         self.pm = plugin_market
+        self.build_sdk_artifact = build_sdk_artifact
         await self.db.initialize()
 
-        self.artifact = Path(self.tmp.name) / "fjtv-plugin.pyz"
-        build_sdk_artifact(PLUGIN_SOURCE, self.artifact)
+        self._artifacts: dict[str, Path] = {}
         self.private = Ed25519PrivateKey.generate()
         public = self.private.public_key().public_bytes(
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw,
@@ -76,7 +77,7 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
             capability_dispatcher=CoreCapabilityDispatcher(CapabilityGateway(client=self.client)),
         )
         self.store = plugin_market.PluginArtifactStore(
-            Path(self.tmp.name) / "store", allowed_local_roots=[self.artifact.parent],
+            Path(self.tmp.name) / "store", allowed_local_roots=[Path(self.tmp.name)],
         )
         self.service = plugin_market.PluginMarketService(
             runtime=self.runtime,
@@ -153,6 +154,7 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         version_range: str = ">=1.0.0 <2.0.0",
         *,
         index_raw: dict | None = None,
+        requirements: list[dict] | None = None,
     ) -> dict:
         """Publish the canary through the real ``market`` source loader.
 
@@ -166,7 +168,9 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
         if index_raw is not None:
             index["packages"] = [entry]
         entry["version"] = version
-        if entry.get("requires_plugins"):
+        if requirements is not None:
+            entry["requires_plugins"] = copy.deepcopy(requirements)
+        elif entry.get("requires_plugins"):
             entry["requires_plugins"][0]["version_range"] = version_range
         manifest = self._canary_manifest_raw()
         manifest["version"] = version
@@ -195,15 +199,24 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
             self._serve.stop()
             self._serve = None
 
-    def _plugin_package(self, version: str = "1.0.0") -> dict:
-        payload = self.artifact.read_bytes()
+    def _artifact(self, plugin: str = "fjtv") -> Path:
+        """Build a real bundled Plugin into a signed SDK artifact (cached)."""
+        if plugin not in self._artifacts:
+            artifact = Path(self.tmp.name) / f"{plugin}-plugin.pyz"
+            self.build_sdk_artifact(PLUGIN_ROOT / plugin / "plugin.py", artifact)
+            self._artifacts[plugin] = artifact
+        return self._artifacts[plugin]
+
+    def _plugin_package(self, version: str = "1.0.0", plugin: str = "fjtv") -> dict:
+        artifact = self._artifact(plugin)
+        payload = artifact.read_bytes()
         digest = hashlib.sha256(payload).hexdigest()
         manifest = {
-            "manifest_version": 1, "publisher_id": "org.waveflow", "plugin_id": "fjtv",
-            "display_name": "FJTV Provider", "version": version, "plugin_api_version": "1.0",
+            "manifest_version": 1, "publisher_id": "org.waveflow", "plugin_id": plugin,
+            "display_name": f"{plugin.upper()} Provider", "version": version, "plugin_api_version": "1.0",
             "core_version_range": ">=0.1.0 <1.0.0",
             "provider_contracts": [{"contract": "tv_provider", "contract_version": "1.0", "features": ["resolve_stream"]}],
-            "owned_schemes": [{"scheme": "fjtv", "contract": "tv_provider"}],
+            "owned_schemes": [{"scheme": plugin, "contract": "tv_provider"}],
             "capabilities": ["tv.resolve_stream"],
             "permissions": {"network": {"managed": True, "allowed_hosts": ["live.fjtv.net", "mapi-plus.fjtv.net"]}},
             "runtime": {"type": "subprocess", "ipc": "stdio_framed_json_v1"},
@@ -218,23 +231,27 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
             "dependencies": [], "state_schema_version": 1,
         }
         return {
-            "schema_version": 1, "id": "official::fjtv-plugin", "original_id": "fjtv-plugin",
-            "name": "FJTV Plugin", "kind": "plugin_package", "package_type": "plugin_package",
+            "schema_version": 1, "id": f"official::{plugin}-plugin", "original_id": f"{plugin}-plugin",
+            "name": f"{plugin.upper()} Plugin", "kind": "plugin_package", "package_type": "plugin_package",
             "version": version, "plugin_manifest": manifest,
-            "artifact_references": [{"sha256": digest, "local_path": str(self.artifact)}],
+            "artifact_references": [{"sha256": digest, "local_path": str(artifact)}],
             "market_source": {"source_key": "official"},
         }
 
-    async def _install_plugin(self, version: str = "1.0.0") -> dict:
-        return await self.service.install_from_packages([self._plugin_package(version)], IDENTITY)
+    async def _install_plugin(self, version: str = "1.0.0", plugin: str = "fjtv") -> dict:
+        return await self.service.install_from_packages(
+            [self._plugin_package(version, plugin)], f"org.waveflow/{plugin}",
+        )
 
     @staticmethod
-    def _requirement(version_range: str = ">=1.0.0 <2.0.0", identity: str = IDENTITY) -> dict:
+    def _requirement(
+        version_range: str = ">=1.0.0 <2.0.0", identity: str = IDENTITY, scheme: str = "fjtv",
+    ) -> dict:
         return {
             "plugin": identity,
             "version_range": version_range,
             "contract": "tv_provider",
-            "required_schemes": ["fjtv"],
+            "required_schemes": [scheme],
         }
 
     async def _import_canary(self, version: str = "1.0.0", version_range: str = ">=1.0.0 <2.0.0"):
@@ -446,6 +463,62 @@ class MarketContentDependencyLifecycleTest(unittest.IsolatedAsyncioTestCase):
             [row["plugin_identity"] for row in await self.db.list_plugin_scheme_ownership()],
             [""],
         )
+
+    async def test_partial_dependency_readiness_is_not_readiness(self):
+        """One satisfied requirement never covers a missing sibling."""
+        absent = {
+            "plugin": "org.waveflow/absent",
+            "version_range": ">=1.0.0 <2.0.0",
+            "contract": "tv_provider",
+            "required_schemes": ["absent"],
+        }
+        await self._install_plugin("1.0.0")
+        package = await self._offer(requirements=[self._requirement(), absent])
+
+        projection = await self.service.dependency_projection([self._requirement(), absent])
+        self.assertEqual(projection["status"], "dependency_missing")
+        self.assertEqual(
+            {item["plugin"]: item["status"] for item in projection["dependencies"]},
+            {IDENTITY: "ready", "org.waveflow/absent": "dependency_missing"},
+        )
+
+        preview = await self.market.build_preview(package["id"])
+        with self.assertRaises(self.pm.PluginError) as blocked:
+            await self.market.import_package(package["id"], preview_id=preview["preview_id"])
+        self.assertEqual(blocked.exception.code, "DEPENDENCY_MISSING")
+        self.assertIsNone(await self.db.get_market_install(self.content_id))
+
+    async def test_reverse_dependency_counts_every_required_identity(self):
+        """A dependent is reported for every identity it names, not only the first."""
+        second = "org.waveflow/jstv"
+        requirements = [self._requirement(), self._requirement(identity=second, scheme="jstv")]
+        await self._install_plugin("1.0.0")
+        await self._install_plugin("1.0.0", "jstv")
+
+        package = await self._offer(requirements=requirements)
+        preview = await self.market.build_preview(package["id"])
+        await self.market.import_package(package["id"], preview_id=preview["preview_id"])
+        install = await self.db.get_market_install(self.content_id)
+        self.assertEqual(json.loads(install["metadata_json"])["requires_plugins"], requirements)
+
+        for identity in (IDENTITY, second):
+            projection = await self.service.reverse_dependency_projection(identity)
+            self.assertEqual(
+                (projection["status"], projection["dependents"]), ("blocked", [self.content_id]), identity,
+            )
+
+        # Losing one of the two Plugins must not silently release the other.
+        await self.service.uninstall(second, force=True)
+        for identity in (IDENTITY, second):
+            self.assertEqual(
+                (await self.service.reverse_dependency_projection(identity))["dependents"],
+                [self.content_id],
+                identity,
+            )
+        with self.assertRaises(self.pm.PluginError) as refused:
+            await self.service.uninstall(IDENTITY)
+        self.assertEqual(refused.exception.code, "PLUGIN_DEPENDENCY_ACTIVE")
+        self.assertEqual(refused.exception.details["dependents"], [self.content_id])
 
     async def test_delisted_dependent_content_package_can_still_be_removed(self):
         """The refusal guard must not become a dead end.
