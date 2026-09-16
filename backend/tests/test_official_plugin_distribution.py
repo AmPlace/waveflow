@@ -361,6 +361,57 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             )
             self.assertEqual(_tree(repo_output), _tree(external_output))
 
+    def test_the_whole_release_plan_builds_identically_from_an_external_source_root(self):
+        """Every official Plugin source can leave the repository unchanged.
+
+        This is the full-scale form of the extraction smoke test: all plan
+        entries are copied outside the repository, declared as external, and
+        rebuilt.  The produced release must be byte-identical to the one built
+        from the in-repository sources, which is what makes "the source location
+        is not part of the release" an evidenced claim rather than an assumption.
+        """
+        from build_official_plugins import OFFICIAL_DISTRIBUTION_ROOT, build_release
+
+        plan = json.loads((OFFICIAL_DISTRIBUTION_ROOT / "release-plan.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key_path, trust = self._release_key(root)
+            external = root / "external-plugins"
+            external.mkdir()
+            external_plugins = []
+            for item in plan["plugins"]:
+                source = (OFFICIAL_DISTRIBUTION_ROOT / item["source"]).resolve()
+                self.assertTrue(source.is_dir(), item["source"])
+                shutil.copytree(source, external / source.name)
+                external_plugins.append({**item, "source": source.name, "source_root": "external"})
+            external_plan = root / "external-plan.json"
+            external_plan.write_text(json.dumps({**plan, "plugins": external_plugins}))
+
+            in_repository = root / "in-repository-release"
+            out_of_repository = root / "external-release"
+            build_release(
+                signing_key=key_path, key_id="fixture-release-key",
+                output=in_repository, trust_path=trust,
+            )
+            build_release(
+                signing_key=key_path, key_id="fixture-release-key",
+                output=out_of_repository, trust_path=trust,
+                plugin_source_root=external, plan_path=external_plan,
+            )
+
+            self.assertEqual(_tree(in_repository), _tree(out_of_repository))
+            market = json.loads((out_of_repository / "market.json").read_text())
+            self.assertEqual(
+                {item["plugin_manifest"]["plugin_id"] for item in market["packages"]},
+                {item["plugin_id"] for item in plan["plugins"]},
+            )
+            # The dependency-locked Plugins go through the untouched dependency
+            # artifact path checks from the external source root as well.
+            self.assertEqual(
+                {path.name for path in (out_of_repository / "payloads" / "dependencies").iterdir()},
+                {"nmtv", "sdtv", "ptbtv", "streamget-providers"},
+            )
+
     def test_external_source_root_cannot_escape_and_repository_containment_holds(self):
         from build_official_plugins import build_release
         from plugin_runtime import PluginError
