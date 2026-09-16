@@ -1,16 +1,27 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable
-from urllib.parse import parse_qs, urlparse
+from typing import Any
 
 import httpx
 
-from adapters import AdapterRequest, AdapterResolveError, parse_adapter_url, resolve_adapter_source
 from plugin_runtime import PluginError, PluginRuntime
+from provider_reference import (
+    ProviderReferenceError,
+    parse_provider_reference,
+)
 
 
 OWNERSHIP_MODES = frozenset({"legacy", "plugin", "migration_test"})
+
+# Only these modes route to a Plugin.  The database keeps a
+# CHECK(mode IN ('legacy', 'plugin', 'migration_test')) constraint, so "legacy"
+# stays storable for data compatibility, but it is deliberately non-routable:
+# Core no longer ships any provider adapter to fall back to.
+ROUTABLE_MODES = frozenset({"plugin", "migration_test"})
+
+# Returned by ``mode()`` when no ownership row exists.  It is never persisted.
+UNOWNED_MODE = "unowned"
 
 
 @dataclass(frozen=True)
@@ -22,27 +33,27 @@ class TVReferenceV1:
 
 
 def parse_tv_reference(value: str) -> TVReferenceV1:
-    raw = str(value or "").strip()
-    try:
-        legacy = parse_adapter_url(raw)
-    except AdapterResolveError:
-        parsed = urlparse(raw)
-        scheme = parsed.scheme.lower()
-        resource = (parsed.netloc + parsed.path).strip("/")
-        if not scheme or not resource:
-            raise
-        return TVReferenceV1(raw, scheme, resource, parse_qs(parsed.query, keep_blank_values=False))
-    return TVReferenceV1(legacy.raw_url, legacy.adapter, legacy.resource_id, legacy.query)
+    reference = parse_provider_reference(value)
+    return TVReferenceV1(
+        reference.raw_url,
+        reference.scheme,
+        reference.resource_id,
+        reference.query,
+    )
 
 
 class ProviderResolver:
+    """Resolve a source reference through Plugin ownership only.
+
+    There is no Core provider fallback.  A scheme without Plugin ownership, or
+    whose Plugin is missing, disabled or unhealthy, fails closed.
+    """
+
     def __init__(
         self, *, runtime: PluginRuntime | None,
         ownership: dict[str, str] | None = None,
-        legacy_resolver: Callable[[str, httpx.AsyncClient], Awaitable[dict[str, Any]]] = resolve_adapter_source,
     ):
         self.runtime = runtime
-        self.legacy_resolver = legacy_resolver
         self._ownership = {str(k).lower(): str(v) for k, v in (ownership or {}).items()}
         self._expected_plugins: dict[str, str] = {}
         self._unavailable: set[str] = set()
@@ -55,25 +66,24 @@ class ProviderResolver:
         rows: list[dict[str, Any]],
         *,
         runtime: PluginRuntime | None,
-        legacy_resolver: Callable[[str, httpx.AsyncClient], Awaitable[dict[str, Any]]] = resolve_adapter_source,
     ) -> "ProviderResolver":
-        resolver = cls(runtime=runtime, legacy_resolver=legacy_resolver)
+        resolver = cls(runtime=runtime)
         for row in rows:
             mode = str(row.get("mode") or "legacy")
             resolver.set_mode(
                 str(row.get("scheme") or ""),
                 mode,
                 str(row.get("plugin_identity") or ""),
-                # Durable Plugin ownership is desired state.  It is only made
-                # routable after production recovery proves the matching
-                # installation/runtime healthy.  Legacy remains immediately
-                # available and does not depend on the Plugin subsystem.
-                available=mode == "legacy",
+                # No mode is routable on construction.  Plugin ownership only
+                # becomes routable after production recovery proves the
+                # matching installation/runtime healthy.
+                available=False,
             )
         return resolver
 
     def mode(self, scheme: str) -> str:
-        return self._ownership.get(scheme.lower(), "legacy")
+        """Stored ownership mode, or ``UNOWNED_MODE`` when nothing owns it."""
+        return self._ownership.get(str(scheme).lower(), UNOWNED_MODE)
 
     def set_mode(
         self, scheme: str, mode: str, plugin_identity: str = "", *, available: bool = True,
@@ -114,9 +124,12 @@ class ProviderResolver:
                 "PLUGIN_UNAVAILABLE", "Provider ownership is reconciling", category="lifecycle",
             )
         mode = self.mode(reference.scheme)
-        if mode == "legacy":
-            result = await self.legacy_resolver(target_url, client)
-            return self._bind_source_identity(result, source_id=source_id, source_revision=source_revision)
+        if mode not in ROUTABLE_MODES:
+            raise PluginError(
+                "PLUGIN_UNAVAILABLE",
+                f"No Plugin owns provider '{reference.scheme}'",
+                category="routing",
+            )
         if self.runtime is None:
             raise PluginError("PLUGIN_UNAVAILABLE", "Plugin subsystem is unavailable", category="lifecycle")
         instance = self.runtime.registry.route(reference.scheme)
@@ -150,13 +163,13 @@ class ProviderResolver:
         """Return whether the active Plugin owns the optional visual feature.
 
         This is a capability check only.  It never invokes a provider and it
-        deliberately returns false for legacy ownership or unavailable
+        deliberately returns false for non-Plugin ownership or unavailable
         runtimes, so unsupported sources are not probed as a side effect of a
         Home render.
         """
         try:
             reference = parse_tv_reference(target_url)
-            if self.mode(reference.scheme) != "plugin" or self.runtime is None:
+            if self.mode(reference.scheme) not in ROUTABLE_MODES or self.runtime is None:
                 return False
             instance = self.runtime.registry.route(reference.scheme)
             expected = self._expected_plugins.get(reference.scheme)
@@ -167,7 +180,7 @@ class ProviderResolver:
                 None,
             )
             return bool(contract and "metadata" in contract.features and reference.scheme in contract.schemes)
-        except (AdapterResolveError, PluginError, ValueError):
+        except (ProviderReferenceError, PluginError, ValueError):
             return False
 
     async def visual_metadata(
@@ -179,7 +192,7 @@ class ProviderResolver:
     ) -> dict[str, Any]:
         """Resolve optional source visual metadata through the active Plugin."""
         reference = parse_tv_reference(target_url)
-        if self.mode(reference.scheme) != "plugin":
+        if self.mode(reference.scheme) not in ROUTABLE_MODES:
             raise PluginError("RESOURCE_NOT_FOUND", "Source has no Plugin visual metadata", category="request")
         if self.runtime is None:
             raise PluginError("PLUGIN_UNAVAILABLE", "Plugin subsystem is unavailable", category="lifecycle")

@@ -5,8 +5,6 @@ import types
 import json
 from unittest import mock
 
-from adapters import AdapterResolveError, parse_adapter_url
-from adapters.youtube import resolve_youtube
 import database
 import iptv_probe
 from plugin_runtime import PluginError
@@ -43,20 +41,23 @@ Input #0, rtsp, from 'rtsp://example/live':
         self.assertEqual(parsed["speed_mbps"], 0.25)
 
 
-class RemovedLegacyProviderSchemeTest(unittest.TestCase):
-    def test_removed_schemes_are_not_registered_or_parseable(self):
-        from adapters import _ADAPTER_REGISTRY
+class RemovedLegacyProviderSchemeTest(unittest.IsolatedAsyncioTestCase):
+    """Removed schemes must fail closed, never fall back to a Core adapter."""
 
+    async def test_removed_schemes_fail_closed_without_a_plugin_owner(self):
+        from provider_resolver import ProviderResolver
+
+        resolver = ProviderResolver(runtime=None)
         for scheme in ("haixiu", "liveme", "lehai"):
             with self.subTest(scheme=scheme):
-                self.assertNotIn(scheme, _ADAPTER_REGISTRY)
-                with self.assertRaises(AdapterResolveError) as direct_ctx:
-                    parse_adapter_url(f"{scheme}://room-1")
-                self.assertEqual(direct_ctx.exception.error_code, "invalid_adapter_url")
+                with self.assertRaises(PluginError) as ctx:
+                    await resolver.resolve(f"{scheme}://room-1", None)
+                self.assertEqual(ctx.exception.code, "PLUGIN_UNAVAILABLE")
 
-                with self.assertRaises(AdapterResolveError) as compat_ctx:
-                    parse_adapter_url(f"adapter://{scheme}/room-1")
-                self.assertEqual(compat_ctx.exception.error_code, "unsupported_adapter")
+    def test_no_provider_adapter_package_remains_in_core(self):
+        import importlib.util
+
+        self.assertIsNone(importlib.util.find_spec("adapters"))
 
 
 class IptvProbeRealtimeStreamTest(unittest.IsolatedAsyncioTestCase):
@@ -73,16 +74,12 @@ class IptvProbeRealtimeStreamTest(unittest.IsolatedAsyncioTestCase):
             os.environ["WAVEFLOW_DB_PATH"] = self._old_db_path
         self._tmp.cleanup()
 
-    async def test_production_probe_fails_closed_for_plugin_owner_but_keeps_legacy_owner(self):
+    async def test_production_probe_fails_closed_for_plugin_and_legacy_owner(self):
         from provider_resolver import ProviderResolver
 
-        legacy = mock.AsyncMock(return_value={
-            "adapter": "jstv", "url": "https://legacy.example/live.m3u8",
-            "source_type": "hls", "headers": {},
-        })
         plugin_owned = ProviderResolver.from_ownership_rows([{
             "scheme": "jstv", "mode": "plugin", "plugin_identity": "org.waveflow/jstv",
-        }], runtime=None, legacy_resolver=legacy)
+        }], runtime=None)
         unavailable = await probe_channel_source(
             {"url": "jstv://jsws", "source_type": "adapter"}, None,
             provider_resolver=plugin_owned,
@@ -90,23 +87,20 @@ class IptvProbeRealtimeStreamTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((unavailable["probe_status"], unavailable["probe_method"]),
                          ("error", "adapter_resolve"))
         self.assertIn('"error_code":"PLUGIN_UNAVAILABLE"', unavailable["probe_meta_json"])
-        legacy.assert_not_awaited()
 
+        # "legacy" stays storable for data compatibility but is non-routable:
+        # Core ships no provider adapter, so it must fail closed too.
         legacy_owned = ProviderResolver.from_ownership_rows([{
             "scheme": "jstv", "mode": "legacy", "plugin_identity": "",
-        }], runtime=None, legacy_resolver=legacy)
-        with mock.patch.object(
-            iptv_probe, "_probe_hls",
-            new=mock.AsyncMock(return_value=_empty_result(
-                probe_status="online", live_status="live", probe_method="http_segment",
-            )),
-        ), mock.patch.object(iptv_probe, "_enrich_with_ffprobe", new=mock.AsyncMock(side_effect=lambda result, *_: result)):
-            available = await probe_channel_source(
-                {"url": "jstv://jsws", "source_type": "adapter"}, None,
-                provider_resolver=legacy_owned,
-            )
-        self.assertEqual(available["probe_status"], "online")
-        legacy.assert_awaited_once()
+        }], runtime=None)
+        self.assertEqual(legacy_owned.mode("jstv"), "legacy")
+        unavailable_legacy = await probe_channel_source(
+            {"url": "jstv://jsws", "source_type": "adapter"}, None,
+            provider_resolver=legacy_owned,
+        )
+        self.assertEqual((unavailable_legacy["probe_status"], unavailable_legacy["probe_method"]),
+                         ("error", "adapter_resolve"))
+        self.assertIn('"error_code":"PLUGIN_UNAVAILABLE"', unavailable_legacy["probe_meta_json"])
 
     async def test_plugin_not_live_maps_to_existing_probe_taxonomy(self):
         class Resolver:
@@ -269,77 +263,6 @@ class IptvProbeRealtimeStreamTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"source_type":"hls"', result["probe_meta_json"])
         metadata = json.loads(result["probe_meta_json"])
         self.assertNotEqual(metadata.get("probe_status"), "online")
-
-
-class YoutubeAdapterProbeOnlyTest(unittest.IsolatedAsyncioTestCase):
-    def _request(self):
-        return parse_adapter_url(
-            "youtube://resolve?probe=1&url=https%3A%2F%2Fwww.youtube.com%2Flive%2FabcDEF123_4"
-        )
-
-    async def test_probe_only_live_page_returns_metadata_only(self):
-        class Client:
-            async def get(self, *args, **kwargs):
-                return type("Response", (), {
-                    "status_code": 200,
-                    "text": (
-                        "window['ytCommand'] = {\"watchEndpoint\":{\"videoId\":\"abcDEF123_4\"}};"
-                        '{"videoPrimaryInfoRenderer":{"viewCount":{"videoViewCountRenderer":'
-                        '{"viewCount":{"runs":[{"text":"1"},{"text":" watching now"}]},"isLive":true}}},'
-                        '"videoSecondaryInfoRenderer":{}}'
-                    ),
-                })()
-
-        result = await resolve_youtube(self._request(), Client())
-
-        self.assertEqual(result["source_type"], "probe_only")
-        self.assertEqual(result["url"], "")
-        self.assertEqual(result["youtube_video_id"], "abcDEF123_4")
-        self.assertTrue(result["youtube_page_is_live"])
-
-    async def test_probe_only_prefers_explicit_url_video_id(self):
-        request = parse_adapter_url(
-            "youtube://resolve?probe=1&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DcMgDo5cH-Lg"
-        )
-
-        class Client:
-            async def get(self, *args, **kwargs):
-                return type("Response", (), {
-                    "status_code": 200,
-                    "text": (
-                        "window['ytCommand'] = {\"watchEndpoint\":{\"videoId\":\"KvwmJIjntvw\"}};"
-                        '{"videoPrimaryInfoRenderer":{"viewCount":{"videoViewCountRenderer":'
-                        '{"viewCount":{"runs":[{"text":"1"},{"text":" watching now"}]},"isLive":true}}},'
-                        '"videoSecondaryInfoRenderer":{}}'
-                    ),
-                })()
-
-        result = await resolve_youtube(request, Client())
-
-        self.assertEqual(result["youtube_video_id"], "cMgDo5cH-Lg")
-
-    async def test_probe_only_not_live_page_raises_not_live(self):
-        class Client:
-            async def get(self, *args, **kwargs):
-                return type("Response", (), {"status_code": 200, "text": "<html></html>"})()
-
-        with self.assertRaises(AdapterResolveError) as ctx:
-            await resolve_youtube(self._request(), Client())
-
-        self.assertEqual(ctx.exception.error_code, "youtube_not_live")
-        self.assertFalse(ctx.exception.retryable)
-        self.assertEqual(ctx.exception.youtube_video_id, "abcDEF123_4")
-
-    async def test_probe_only_unreachable_page_is_retryable_error(self):
-        class Client:
-            async def get(self, *args, **kwargs):
-                return type("Response", (), {"status_code": 403, "text": ""})()
-
-        with self.assertRaises(AdapterResolveError) as ctx:
-            await resolve_youtube(self._request(), Client())
-
-        self.assertEqual(ctx.exception.error_code, "youtube_page_unreachable")
-        self.assertTrue(ctx.exception.retryable)
 
 
 if __name__ == "__main__":

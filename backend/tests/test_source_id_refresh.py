@@ -113,7 +113,7 @@ class SourceIdRefreshTest(unittest.TestCase):
             self.assertNotIn(before[removed_header_key][1], surviving_ids)
 
             from routers import media_proxy
-            from adapters import AdapterResolveError
+            from provider_reference import ProviderReferenceError
             from security.dependencies import MediaAccessContext
 
             adapter_source = {**after[adapter_key][2], 'source_id': before[adapter_key][1], 'enabled': True}
@@ -147,7 +147,7 @@ class SourceIdRefreshTest(unittest.TestCase):
                 _sorted_sources=lambda sources: list(sources),
                 _source_type=lambda source: source.get('source_type') or 'hls',
                 http_client=object(),
-                AdapterResolveError=AdapterResolveError,
+                ProviderReferenceError=ProviderReferenceError,
             )
             fake_main.app = types.SimpleNamespace(
                 state=types.SimpleNamespace(provider_resolver=types.SimpleNamespace(resolve=fake_resolve)),

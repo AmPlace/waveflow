@@ -13,6 +13,7 @@ from unittest import mock
 import httpx
 
 from plugin_runtime import LifecycleState, PluginError, validate_manifest
+from provider_resolver import ROUTABLE_MODES, UNOWNED_MODE
 
 
 IDENTITY = "org.waveflow/streamget-providers"
@@ -67,12 +68,6 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.client = httpx.AsyncClient(transport=httpx.MockTransport(
             lambda request: httpx.Response(503, text="deterministic rollout has no upstream fetch")
         ))
-        self.legacy = mock.AsyncMock(
-            side_effect=lambda target, _client: {
-                "ok": True,
-                "url": f"https://legacy.example/{target.split('://', 1)[0]}.m3u8",
-            }
-        )
         self.subsystems = []
         self.plugin_requests: list[tuple[str, str]] = []
         self.safe = mock.patch("plugin_capabilities.assert_safe_target_url", new=mock.AsyncMock())
@@ -103,7 +98,6 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         subsystem = await ProductionPluginSubsystem.create(
             root=Path(self.tmp.name) / "plugin-store", http_client=self.client,
         )
-        subsystem.provider_resolver.legacy_resolver = self.legacy
         self.subsystems.append(subsystem)
         return subsystem
 
@@ -186,9 +180,9 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(instance.health, "healthy")
         for scheme in SCHEMES:
             self.assertIs(subsystem.service.runtime.registry.route(scheme), instance)
-        self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), "legacy")
-        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), "legacy")
-        self.assertEqual(subsystem.provider_resolver.mode(DOUYIN_SCHEME), "legacy")
+        self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), UNOWNED_MODE)
+        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), UNOWNED_MODE)
+        self.assertEqual(subsystem.provider_resolver.mode(DOUYIN_SCHEME), UNOWNED_MODE)
 
     def _install_deterministic_runtime_request(self, subsystem) -> None:
         """Keep ProviderResolver deterministic while the real process is smoke-tested separately.
@@ -233,28 +227,33 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         )
         return result
 
-    async def _resolve_legacy(self, subsystem, scheme: str) -> dict:
-        before = self.legacy.await_count
-        result = await subsystem.provider_resolver.resolve(f"{scheme}://room-42", self.client)
-        self.assertEqual(subsystem.provider_resolver.mode(scheme), "legacy")
-        self.assertEqual(self.legacy.await_count, before + 1)
-        self.assertTrue(result["url"].startswith("https://legacy.example/"))
-        return result
+    async def _assert_unowned_fails_closed(self, subsystem, scheme: str) -> None:
+        """A scheme without Plugin ownership fails closed; Core has no fallback.
+
+        Works for both shapes: a scheme that was never taken over (unowned) and
+        one rolled back to the storable-but-non-routable "legacy" mode.
+        """
+        self.assertNotEqual(subsystem.provider_resolver.mode(scheme), "plugin")
+        with self.assertRaises(PluginError) as ctx:
+            await subsystem.provider_resolver.resolve(f"{scheme}://room-42", self.client)
+        self.assertEqual(ctx.exception.code, "PLUGIN_UNAVAILABLE")
 
     async def _assert_plugin_modes(self, subsystem, expected: set[str]) -> None:
         rows = {row["scheme"]: row for row in await self.db.list_plugin_scheme_ownership()}
         for scheme in sorted(BUNDLE_SCHEME_SET):
             row = rows.get(scheme)
-            mode = "legacy" if row is None else row["mode"]
+            mode = UNOWNED_MODE if row is None else row["mode"]
             identity = "" if row is None else row["plugin_identity"]
             if scheme in expected:
                 self.assertEqual((mode, identity), ("plugin", IDENTITY), scheme)
                 self.assertEqual(subsystem.provider_resolver.mode(scheme), "plugin")
             else:
-                self.assertEqual(mode, "legacy", scheme)
-                self.assertEqual(subsystem.provider_resolver.mode(scheme), "legacy")
+                # Either never taken over ("unowned") or explicitly rolled back
+                # to "legacy", which stays storable but is no longer routable.
+                self.assertIn(mode, (UNOWNED_MODE, "legacy"), scheme)
+                self.assertNotIn(subsystem.provider_resolver.mode(scheme), ROUTABLE_MODES)
         if BILIBILI_SCHEME not in expected:
-            self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), "legacy")
+            self.assertNotIn(subsystem.provider_resolver.mode(BILIBILI_SCHEME), ROUTABLE_MODES)
 
     async def test_four_batch_rollout_partial_ownership_crash_recovery_and_guards(self):
         self._require_mac_runtime()
@@ -281,10 +280,10 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
                 # the whole bundle.  The remaining 24 schemes must remain
                 # legacy, and one scheme can roll back independently.
                 for scheme in sorted(SCHEME_SET - rolled_out):
-                    await self._resolve_legacy(subsystem, scheme)
+                    await self._assert_unowned_fails_closed(subsystem, scheme)
                 rollback_scheme = batch[0]
                 await subsystem.set_ownership(rollback_scheme, "legacy")
-                await self._resolve_legacy(subsystem, rollback_scheme)
+                await self._assert_unowned_fails_closed(subsystem, rollback_scheme)
                 self.assertEqual(
                     {scheme for scheme in rolled_out
                      if subsystem.provider_resolver.mode(scheme) == "plugin"},
@@ -294,8 +293,8 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
                 await self._resolve_plugin(subsystem, rollback_scheme)
 
                 # A runtime crash is bundle-wide, but only Plugin-owned
-                # schemes fail closed.  Legacy-owned schemes still use the
-                # legacy resolver and never silently switch owner.
+                # schemes were routed there.  Everything without Plugin
+                # ownership fails closed and never silently switches owner.
                 instance = subsystem.service.runtime.registry.route("yy")
                 process = instance.process.process
                 self.assertIsNotNone(process)
@@ -309,7 +308,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
                         await subsystem.provider_resolver.resolve(f"{scheme}://room-42", self.client)
                     self.assertIn(unavailable.exception.code, {"PLUGIN_UNAVAILABLE", "PLUGIN_CRASHED"})
                 self.assertEqual(len(self.plugin_requests), plugin_calls)
-                await self._resolve_legacy(subsystem, "picarto")
+                await self._assert_unowned_fails_closed(subsystem, "picarto")
 
                 subsystem = await self._restart(subsystem)
                 self._install_deterministic_runtime_request(subsystem)
@@ -386,16 +385,14 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await subsystem.startup()
         await self._install_official(subsystem, package)
 
-        self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), "legacy")
+        await self._assert_unowned_fails_closed(subsystem, BILIBILI_SCHEME)
         self._install_deterministic_runtime_request(subsystem)
-        legacy_calls = self.legacy.await_count
         await subsystem.set_ownership(BILIBILI_SCHEME, "plugin", IDENTITY)
         result = await self._resolve_plugin(subsystem, BILIBILI_SCHEME)
         self.assertEqual(
             (result["source_type"], result["ttl"], result["volatile_url"], result["requires_proxy"]),
             ("http_flv", 1800, False, False),
         )
-        self.assertEqual(self.legacy.await_count, legacy_calls)
         await self._assert_plugin_modes(subsystem, {BILIBILI_SCHEME})
 
         # Reinstalling the same signed bundle version is idempotent and must
@@ -410,10 +407,9 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await self._resolve_plugin(subsystem, BILIBILI_SCHEME)
 
         await subsystem.set_ownership(BILIBILI_SCHEME, "legacy")
-        await self._resolve_legacy(subsystem, BILIBILI_SCHEME)
+        await self._assert_unowned_fails_closed(subsystem, BILIBILI_SCHEME)
         await subsystem.set_ownership(BILIBILI_SCHEME, "plugin", IDENTITY)
         await self._resolve_plugin(subsystem, BILIBILI_SCHEME)
-        self.assertEqual(self.legacy.await_count, legacy_calls + 1)
         await self._assert_plugin_modes(subsystem, {BILIBILI_SCHEME})
 
     async def test_douyu_staged_takeover_restart_rollback_and_update_boundary(self):
@@ -424,10 +420,9 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await subsystem.startup()
         await self._install_official(subsystem, package)
 
-        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), "legacy")
-        self.assertEqual(subsystem.provider_resolver.mode("bilibili"), "legacy")
+        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), UNOWNED_MODE)
+        self.assertEqual(subsystem.provider_resolver.mode("bilibili"), UNOWNED_MODE)
         self._install_deterministic_runtime_request(subsystem)
-        legacy_calls = self.legacy.await_count
         await subsystem.set_ownership("picarto", "plugin", IDENTITY)
         await self._resolve_plugin(subsystem, "picarto")
         await subsystem.set_ownership(DOUYU_SCHEME, "plugin", IDENTITY)
@@ -436,8 +431,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
             (result["source_type"], result["ttl"], result["volatile_url"], result["requires_proxy"]),
             ("http_flv", 0, True, False),
         )
-        self.assertEqual(self.legacy.await_count, legacy_calls)
-        await self._resolve_legacy(subsystem, "bilibili")
+        await self._assert_unowned_fails_closed(subsystem, "bilibili")
         await self._assert_plugin_modes(subsystem, {DOUYU_SCHEME, "picarto"})
 
         # Reinstalling the same signed 34-scheme bundle does not rewrite
@@ -453,11 +447,10 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await self._resolve_plugin(subsystem, "picarto")
 
         await subsystem.set_ownership(DOUYU_SCHEME, "legacy")
-        await self._resolve_legacy(subsystem, DOUYU_SCHEME)
+        await self._assert_unowned_fails_closed(subsystem, DOUYU_SCHEME)
         await self._resolve_plugin(subsystem, "picarto")
         await subsystem.set_ownership(DOUYU_SCHEME, "plugin", IDENTITY)
         await self._resolve_plugin(subsystem, DOUYU_SCHEME)
-        self.assertEqual(self.legacy.await_count, legacy_calls + 2)
         await self._assert_plugin_modes(subsystem, {DOUYU_SCHEME, "picarto"})
 
     async def test_douyin_staged_takeover_restart_rollback_and_update_boundary(self):
@@ -468,11 +461,10 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await subsystem.startup()
         await self._install_official(subsystem, package)
 
-        self.assertEqual(subsystem.provider_resolver.mode(DOUYIN_SCHEME), "legacy")
-        self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), "legacy")
-        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), "legacy")
+        self.assertEqual(subsystem.provider_resolver.mode(DOUYIN_SCHEME), UNOWNED_MODE)
+        self.assertEqual(subsystem.provider_resolver.mode(BILIBILI_SCHEME), UNOWNED_MODE)
+        self.assertEqual(subsystem.provider_resolver.mode(DOUYU_SCHEME), UNOWNED_MODE)
         self._install_deterministic_runtime_request(subsystem)
-        legacy_calls = self.legacy.await_count
         await subsystem.set_ownership("picarto", "plugin", IDENTITY)
         await self._resolve_plugin(subsystem, "picarto")
         await subsystem.set_ownership(DOUYIN_SCHEME, "plugin", IDENTITY)
@@ -481,8 +473,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
             (result["source_type"], result["ttl"], result["volatile_url"], result["requires_proxy"]),
             ("hls", 1800, False, False),
         )
-        self.assertEqual(self.legacy.await_count, legacy_calls)
-        await self._resolve_legacy(subsystem, BILIBILI_SCHEME)
+        await self._assert_unowned_fails_closed(subsystem, BILIBILI_SCHEME)
         await self._assert_plugin_modes(subsystem, {DOUYIN_SCHEME, "picarto"})
 
         # Updating the signed 35-scheme bundle cannot rewrite existing
@@ -498,11 +489,10 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await self._resolve_plugin(subsystem, "picarto")
 
         await subsystem.set_ownership(DOUYIN_SCHEME, "legacy")
-        await self._resolve_legacy(subsystem, DOUYIN_SCHEME)
+        await self._assert_unowned_fails_closed(subsystem, DOUYIN_SCHEME)
         await self._resolve_plugin(subsystem, "picarto")
         await subsystem.set_ownership(DOUYIN_SCHEME, "plugin", IDENTITY)
         await self._resolve_plugin(subsystem, DOUYIN_SCHEME)
-        self.assertEqual(self.legacy.await_count, legacy_calls + 2)
         await self._assert_plugin_modes(subsystem, {DOUYIN_SCHEME, "picarto"})
 
     @unittest.skipUnless(
@@ -522,7 +512,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         await subsystem.startup()
         await self._install_official(subsystem, package)
         for scheme, resource in (("twitch", "eslcs"), ("showroom", "573483")):
-            self.assertEqual(subsystem.provider_resolver.mode(scheme), "legacy")
+            self.assertEqual(subsystem.provider_resolver.mode(scheme), UNOWNED_MODE)
             await subsystem.set_ownership(scheme, "plugin", IDENTITY)
             result = await subsystem.provider_resolver.resolve(
                 f"{scheme}://{resource}", self.client,

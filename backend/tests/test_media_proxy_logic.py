@@ -7,7 +7,7 @@ import time
 import types
 from unittest import mock
 
-from adapters import AdapterResolveError
+from provider_reference import ProviderReferenceError
 from security.dependencies import MediaAccessContext
 from security.proxy_context import get_registry as get_proxy_context_registry, reset_for_tests as reset_proxy_context_for_tests
 from security.proxy_handles import decode_for_kind, issue_handle
@@ -258,7 +258,7 @@ class MediaProxyLogicTest(unittest.TestCase):
         fake_main = types.SimpleNamespace(
             _source_type=lambda s: s.get("source_type") or "hls",
             http_client=object(),
-            AdapterResolveError=AdapterResolveError,
+            ProviderReferenceError=ProviderReferenceError,
         )
         fake_main.app = types.SimpleNamespace(
             state=types.SimpleNamespace(provider_resolver=types.SimpleNamespace(resolve=fake_resolve)),
@@ -300,7 +300,7 @@ class MediaProxyLogicTest(unittest.TestCase):
             ], [])),
             _source_type=lambda s: s.get("source_type") or "hls",
             http_client=object(),
-            AdapterResolveError=AdapterResolveError,
+            ProviderReferenceError=ProviderReferenceError,
         )
         fake_main.app = types.SimpleNamespace(
             state=types.SimpleNamespace(provider_resolver=types.SimpleNamespace(resolve=fake_resolve)),

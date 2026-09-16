@@ -8,7 +8,7 @@ from urllib.parse import quote, urljoin
 
 import httpx
 
-from adapters import AdapterResolveError
+from provider_reference import ProviderReferenceError
 from infrastructure.http_client import (
     RedirectTargetRejected,
     request_with_safe_redirects,
@@ -873,7 +873,7 @@ async def probe_channel_source(ch: dict[str, Any], client: httpx.AsyncClient, *,
                 "warnings": resolved.get("warnings") or [],
                 **descriptor_metadata,
             })
-        except AdapterResolveError as exc:
+        except ProviderReferenceError as exc:
             status = "not_live" if is_adapter_not_live_error(exc.error_code) else "error"
             cause = exc.__cause__ or exc
             err_vid = str(getattr(cause, "youtube_video_id", "") or getattr(exc, "youtube_video_id", "") or "").strip()

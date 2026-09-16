@@ -27,11 +27,9 @@ import epg_binding_management
 import epg_management
 import epg_read_resolver
 import epg_source_management
-from adapters import (
-    AdapterResolveError,
-    adapter_supports,
-    parse_adapter_url,
-    resolve_adapter_source,
+from provider_reference import (
+    ProviderReferenceError,
+    parse_provider_reference,
 )
 from iptv_probe import probe_channel_source
 from media_tools import media_tool_bin
@@ -1052,7 +1050,6 @@ async def lifespan(app: FastAPI):
         try:
             app.state.provider_resolver = ProviderResolver.from_ownership_rows(
                 await database.list_plugin_scheme_ownership(), runtime=None,
-                legacy_resolver=resolve_adapter_source,
             )
         except Exception:
             # If the durable ownership read itself fails, do not guess that
@@ -1093,7 +1090,6 @@ async def lifespan(app: FastAPI):
             try:
                 app.state.provider_resolver = ProviderResolver.from_ownership_rows(
                     await database.list_plugin_scheme_ownership(), runtime=None,
-                    legacy_resolver=resolve_adapter_source,
                 )
             except Exception:
                 logger.exception("Unable to reconcile Plugin ownership after startup failure")
@@ -3177,6 +3173,19 @@ _ADAPTER_COVER_FETCHERS = {
     "kuaishou": _fetch_kuaishou_cover,
 }
 
+# Provider-specific leftover, deliberately out of scope for the Plugin-only
+# resolve migration: cover art is not a provider resolve path, and these four
+# entries only say which cover fetchers exist.  It used to live in the deleted
+# ``adapters`` package; it is kept verbatim rather than redesigned.
+_ADAPTER_CAPABILITIES: dict[str, dict[str, bool]] = {
+    name: {"cover": True} for name in _ADAPTER_COVER_FETCHERS
+}
+
+
+def adapter_supports(adapter_name: str, capability: str) -> bool:
+    """Whether a Core cover fetcher still exists for this provider and capability."""
+    return bool(_ADAPTER_CAPABILITIES.get(str(adapter_name or "").lower(), {}).get(capability))
+
 
 # ── 封面图片代理（绕过 CDN Referer 防盗链）──────────────────────────────
 # 白名单：仅允许代理这些域名下的图片，防止被当作公共代理滥用。
@@ -3208,12 +3217,12 @@ def _cover_img_proxy_url(raw_url: str) -> str:
 async def fetch_adapter_cover_payload(adapter_url: str) -> dict:
     """供 /api/media/channel/{key}/cover 调用。返回封面 payload。"""
     try:
-        request = parse_adapter_url(adapter_url)
-    except AdapterResolveError:
+        request = parse_provider_reference(adapter_url)
+    except ProviderReferenceError:
         return _adapter_cover_empty()
 
-    if not adapter_supports(request.adapter, "cover"):
-        return _adapter_cover_empty(request.adapter)
+    if not adapter_supports(request.scheme, "cover"):
+        return _adapter_cover_empty(request.scheme)
 
     cache_key = request.raw_url
     cached = _adapter_cover_cache_get(cache_key)
@@ -3226,9 +3235,9 @@ async def fetch_adapter_cover_payload(adapter_url: str) -> dict:
         if cached is not None:
             return cached
 
-        fetcher = _ADAPTER_COVER_FETCHERS.get(request.adapter)
+        fetcher = _ADAPTER_COVER_FETCHERS.get(request.scheme)
         if not fetcher:
-            payload = _adapter_cover_empty(request.adapter)
+            payload = _adapter_cover_empty(request.scheme)
             _adapter_cover_cache_set(cache_key, payload, _ADAPTER_COVER_FAILURE_TTL_SECONDS)
             return payload
         try:
@@ -3243,8 +3252,8 @@ async def fetch_adapter_cover_payload(adapter_url: str) -> dict:
             return payload
         except Exception as exc:
             logger.info("adapter cover fetch failed adapter=%s room=%s err=%s",
-                        request.adapter, request.resource_id, exc)
-            payload = _adapter_cover_empty(request.adapter)
+                        request.scheme, request.resource_id, exc)
+            payload = _adapter_cover_empty(request.scheme)
             _adapter_cover_cache_set(cache_key, payload, _ADAPTER_COVER_FAILURE_TTL_SECONDS)
             return payload
 

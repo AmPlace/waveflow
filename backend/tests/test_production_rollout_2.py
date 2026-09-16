@@ -16,6 +16,7 @@ import httpx
 import xxtea
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from provider_resolver import UNOWNED_MODE
 
 
 TARGETS = (
@@ -94,7 +95,6 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
             return httpx.Response(503, text="offline")
 
         self.client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
-        self.legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/live.m3u8"})
         self.subsystems = []
         self.safe = mock.patch("plugin_capabilities.assert_safe_target_url", new=mock.AsyncMock())
         self.safe.start()
@@ -118,7 +118,6 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
         subsystem = await ProductionPluginSubsystem.create(
             root=Path(self.tmp.name) / "plugin-store", http_client=self.client,
         )
-        subsystem.provider_resolver.legacy_resolver = self.legacy
         self.subsystems.append(subsystem)
         return subsystem
 
@@ -158,7 +157,6 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
             # This is the only ownership mutation in the staged step.  It is
             # the same generic production API used by Settings, not a provider
             # branch or a test-only resolver mode switch.
-            legacy_calls_before = self.legacy.await_count
             result = await subsystem.set_ownership(scheme, "plugin", identity)
             self.assertEqual((result["mode"], result["plugin"]), ("plugin", identity))
             resolved = await subsystem.provider_resolver.resolve(reference, self.client)
@@ -166,7 +164,6 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(resolved["url"], STREAMS[scheme])
             self.assertEqual(subsystem.provider_resolver.mode(scheme), "plugin")
             self.assertEqual(subsystem.service.runtime.registry.route(scheme).manifest.identity, identity)
-            self.assertEqual(self.legacy.await_count, legacy_calls_before)
 
             if scheme in {"nmtv", "sdtv"}:
                 dependency_result = await subsystem.service.runtime.request(
@@ -182,23 +179,27 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
             recovered = await subsystem.provider_resolver.resolve(reference, self.client)
             self.assertEqual((recovered["stream_descriptor_version"], recovered["url"]),
                              ("1.0", STREAMS[scheme]))
-            self.assertEqual(self.legacy.await_count, legacy_calls_before)
+
+            # Rolling ownership back to "legacy" reaches no Core adapter: the
+            # mode stays storable for data compatibility but is no longer
+            # routable, so the scheme is explicitly unavailable instead of
+            # silently reverting to a provider adapter Core no longer ships.
+            from plugin_runtime import PluginError
 
             await subsystem.set_ownership(scheme, "legacy")
-            legacy = await subsystem.provider_resolver.resolve(reference, self.client)
-            self.assertEqual(legacy["url"], "https://legacy.example/live.m3u8")
+            with self.assertRaises(PluginError) as rolled_back:
+                await subsystem.provider_resolver.resolve(reference, self.client)
+            self.assertEqual(rolled_back.exception.code, "PLUGIN_UNAVAILABLE")
             await subsystem.set_ownership(scheme, "plugin", identity)
             restored = await subsystem.provider_resolver.resolve(reference, self.client)
             self.assertEqual((restored["stream_descriptor_version"], restored["url"]),
                              ("1.0", STREAMS[scheme]))
-            self.assertEqual(self.legacy.await_count, legacy_calls_before + 1)
 
         owners = {row["scheme"]: row for row in await self.db.list_plugin_scheme_ownership()}
         self.assertEqual(
             {(owners[scheme]["mode"], owners[scheme]["plugin_identity"]) for scheme, _identity, _ref in TARGETS},
             {("plugin", identity) for _scheme, identity, _ref in TARGETS},
         )
-        self.assertEqual(self.legacy.await_count, len(TARGETS))
 
         market = importlib.import_module("market")
         with mock.patch.object(
@@ -241,8 +242,11 @@ class ProductionRollout2Test(unittest.IsolatedAsyncioTestCase):
         ))
         owners = {row["scheme"]: row for row in await self.db.list_plugin_scheme_ownership()}
         self.assertTrue(all(scheme not in owners for scheme, _identity, _reference in TARGETS))
+        # Blocked takeovers leave no ownership row at all, and an unowned
+        # scheme is not routable: it resolves to "unowned" rather than falling
+        # back to a Core provider adapter.
         self.assertTrue(all(
-            subsystem.provider_resolver.mode(scheme) == "legacy"
+            subsystem.provider_resolver.mode(scheme) == UNOWNED_MODE
             for scheme, _identity, _reference in TARGETS
         ))
 

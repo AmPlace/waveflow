@@ -151,20 +151,22 @@ class PluginLifespanTest(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(unavailable.exception.code, "PLUGIN_UNAVAILABLE")
             subsystem.shutdown.assert_awaited_once()
 
-    async def test_startup_failure_preserves_legacy_routing(self):
+    async def test_startup_failure_does_not_restore_legacy_routing(self):
         automation = SimpleNamespace(registry=SimpleNamespace(), start=mock.AsyncMock(), stop=mock.AsyncMock())
-        legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/live.m3u8"})
         with self.patches(automation), mock.patch.object(
             self.main.ProductionPluginSubsystem, "create", new=mock.AsyncMock(side_effect=RuntimeError("bad plugin")),
         ), mock.patch.object(
             self.main.database, "list_plugin_scheme_ownership", new=mock.AsyncMock(return_value=[
                 {"scheme": "jstv", "mode": "legacy", "plugin_identity": ""},
             ]),
-        ), mock.patch.object(self.main, "resolve_adapter_source", new=legacy):
+        ):
             async with self.main.lifespan(self.main.app):
-                result = await self.main.app.state.provider_resolver.resolve("jstv://jsws", self.main.http_client)
-                self.assertEqual(result["url"], "https://legacy.example/live.m3u8")
-                legacy.assert_awaited_once()
+                # "legacy" stays storable, but Core ships no provider adapter, so
+                # it is non-routable and must fail closed.
+                self.assertEqual(self.main.app.state.provider_resolver.mode("jstv"), "legacy")
+                with self.assertRaises(Exception) as unavailable:
+                    await self.main.app.state.provider_resolver.resolve("jstv://jsws", self.main.http_client)
+                self.assertEqual(unavailable.exception.code, "PLUGIN_UNAVAILABLE")
 
     async def test_ownership_read_failure_does_not_assume_legacy(self):
         automation = SimpleNamespace(registry=SimpleNamespace(), start=mock.AsyncMock(), stop=mock.AsyncMock())

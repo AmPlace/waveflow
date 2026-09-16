@@ -96,15 +96,17 @@ class PluginProductionTest(unittest.IsolatedAsyncioTestCase):
             ProductionTrustPolicy([{**row, "enabled": 0}]).verify(manifest, manifest.artifacts[0], payload)
         self.assertEqual(disabled.exception.code, "PLUGIN_UNTRUSTED")
 
-    async def test_provider_resolver_defaults_legacy_and_explicit_plugin(self):
-        from adapters import _ADAPTER_REGISTRY
-        from provider_resolver import ProviderResolver
-        legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/a"})
-        resolver = ProviderResolver(runtime=None, legacy_resolver=legacy)
-        for scheme in _ADAPTER_REGISTRY:
-            self.assertEqual(resolver.mode(scheme), "legacy")
-        await resolver.resolve("fjtv://one", mock.Mock())
-        legacy.assert_awaited_once()
+    async def test_provider_resolver_is_plugin_only_and_fails_closed(self):
+        from provider_resolver import ProviderResolver, UNOWNED_MODE
+
+        resolver = ProviderResolver(runtime=None)
+        # A scheme with no ownership row is unowned, not legacy, and it never
+        # reaches a Core provider adapter.
+        self.assertEqual(resolver.mode("fjtv"), UNOWNED_MODE)
+        with self.assertRaises(Exception) as unowned:
+            await resolver.resolve("fjtv://one", mock.Mock())
+        self.assertEqual(unowned.exception.code, "PLUGIN_UNAVAILABLE")
+
         resolver.set_mode("synthetic-production-plugin", "plugin")
         with self.assertRaises(Exception) as unavailable:
             await resolver.resolve("synthetic-production-plugin://one", mock.Mock())
@@ -126,11 +128,13 @@ class PluginProductionTest(unittest.IsolatedAsyncioTestCase):
             "--version", manifest.version, "--scheme", "synthetic-production-plugin", "--tv-only",
         ])
         await runtime.enable(instance)
-        legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/a"})
-        resolver = ProviderResolver(runtime=runtime, legacy_resolver=legacy)
+        resolver = ProviderResolver(runtime=runtime)
         try:
-            result = await resolver.resolve("synthetic-production-plugin://channel/one", mock.Mock())
-            self.assertEqual(result["url"], "https://legacy.example/a")
+            # Before the explicit cutover the scheme has no Plugin owner, so it
+            # must fail closed rather than resolve through Core.
+            with self.assertRaises(Exception) as unowned:
+                await resolver.resolve("synthetic-production-plugin://channel/one", mock.Mock())
+            self.assertEqual(unowned.exception.code, "PLUGIN_UNAVAILABLE")
             resolver.set_mode("synthetic-production-plugin", "plugin")
             result = await resolver.resolve("synthetic-production-plugin://channel/one", mock.Mock())
             self.assertEqual(result["stream_descriptor_version"], "1.0")

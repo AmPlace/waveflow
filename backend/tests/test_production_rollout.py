@@ -11,6 +11,8 @@ from unittest import mock
 
 import httpx
 
+from provider_resolver import UNOWNED_MODE
+
 
 TARGETS = (
     ("jstv", "org.waveflow/jstv", "jstv://jsws"),
@@ -74,7 +76,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             return httpx.Response(503, text="offline")
 
         self.client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
-        self.legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/live.m3u8"})
         self.subsystems = []
         self.safe = mock.patch("plugin_capabilities.assert_safe_target_url", new=mock.AsyncMock())
         self.safe.start()
@@ -98,7 +99,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         subsystem = await ProductionPluginSubsystem.create(
             root=Path(self.tmp.name) / "plugin-store", http_client=self.client,
         )
-        subsystem.provider_resolver.legacy_resolver = self.legacy
         self.subsystems.append(subsystem)
         return subsystem
 
@@ -189,8 +189,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             subsystem._ownership_preflight = original_preflight
 
     async def test_signed_fresh_rollout_restart_offline_routing_and_reversible_ownership(self):
-        from adapters import _ADAPTER_REGISTRY
-
         subsystem = await self._subsystem()
         startup = await subsystem.startup()
         self.assertEqual(
@@ -218,10 +216,9 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             for scheme, identity, _reference in TARGETS
         ))
         self.assertEqual(
-            {scheme for scheme in _ADAPTER_REGISTRY if subsystem.provider_resolver.mode(scheme) == "plugin"},
+            {scheme for scheme in ROLLOUT_SCHEMES if subsystem.provider_resolver.mode(scheme) == "plugin"},
             ROLLOUT_SCHEMES,
         )
-        self.assertEqual(len(_ADAPTER_REGISTRY), 58)
 
         router = importlib.import_module("routers.plugins")
         projections = [await router._plugin_projection(row) for row in installations]
@@ -237,7 +234,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         ))
 
         await self._assert_plugin_routing(subsystem, "fresh")
-        self.legacy.assert_not_awaited()
         subsystem, recovered = await self._restart(subsystem)
         self.assertEqual(
             {item["plugin"] for item in recovered if item.get("status") == "active"},
@@ -245,7 +241,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertFalse(any(item.get("rollout") == "plugin" for item in recovered))
         await self._assert_plugin_routing(subsystem, "restart")
-        self.legacy.assert_not_awaited()
 
         market = importlib.import_module("market")
         with mock.patch.object(
@@ -256,12 +251,16 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(source["status"], "bundled")
         await self._assert_plugin_routing(subsystem, "offline")
 
+        # Rolling ownership back to "legacy" no longer reaches a Core adapter.
+        # The mode stays storable for data compatibility, but resolution must
+        # fail closed until a Plugin owns the scheme again.
+        from plugin_runtime import PluginError
+
         for scheme, identity, reference in TARGETS:
             self.assertEqual((await subsystem.set_ownership(scheme, "legacy"))["mode"], "legacy")
-            self.assertEqual(
-                (await subsystem.provider_resolver.resolve(reference, self.client))["url"],
-                "https://legacy.example/live.m3u8",
-            )
+            with self.assertRaises(PluginError) as ctx:
+                await subsystem.provider_resolver.resolve(reference, self.client)
+            self.assertEqual(ctx.exception.code, "PLUGIN_UNAVAILABLE")
             self.assertEqual(
                 (await subsystem.set_ownership(scheme, "plugin", identity))["mode"], "plugin",
             )
@@ -269,11 +268,8 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
                 (await subsystem.provider_resolver.resolve(reference, self.client))["stream_descriptor_version"],
                 "1.0",
             )
-        self.assertEqual(self.legacy.await_count, 4)
         final = {row["scheme"]: row for row in await self.db.list_plugin_scheme_ownership()}
         self.assertTrue(all(final[scheme]["mode"] == "plugin" for scheme in TARGET_SCHEMES))
-        for scheme in TARGET_SCHEMES:
-            self.assertTrue((Path("backend/adapters") / f"{scheme}.py").is_file())
 
     async def test_plugin_failure_has_no_legacy_fallback_and_guards_require_explicit_rollback(self):
         from plugin_runtime import PluginError
@@ -304,14 +300,15 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             crashed_row, runtime=subsystem.service.runtime,
         )
         self.assertFalse(crashed_projection["runtime_available"])
-        with self.assertRaises(PluginError):
+        with self.assertRaises(PluginError) as unhealthy:
             await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
-        self.legacy.assert_not_awaited()
+        self.assertEqual(unhealthy.exception.code, "PLUGIN_UNAVAILABLE")
+        # Even an explicit rollback to the storable "legacy" mode reaches no
+        # Core provider adapter: Core ships none to fall back to.
         await subsystem.set_ownership("jstv", "legacy")
-        self.assertEqual(
-            (await subsystem.provider_resolver.resolve("jstv://jsws", self.client))["url"],
-            "https://legacy.example/live.m3u8",
-        )
+        with self.assertRaises(PluginError) as rolled_back:
+            await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
+        self.assertEqual(rolled_back.exception.code, "PLUGIN_UNAVAILABLE")
         subsystem, _recovered = await self._restart(subsystem)
         self.assertEqual(subsystem.provider_resolver.mode("jstv"), "legacy")
         await subsystem.set_ownership("jstv", "plugin", "org.waveflow/jstv")
@@ -393,7 +390,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(Exception) as routed:
                 await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
             self.assertEqual(routed.exception.code, "PLUGIN_UNAVAILABLE")
-            self.legacy.assert_not_awaited()
         await self._wait_reconciliation(subsystem)
         row = next(item for item in await self.db.list_plugin_scheme_ownership() if item["scheme"] == "jstv")
         self.assertEqual((row["mode"], row["plugin_identity"]), ("plugin", "org.waveflow/jstv"))
@@ -423,14 +419,15 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(Exception) as routed:
                 await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
             self.assertEqual(routed.exception.code, "PLUGIN_UNAVAILABLE")
-            self.legacy.assert_not_awaited()
         await self._wait_reconciliation(subsystem)
         owner = next(row for row in await self.db.list_plugin_scheme_ownership() if row["scheme"] == "jstv")
         self.assertEqual((owner["mode"], owner["plugin_identity"]), ("legacy", ""))
         self.assertEqual(subsystem.provider_resolver.mode("jstv"), "legacy")
         self.assertTrue(subsystem.provider_resolver.is_available("jstv"))
 
-    async def test_failed_plugin_preflight_reprojects_durable_legacy_immediately(self):
+    async def test_failed_plugin_preflight_reprojects_durable_legacy_without_core_fallback(self):
+        from plugin_runtime import PluginError
+
         subsystem = await self._subsystem()
         await subsystem.startup()
         await subsystem.set_ownership("jstv", "legacy")
@@ -444,9 +441,10 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((owner["mode"], owner["plugin_identity"]), ("legacy", ""))
         self.assertEqual(subsystem.provider_resolver.mode("jstv"), "legacy")
         self.assertTrue(subsystem.provider_resolver.is_available("jstv"))
-        resolved = await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
-        self.assertEqual(resolved["url"], "https://legacy.example/live.m3u8")
-        self.legacy.assert_awaited_once()
+        # "legacy" remains durable and storable, but it is no longer routable.
+        with self.assertRaises(PluginError) as closed:
+            await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
+        self.assertEqual(closed.exception.code, "PLUGIN_UNAVAILABLE")
 
     async def test_failed_plugin_preflight_keeps_durable_plugin_explicitly_unavailable(self):
         subsystem = await self._subsystem()
@@ -467,7 +465,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(Exception) as unavailable:
             await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
         self.assertEqual(unavailable.exception.code, "PLUGIN_UNAVAILABLE")
-        self.legacy.assert_not_awaited()
 
     async def test_ownership_commit_then_error_reloads_durable_desired_state(self):
         subsystem = await self._subsystem()
@@ -514,7 +511,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(Exception) as routed:
                 await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
             self.assertEqual(routed.exception.code, "PLUGIN_UNAVAILABLE")
-            self.legacy.assert_not_awaited()
             release.set()
             with self.assertRaises(asyncio.CancelledError):
                 await task
@@ -580,7 +576,6 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(subsystem.provider_resolver.is_available("jstv"))
         resolved = await subsystem.provider_resolver.resolve("jstv://jsws", self.client)
         self.assertEqual(resolved["stream_descriptor_version"], "1.0")
-        self.legacy.assert_not_awaited()
 
     async def test_crash_persistence_failure_is_retried_and_sanitized(self):
         subsystem = await self._subsystem()
@@ -611,7 +606,7 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         row = await self.db.get_plugin_installation("org.waveflow", "jstv")
         self.assertEqual(row["lifecycle_state"], "unavailable")
 
-    async def test_missing_installation_never_writes_owner_and_desktop_stays_legacy(self):
+    async def test_missing_installation_never_writes_owner_and_desktop_stays_unowned(self):
         subsystem = await self._subsystem()
         os.environ["WAVEFLOW_OFFICIAL_PLUGIN_BOOTSTRAP"] = "0"
         blocked = await subsystem.rollout_official_plugins()
@@ -631,7 +626,11 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertFalse(any(item.get("rollout") for item in startup))
         self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
-        self.assertTrue(all(desktop.provider_resolver.mode(scheme) == "legacy" for scheme in TARGET_SCHEMES))
+        # No ownership row at all: the scheme is "unowned", not "legacy".  Core
+        # no longer defaults an unowned scheme to a provider adapter.
+        self.assertTrue(all(
+            desktop.provider_resolver.mode(scheme) == UNOWNED_MODE for scheme in TARGET_SCHEMES
+        ))
 
 
 if __name__ == "__main__":

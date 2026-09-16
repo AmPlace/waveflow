@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from packaging import tags
 
+from provider_resolver import UNOWNED_MODE
 from tests.plugin_sources import legacy_root, plugin_source, plugins_root
 
 
@@ -43,7 +44,9 @@ BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
 # source directory name, so a plan ``source`` is just the id.
 #
 # Plugin ids that are implemented against the SDK but have no official release
-# channel yet.  Core keeps a legacy adapter for every one of their schemes.
+# channel yet.  They are a publishing queue in the market repository; Core has
+# no provider adapter for them either, so their schemes stay unowned until a
+# Plugin is published for them.
 LEGACY_ONLY_PLUGINS = {
     "hbtv", "hntv", "huya", "kuaishou", "migu", "qukan", "sdly", "sxbc",
     "tvb", "woniu", "xjtv", "youtube",
@@ -609,7 +612,7 @@ class OfficialPluginInventoryTest(unittest.TestCase):
                 self.assertTrue(item.get("description"), "release plan entry has no description")
 
     def test_every_plugin_source_is_either_official_or_legacy_only(self):
-        from adapters import parse_adapter_url
+        from provider_reference import parse_provider_reference
         from plugin_runtime import validate_manifest
 
         plan_directories = {item["source"] for item in self._plan()["plugins"]}
@@ -622,8 +625,8 @@ class OfficialPluginInventoryTest(unittest.TestCase):
         self.assertEqual(legacy_directories, LEGACY_ONLY_PLUGINS)
         self.assertEqual(official_directories & legacy_directories, set())
 
-        # Plugins without an official channel keep their Core legacy adapter, so
-        # waiting in legacy/ removes no production path.
+        # Plugins without an official channel have no Plugin ownership, so
+        # waiting in legacy/ is a publishing queue and not a Core fallback.
         for name in sorted(LEGACY_ONLY_PLUGINS):
             with self.subTest(plugin=name):
                 self.assertNotIn(name, plan_directories)
@@ -632,7 +635,7 @@ class OfficialPluginInventoryTest(unittest.TestCase):
                 )
                 self.assertTrue(manifest.owned_schemes)
                 for scheme, _contract in manifest.owned_schemes:
-                    self.assertEqual(parse_adapter_url(f"{scheme}://probe").adapter, scheme)
+                    self.assertEqual(parse_provider_reference(f"{scheme}://probe").scheme, scheme)
 
     def test_no_plugin_source_tree_remains_in_the_repository(self):
         """Extraction only holds while the source tree stays out of the repo."""
@@ -877,7 +880,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         await restarted.startup()
         return restarted
 
-    async def test_fresh_bootstrap_installs_official_plugins_keeps_legacy_and_projects_settings(self):
+    async def test_fresh_bootstrap_installs_official_plugins_keeps_unowned_and_projects_settings(self):
         subsystem = await self._subsystem()
         results = await subsystem.startup()
         self.assertEqual({item["plugin"] for item in results if item.get("bootstrap") == "installed"}, BASE_IDENTITIES)
@@ -888,7 +891,9 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({f"{row['publisher_id']}/{row['plugin_id']}" for row in rows}, BASE_IDENTITIES)
         self.assertTrue(all(row["lifecycle_state"] == "active" and row["trust_state"] == "official" for row in rows))
         self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
-        self.assertTrue(all(subsystem.provider_resolver.mode(scheme) == "legacy" for scheme in SCHEMES))
+        # Bootstrap installs runtimes but does not take ownership, and an
+        # unowned scheme is not routed to any Core adapter.
+        self.assertTrue(all(subsystem.provider_resolver.mode(scheme) == UNOWNED_MODE for scheme in SCHEMES))
 
         router = importlib.import_module("routers.plugins")
         projections = [await router._plugin_projection(row) for row in rows]
@@ -1024,8 +1029,10 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(hashlib.sha256(artifact.read_bytes()).hexdigest(), expected_digests[identity])
             self.assertEqual(row["lifecycle_state"], "active")
         self.assertEqual(restarted.provider_resolver.mode("fjtv"), "plugin")
-        self.assertTrue(all(restarted.provider_resolver.mode(scheme) == ("plugin" if scheme == "fjtv" else "legacy")
-                            for scheme in BASE_SCHEMES))
+        self.assertTrue(all(
+            restarted.provider_resolver.mode(scheme) == ("plugin" if scheme == "fjtv" else UNOWNED_MODE)
+            for scheme in BASE_SCHEMES
+        ))
         self.assertEqual(restarted.service.runtime.registry.route("fjtv").health, "healthy")
 
     async def test_active_runtime_converges_unavailable_when_artifact_disappears(self):
@@ -1272,7 +1279,9 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(Path(environment_rows[0]["path"], "waveflow-environment.json").is_file())
                     self.assertEqual(str(instance.process.command[0]), str(Path(environment_rows[0]["path"]) / "bin/python"))
 
-                self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == "legacy"
+                # The Plugin is installed and healthy, but nothing owns the
+                # scheme yet: it stays unowned rather than falling back.
+                self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == UNOWNED_MODE
                                     for owned_scheme in (STREAMGET_SCHEMES if plugin_id == "streamget-providers"
                                                          else {plugin_id})))
                 self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
@@ -1286,7 +1295,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((row["lifecycle_state"], row["trust_state"], row["enabled"]), ("active", "official", 1))
             scheme = "yy" if plugin_id == "streamget-providers" else plugin_id
             self.assertEqual(subsystem.service.runtime.registry.route(scheme).health, "healthy")
-            self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == "legacy"
+            self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == UNOWNED_MODE
                                 for owned_scheme in (STREAMGET_SCHEMES if plugin_id == "streamget-providers"
                                                      else {plugin_id})))
 
@@ -1308,7 +1317,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((enabled["lifecycle_state"], enabled["enabled"]), ("active", 1))
             scheme = "yy" if plugin_id == "streamget-providers" else plugin_id
             self.assertEqual(subsystem.service.runtime.registry.route(scheme).health, "healthy")
-            self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == "legacy"
+            self.assertTrue(all(subsystem.provider_resolver.mode(owned_scheme) == UNOWNED_MODE
                                 for owned_scheme in (STREAMGET_SCHEMES if plugin_id == "streamget-providers"
                                                      else {plugin_id})))
 
@@ -1352,7 +1361,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         installed = await subsystem.install("org.waveflow/fjtv", market.market_packages_snapshot())
         self.assertEqual((installed["trust_state"], installed["source_key"], installed["active_version"]),
                          ("official", "official", "1.0.0"))
-        self.assertEqual(subsystem.provider_resolver.mode("fjtv"), "legacy")
+        self.assertEqual(subsystem.provider_resolver.mode("fjtv"), UNOWNED_MODE)
 
     async def test_missing_target_platform_fails_before_installation_or_ownership(self):
         from official_plugin_distribution import bundled_official_packages

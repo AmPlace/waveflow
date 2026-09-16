@@ -457,7 +457,7 @@ async def media_channel_source_resolve(
             source_revision=source_revision,
         )
         await _assert_current_iptv_source_revision(channel_key, source_ref, source_revision)
-    except _m.AdapterResolveError as exc:
+    except _m.ProviderReferenceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.to_payload()) from exc
     except PluginError as exc:
         raise HTTPException(status_code=502, detail=exc.as_contract()) from exc
@@ -726,7 +726,7 @@ async def _serve_iptv_source_playlist(
             )
             if has_source_snapshot_identity:
                 await _assert_current_iptv_source_revision(canonical_key, source_id, source_revision)
-        except _m.AdapterResolveError as exc:
+        except _m.ProviderReferenceError as exc:
             raise HTTPException(status_code=exc.status_code, detail=exc.to_payload()) from exc
         except PluginError as exc:
             raise HTTPException(status_code=502, detail=exc.as_contract()) from exc

@@ -6,7 +6,7 @@ import types
 import unittest
 from unittest import mock
 
-from adapters import AdapterResolveError
+from provider_reference import ProviderReferenceError
 from routers import media_proxy
 from security.dependencies import MediaAccessContext
 from security.proxy_context import ProxyContext, get_registry, reset_for_tests
@@ -27,7 +27,7 @@ def _fake_main(get_channels, resolve):
         _get_aggregated_iptv_channels=get_channels,
         _source_type=lambda source: source.get("source_type") or "hls",
         http_client=object(),
-        AdapterResolveError=AdapterResolveError,
+        ProviderReferenceError=ProviderReferenceError,
     )
     module.app = types.SimpleNamespace(
         state=types.SimpleNamespace(provider_resolver=types.SimpleNamespace(resolve=resolve)),

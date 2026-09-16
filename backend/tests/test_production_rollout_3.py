@@ -11,6 +11,8 @@ from unittest import mock
 
 import httpx
 
+from provider_resolver import ROUTABLE_MODES
+
 
 TARGETS = (
     ("hnntv", "org.waveflow/hnntv", "hnntv://hnws"),
@@ -72,7 +74,6 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
             return httpx.Response(503, text="offline")
 
         self.client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
-        self.legacy = mock.AsyncMock(return_value={"url": "https://legacy.example/live.m3u8"})
         self.subsystems = []
         self.safe = mock.patch("plugin_capabilities.assert_safe_target_url", new=mock.AsyncMock())
         self.safe.start()
@@ -125,7 +126,6 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
 
         subsystem.service.command_factory = command_factory
         subsystem.service.runtime_command_factory = runtime_command_factory
-        subsystem.provider_resolver.legacy_resolver = self.legacy
         self.subsystems.append(subsystem)
         return subsystem
 
@@ -172,12 +172,10 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         return installed
 
     async def _resolve_plugin(self, subsystem, scheme: str, identity: str, reference: str) -> dict:
-        before = self.legacy.await_count
         result = await subsystem.provider_resolver.resolve(reference, self.client)
         self.assertEqual(result["stream_descriptor_version"], "1.0")
         self.assertEqual(subsystem.provider_resolver.mode(scheme), "plugin")
         self.assertEqual(subsystem.service.runtime.registry.route(scheme).manifest.identity, identity)
-        self.assertEqual(self.legacy.await_count, before)
         return result
 
     async def _assert_permission_revoke_requires_explicit_rollback(
@@ -201,9 +199,13 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
 
         # Settings must explicitly roll back before revoking.  After revoke,
         # neither activation nor Plugin ownership can be restored implicitly.
+        # Rolling back to "legacy" does not reach a Core provider adapter: the
+        # mode stays storable but is no longer routable, so the scheme is
+        # explicitly unavailable until a Plugin owns it again.
         await subsystem.set_ownership(scheme, "legacy")
-        await subsystem.provider_resolver.resolve(reference, self.client)
-        self.assertEqual(self.legacy.await_count, 1 if scheme == "hnntv" else 2)
+        with self.assertRaises(PluginError) as rolled_back:
+            await subsystem.provider_resolver.resolve(reference, self.client)
+        self.assertEqual(rolled_back.exception.code, "PLUGIN_UNAVAILABLE")
         await subsystem.revoke_permission(identity, "network.direct", "rollout-3-test")
         projection = await subsystem.service.permission_projection(identity)
         self.assertEqual([item["name"] for item in projection["pending"]], ["network.direct"])
@@ -218,7 +220,7 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         # the ownership row can be written; enable() above is the explicit
         # permission-gate assertion.
         self.assertEqual(no_owner.exception.code, "SCHEME_UNOWNED")
-        self.assertEqual(subsystem.provider_resolver.mode(scheme), "legacy")
+        self.assertNotIn(subsystem.provider_resolver.mode(scheme), ROUTABLE_MODES)
 
         await subsystem.approve_permission(identity, await self._official_packages(), "network.direct", "rollout-3-test")
         await subsystem.service.enable(identity)
@@ -254,11 +256,9 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         })
         self.assertEqual({request.url.host for request in self.requests[-2:]}, {"www.hnntv.cn", "ps.hnntv.cn"})
 
-        before = self.legacy.await_count
         await subsystem.set_ownership("hnntv", "plugin", hnntv)
         resolved = await self._resolve_plugin(subsystem, "hnntv", hnntv, "hnntv://hnws")
         self.assertEqual(resolved["url"], STREAMS["hnntv-live"])
-        self.assertEqual(self.legacy.await_count, before)
         subsystem = await self._restart(subsystem)
         self.assertEqual(subsystem.provider_resolver.mode("hnntv"), "plugin")
         self.assertEqual(
@@ -286,11 +286,9 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         env_rows = await self.db.list_plugin_python_environments("org.waveflow", "ptbtv")
         self.assertEqual([row["state"] for row in env_rows], ["active"])
 
-        before = self.legacy.await_count
         await subsystem.set_ownership("ptbtv", "plugin", ptbtv)
         resolved = await self._resolve_plugin(subsystem, "ptbtv", ptbtv, "ptbtv://pt1")
         self.assertEqual(resolved["url"], STREAMS["ptbtv"])
-        self.assertEqual(self.legacy.await_count, before)
         subsystem = await self._restart(subsystem)
         self.assertEqual(subsystem.provider_resolver.mode("ptbtv"), "plugin")
         self.assertEqual(
@@ -323,7 +321,6 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(subsystem.provider_resolver.mode(scheme), "plugin")
             result = await self._resolve_plugin(subsystem, scheme, identity, reference)
             self.assertIn("media.example", result["url"])
-        self.assertEqual(self.legacy.await_count, 2)
 
 
 if __name__ == "__main__":
