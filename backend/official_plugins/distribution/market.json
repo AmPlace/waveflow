@@ -1,0 +1,2390 @@
+{
+  "market_version": "1.7.0",
+  "packages": [
+    {
+      "artifact_references": [
+        {
+          "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+          "url": "payloads/fjtv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official FJTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 FJTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::fjtv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "gyvnhoahPb0zwQOp9iW5pkCSszOf4uxKkvx3mUsZLsPbtfqctEpQ2PXFm+Zys0QgHkDQFt4YJtR1v7oQybeyBg=="
+      },
+      "name": "FJTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "fjtv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+            },
+            "size_bytes": 8812
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "fjtv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+            },
+            "size_bytes": 8812
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "fjtv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+            },
+            "size_bytes": 8812
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "fjtv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+            },
+            "size_bytes": 8812
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "fjtv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+            },
+            "size_bytes": 8812
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "FJTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "fjtv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "live.fjtv.net",
+              "mapi-plus.fjtv.net",
+              "mapi1.kxm.xmtv.cn",
+              "mapi.ijjnews.com",
+              "mapi-new.chinashishi.net"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "fjtv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "ipc": "stdio_framed_json_v1",
+          "type": "subprocess"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "fjtv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "FJTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+          "url": "payloads/gzstv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official GZSTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 GZSTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::gzstv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "68jC3y0TIsfujrbZPdCHVcM1Rg2rZqujFk31KtiL+AeVvRtNNm7jePD5HrV0+aC3b1n7Nl6f3pGdZU+/nzoDDg=="
+      },
+      "name": "GZSTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "gzstv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+            },
+            "size_bytes": 9216
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "gzstv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+            },
+            "size_bytes": 9216
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "gzstv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+            },
+            "size_bytes": 9216
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "gzstv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+            },
+            "size_bytes": 9216
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "gzstv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+            },
+            "size_bytes": 9216
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "GZSTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "gzstv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "api.gzstv.com"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "gzstv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "ipc": "stdio_framed_json_v1",
+          "type": "subprocess"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "gzstv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "GZSTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+          "url": "payloads/hnntv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official HNNTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 HNNTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::hnntv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "PNbdgkXfMsvsoV0zJv7vSo89CQ6aUGrP9F/CGkNrgtl6bhLPj/sGr31yJa+5kNJ5ZfXOQKoM/0GiSFuEEeMOBQ=="
+      },
+      "name": "HNNTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "hnntv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "rJeDluYrAPM08fZGeS2ZSMkSK7tt5HEfD1SNx/2LCmXNd5aLawKZaIn8xMOwQIB7evY7+bmhJYQgxTdJYsJBDw=="
+            },
+            "size_bytes": 10287
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "hnntv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "rJeDluYrAPM08fZGeS2ZSMkSK7tt5HEfD1SNx/2LCmXNd5aLawKZaIn8xMOwQIB7evY7+bmhJYQgxTdJYsJBDw=="
+            },
+            "size_bytes": 10287
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "HNNTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "hnntv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "www.hnntv.cn",
+              "ps.hnntv.cn"
+            ],
+            "direct": true,
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "hnntv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "ipc": "stdio_framed_json_v1",
+          "type": "subprocess"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "hnntv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "HNNTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+          "url": "payloads/jstv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official JSTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 JSTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::jstv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "P2Zr9XEuOn0AGIe8+fWaEscZJKHe94teWOyS65ntFTgDSlpL0GTqkXN0I/J5blYjMSHDAmUzKaD/PdjXVwyhCQ=="
+      },
+      "name": "JSTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "jstv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "dxkI/mU2+urN7Nil/IissrJ/dklWpDs+UiSMWD4d4lF9KRDzgsRFvdcp22yDJAg2TUq/HwfRultCt28bRrxqBw=="
+            },
+            "size_bytes": 8493
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "jstv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "dxkI/mU2+urN7Nil/IissrJ/dklWpDs+UiSMWD4d4lF9KRDzgsRFvdcp22yDJAg2TUq/HwfRultCt28bRrxqBw=="
+            },
+            "size_bytes": 8493
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "jstv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "dxkI/mU2+urN7Nil/IissrJ/dklWpDs+UiSMWD4d4lF9KRDzgsRFvdcp22yDJAg2TUq/HwfRultCt28bRrxqBw=="
+            },
+            "size_bytes": 8493
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "jstv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "dxkI/mU2+urN7Nil/IissrJ/dklWpDs+UiSMWD4d4lF9KRDzgsRFvdcp22yDJAg2TUq/HwfRultCt28bRrxqBw=="
+            },
+            "size_bytes": 8493
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "jstv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "7b8def14a4cb3469f44d557a57ed1f3040db07332281428678e2239ed2949bfc",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "dxkI/mU2+urN7Nil/IissrJ/dklWpDs+UiSMWD4d4lF9KRDzgsRFvdcp22yDJAg2TUq/HwfRultCt28bRrxqBw=="
+            },
+            "size_bytes": 8493
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "JSTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "jstv"
+          }
+        ],
+        "permissions": {},
+        "plugin_api_version": "1.0",
+        "plugin_id": "jstv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "ipc": "stdio_framed_json_v1",
+          "type": "subprocess"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "jstv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "JSTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+          "url": "payloads/nd0593tv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official ND0593TV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 ND0593TV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::nd0593tv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "VsMKggSC/Q2dOqnLMLIfPiAvOym3HiM70OjT0mLP/5W1Ga6c3Lwn/vWDcqy+iGswxTFt30l57EHYbizMM9PiDA=="
+      },
+      "name": "ND0593TV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "nd0593tv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+            },
+            "size_bytes": 8739
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nd0593tv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+            },
+            "size_bytes": 8739
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "nd0593tv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+            },
+            "size_bytes": 8739
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nd0593tv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+            },
+            "size_bytes": 8739
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "nd0593tv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+            },
+            "size_bytes": 8739
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "ND0593TV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "nd0593tv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "app.0593tv.cn"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "nd0593tv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "ipc": "stdio_framed_json_v1",
+          "type": "subprocess"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nd0593tv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "ND0593TV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+          "url": "payloads/nmtv-1.1.0.pyz"
+        }
+      ],
+      "dependency_references": [
+        {
+          "sha256": "83212c868cd88decde39467579282464853942e36764031f9507ee81e803ac9a",
+          "url": "payloads/dependencies/nmtv/xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "sha256": "b11d6b8119e1f4413e07f24741b6d1ad78a93012d968afabd15448b9912712ac",
+          "url": "payloads/dependencies/nmtv/xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+        }
+      ],
+      "description": "WaveFlow official NMTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 NMTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::nmtv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "XlhhY7/IBC/Aos2b04Qvr/CONUGtXk9XBfpuLbkiQiuirF7hy13mIq8VbJRamqYIxedb+19SvqgB84TFrCr2DA=="
+      },
+      "name": "NMTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "nmtv-1.1.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "VGYBd62XEWLyBS5BFGacBUustqrMamU6APprnXHkzgococyP5Jf8HSqL7cYaghf9pku6NGHDqxias3C4LoefAQ=="
+            },
+            "size_bytes": 7789
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nmtv-1.1.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "VGYBd62XEWLyBS5BFGacBUustqrMamU6APprnXHkzgococyP5Jf8HSqL7cYaghf9pku6NGHDqxias3C4LoefAQ=="
+            },
+            "size_bytes": 7789
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "NMTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "nmtv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "api-bt.nmtv.cn"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "nmtv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "dependency_lock": {
+            "artifacts": [
+              {
+                "abi_tag": "cp314",
+                "filename": "xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "name": "xxtea",
+                "platform_tag": "macosx_11_0_arm64",
+                "python_tag": "cp314",
+                "sha256": "83212c868cd88decde39467579282464853942e36764031f9507ee81e803ac9a",
+                "size_bytes": 12565,
+                "url": "https://files.pythonhosted.org/packages/7c/76/1e4ced8038904aada6716ec729ddffbce509c12784c6b3f659cd8206e544/xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "version": "5.0.0"
+              },
+              {
+                "abi_tag": "cp311",
+                "filename": "xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+                "name": "xxtea",
+                "platform_tag": "manylinux2014_x86_64",
+                "python_tag": "cp311",
+                "sha256": "b11d6b8119e1f4413e07f24741b6d1ad78a93012d968afabd15448b9912712ac",
+                "size_bytes": 43062,
+                "url": "https://files.pythonhosted.org/packages/b5/69/432aa20f5d3e56be939cdb2e4fcff80e84da5f07fbff94bd5cc190f9aabb/xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+                "version": "5.0.0"
+              }
+            ],
+            "lock_version": 1
+          },
+          "entrypoint": "nmtv-1.1.0.pyz",
+          "ipc": "stdio_framed_json_v1",
+          "python_version_range": ">=3.11.0 <3.15.0",
+          "type": "python"
+        },
+        "state_schema_version": 1,
+        "version": "1.1.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.1.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nmtv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "NMTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+          "url": "payloads/nowtv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [],
+      "description": "WaveFlow official NOW TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 NOW TV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::nowtv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UZ+D3/Ra1zQsnGSOzo9rt+Jn3X07T4T2IFeUfg+zfMT3JJM1JitQFGBwcbxQGC5+Ap/pTZ8HQ7/nSeDBHg0CBg=="
+      },
+      "name": "NOW TV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          },
+          {
+            "arch": "x86_64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "nowtv-1.0.0.pyz",
+            "os": "windows",
+            "runtime": "python",
+            "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+            },
+            "size_bytes": 7803
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "NOW TV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "nowtv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "webtvapi.now.com"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "nowtv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "dependency_lock": {
+            "artifacts": [],
+            "lock_version": 1
+          },
+          "entrypoint": "nowtv-1.0.0.pyz",
+          "ipc": "stdio_framed_json_v1",
+          "python_version_range": ">=3.14.0 <3.15.0",
+          "type": "python"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nowtv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "NOW TV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "12a8a47f9c7fb631cffdb7977713e59edbdc00d913df5cd5b94d8e32dd7e3ba1",
+          "url": "payloads/ptbtv-1.0.0.pyz"
+        }
+      ],
+      "dependency_references": [
+        {
+          "sha256": "a25620d9bf989c9c029a7d1642999c4c265abb0bad811deb2f77b0b5b2b12e5b",
+          "url": "payloads/dependencies/ptbtv/curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl"
+        },
+        {
+          "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+          "url": "payloads/dependencies/ptbtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+          "url": "payloads/dependencies/ptbtv/certifi-2026.5.20-py3-none-any.whl"
+        },
+        {
+          "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+          "url": "payloads/dependencies/ptbtv/rich-15.0.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+          "url": "payloads/dependencies/ptbtv/pycparser-3.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+          "url": "payloads/dependencies/ptbtv/markdown_it_py-4.2.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176",
+          "url": "payloads/dependencies/ptbtv/pygments-2.20.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+          "url": "payloads/dependencies/ptbtv/mdurl-0.1.2-py3-none-any.whl"
+        }
+      ],
+      "description": "WaveFlow official PTBTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 PTBTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::ptbtv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "R39TV1wrRfHDXK2Do9YLC870418hzyIDsAKnR2GUYkXZbglP2OnfcXxuOFU/96H3/XX1Cyf6L+cx0Yh9I8ZdBg=="
+      },
+      "name": "PTBTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "entrypoint": "ptbtv-1.0.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "12a8a47f9c7fb631cffdb7977713e59edbdc00d913df5cd5b94d8e32dd7e3ba1",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "8U+BCAW24G+72tuchxm862J9ky7Ik43O1VrZfnTt3LxQW+G+b2wa3Ae83yk2qtIbWeXGur+dtFOwSX+JqmfLBQ=="
+            },
+            "size_bytes": 8404
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "PTBTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "ptbtv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "www.ptbtv.com"
+            ],
+            "direct": true,
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "ptbtv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "dependency_lock": {
+            "artifacts": [
+              {
+                "abi_tag": "abi3",
+                "filename": "curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+                "name": "curl-cffi",
+                "platform_tag": "macosx_11_0_arm64",
+                "python_tag": "cp310",
+                "sha256": "a25620d9bf989c9c029a7d1642999c4c265abb0bad811deb2f77b0b5b2b12e5b",
+                "size_bytes": 2573544,
+                "url": "https://files.pythonhosted.org/packages/83/2d/3915e238579b3c5a92cead5c79130c3b8d20caaba7616cc4d894650e1d6b/curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+                "version": "0.15.0"
+              },
+              {
+                "abi_tag": "cp314",
+                "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "name": "cffi",
+                "platform_tag": "macosx_11_0_arm64",
+                "python_tag": "cp314",
+                "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+                "size_bytes": 181487,
+                "url": "https://files.pythonhosted.org/packages/59/dd/27e9fa567a23931c838c6b02d0764611c62290062a6d4e8ff7863daf9730/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "version": "2.0.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "certifi-2026.5.20-py3-none-any.whl",
+                "name": "certifi",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+                "size_bytes": 134134,
+                "url": "https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl",
+                "version": "2026.5.20"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "rich-15.0.0-py3-none-any.whl",
+                "name": "rich",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+                "size_bytes": 310654,
+                "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+                "version": "15.0.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "pycparser-3.0-py3-none-any.whl",
+                "name": "pycparser",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+                "size_bytes": 48172,
+                "url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+                "version": "3.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+                "name": "markdown-it-py",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+                "size_bytes": 91687,
+                "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+                "version": "4.2.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "pygments-2.20.0-py3-none-any.whl",
+                "name": "pygments",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176",
+                "size_bytes": 1231151,
+                "url": "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl",
+                "version": "2.20.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "mdurl-0.1.2-py3-none-any.whl",
+                "name": "mdurl",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+                "size_bytes": 9979,
+                "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+                "version": "0.1.2"
+              }
+            ],
+            "lock_version": 1
+          },
+          "entrypoint": "ptbtv-1.0.0.pyz",
+          "ipc": "stdio_framed_json_v1",
+          "python_version_range": ">=3.14.0 <3.15.0",
+          "type": "python"
+        },
+        "state_schema_version": 1,
+        "version": "1.0.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.0.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "ptbtv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "PTBTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+          "url": "payloads/sdtv-1.1.0.pyz"
+        }
+      ],
+      "dependency_references": [
+        {
+          "sha256": "3e4a1a3232eef2e6c732827d5722db29a0cc8b27af2a4d865b094cf954be9ca1",
+          "url": "payloads/dependencies/sdtv/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "sha256": "f0d27a5696721ef7a672b8c810f6aded391058e0b9486e63e6d93baf765da691",
+          "url": "payloads/dependencies/sdtv/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+          "url": "payloads/dependencies/sdtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "sha256": "8941aaadaf67246224cee8c3803777eed332a19d909b47e29c9842ef1e79ac26",
+          "url": "payloads/dependencies/sdtv/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+          "url": "payloads/dependencies/sdtv/pycparser-3.0-py3-none-any.whl"
+        }
+      ],
+      "description": "WaveFlow official SDTV TV Provider.",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 SDTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::sdtv-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "N5CVGmFUnN9QgC1gxMDu+LkokPf81mViNHcaVLmaj7hVLX4ntfW1Jn7oxUoNpzJ5ImQjR68KaIQade9GNi7aDg=="
+      },
+      "name": "SDTV Provider Plugin",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "x86_64",
+            "entrypoint": "sdtv-1.1.0.pyz",
+            "os": "linux",
+            "runtime": "python",
+            "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "ytJHUsLht04qjDIOh7ebpzNEaCS8zDNtw6jtZnwzafEvYvZoS6DeRGMWi4Me59gzs84FWAGqMRd3fSB31q1tDA=="
+            },
+            "size_bytes": 9462
+          },
+          {
+            "arch": "arm64",
+            "entrypoint": "sdtv-1.1.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "ytJHUsLht04qjDIOh7ebpzNEaCS8zDNtw6jtZnwzafEvYvZoS6DeRGMWi4Me59gzs84FWAGqMRd3fSB31q1tDA=="
+            },
+            "size_bytes": 9462
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "SDTV Provider",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "sdtv"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "v.iqilu.com",
+              "feiying.litenews.cn"
+            ],
+            "managed": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "sdtv",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "dependency_lock": {
+            "artifacts": [
+              {
+                "abi_tag": "abi3",
+                "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+                "name": "cryptography",
+                "platform_tag": "macosx_10_9_universal2",
+                "python_tag": "cp311",
+                "sha256": "3e4a1a3232eef2e6c732827d5722db29a0cc8b27af2a4d865b094cf954be9ca1",
+                "size_bytes": 8008324,
+                "url": "https://files.pythonhosted.org/packages/1b/bc/ee4137cbbe105652c0ee4252792b78fc8e7afa4b8e61d9d5dc05a7f45731/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+                "version": "48.0.1"
+              },
+              {
+                "abi_tag": "abi3",
+                "filename": "cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+                "name": "cryptography",
+                "platform_tag": "manylinux2014_x86_64",
+                "python_tag": "cp311",
+                "sha256": "f0d27a5696721ef7a672b8c810f6aded391058e0b9486e63e6d93baf765da691",
+                "size_bytes": 4713235,
+                "url": "https://files.pythonhosted.org/packages/9c/87/c85d147b53323c7eb4d850920c8901377323c2a0ff8d79c262d4fee89aa2/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+                "version": "48.0.1"
+              },
+              {
+                "abi_tag": "cp314",
+                "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "name": "cffi",
+                "platform_tag": "macosx_11_0_arm64",
+                "python_tag": "cp314",
+                "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+                "size_bytes": 181487,
+                "url": "https://files.pythonhosted.org/packages/59/dd/27e9fa567a23931c838c6b02d0764611c62290062a6d4e8ff7863daf9730/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+                "version": "2.0.0"
+              },
+              {
+                "abi_tag": "cp311",
+                "filename": "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+                "name": "cffi",
+                "platform_tag": "manylinux2014_x86_64",
+                "python_tag": "cp311",
+                "sha256": "8941aaadaf67246224cee8c3803777eed332a19d909b47e29c9842ef1e79ac26",
+                "size_bytes": 215574,
+                "url": "https://files.pythonhosted.org/packages/d7/91/500d892b2bf36529a75a77958edfcd5ad8e2ce4064ce2ecfeab2125d72d1/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+                "version": "2.0.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "pycparser-3.0-py3-none-any.whl",
+                "name": "pycparser",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+                "size_bytes": 48172,
+                "url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+                "version": "3.0"
+              }
+            ],
+            "lock_version": 1
+          },
+          "entrypoint": "sdtv-1.1.0.pyz",
+          "ipc": "stdio_framed_json_v1",
+          "python_version_range": ">=3.11.0 <3.15.0",
+          "type": "python"
+        },
+        "state_schema_version": 1,
+        "version": "1.1.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.1.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "sdtv"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "SDTV"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    },
+    {
+      "artifact_references": [
+        {
+          "sha256": "2d41142d7676c7e74ee428e8eeba8326dba894e3d415e6e280f5db55777b3bd9",
+          "url": "payloads/streamget-providers-1.3.0.pyz"
+        }
+      ],
+      "dependency_references": [
+        {
+          "sha256": "08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708",
+          "url": "payloads/dependencies/streamget-providers/anyio-4.13.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+          "url": "payloads/dependencies/streamget-providers/certifi-2026.5.20-py3-none-any.whl"
+        },
+        {
+          "sha256": "c36c333c39be2dbca264d7803333c896ab8fa7d4d6f0ab7edb7dfd7aea6e98c0",
+          "url": "payloads/dependencies/streamget-providers/charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "sha256": "597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f",
+          "url": "payloads/dependencies/streamget-providers/deprecated-1.3.1-py2.py3-none-any.whl"
+        },
+        {
+          "sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2",
+          "url": "payloads/dependencies/streamget-providers/distro-1.9.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+          "url": "payloads/dependencies/streamget-providers/h11-0.16.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd",
+          "url": "payloads/dependencies/streamget-providers/h2-4.3.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496",
+          "url": "payloads/dependencies/streamget-providers/hpack-4.1.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+          "url": "payloads/dependencies/streamget-providers/httpcore-1.0.9-py3-none-any.whl"
+        },
+        {
+          "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+          "url": "payloads/dependencies/streamget-providers/httpx-0.28.1-py3-none-any.whl"
+        },
+        {
+          "sha256": "b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5",
+          "url": "payloads/dependencies/streamget-providers/hyperframe-6.1.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "cc246e3a3f89580c3a951b5ad298ca4638078b2cdd4f115654332b5c26daded5",
+          "url": "payloads/dependencies/streamget-providers/idna-3.16-py3-none-any.whl"
+        },
+        {
+          "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c",
+          "url": "payloads/dependencies/streamget-providers/loguru-0.7.3-py3-none-any.whl"
+        },
+        {
+          "sha256": "187058ab80b3281b1de11c2e6842a357a1f71b42cb1e15bce373f3d238135c27",
+          "url": "payloads/dependencies/streamget-providers/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "sha256": "f3c596ddc9529cc69f4d2b6b7e3d148f419e92b47a6040914f534563533090cf",
+          "url": "payloads/dependencies/streamget-providers/pyexecjs-1.5.1-py3-none-any.whl"
+        },
+        {
+          "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+          "url": "payloads/dependencies/streamget-providers/requests-2.34.2-py3-none-any.whl"
+        },
+        {
+          "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+          "url": "payloads/dependencies/streamget-providers/six-1.17.0-py2.py3-none-any.whl"
+        },
+        {
+          "sha256": "9e79a54f1338320996e7d3ba82252762fa88efa8d4b6fbca80e893e029232b64",
+          "url": "payloads/dependencies/streamget-providers/streamget-4.0.10-py3-none-any.whl"
+        },
+        {
+          "sha256": "ee1e4c0e59148062281c49d80b25b67771a127c85fc9676d3be5f243206826bf",
+          "url": "payloads/dependencies/streamget-providers/tqdm-4.67.3-py3-none-any.whl"
+        },
+        {
+          "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+          "url": "payloads/dependencies/streamget-providers/urllib3-2.7.0-py3-none-any.whl"
+        },
+        {
+          "sha256": "64b7deeda4b70408e382328d8bbe52a256fe9bc63ae3db86d804608367e5422c",
+          "url": "payloads/dependencies/streamget-providers/wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl"
+        }
+      ],
+      "description": "WaveFlow official StreamGet multi-scheme Provider Bundle.",
+      "display": {
+        "subtitle": "Multi-scheme Provider Plugin",
+        "summary": "为 WaveFlow 提供 StreamGet 多 scheme 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "id": "official::streamget-providers-plugin",
+      "kind": "plugin_package",
+      "manifest_signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "/vBj0VCmg23sGr4jHw0s2J4rcFCwAmsV5W1dhhIyKCKRXGATQ8iUTd6p2bn9W9zSUDYxJ/rMhQfwhk112f6DBQ=="
+      },
+      "name": "StreamGet Provider Bundle",
+      "package_type": "plugin_package",
+      "plugin_manifest": {
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "entrypoint": "streamget-providers-1.3.0.pyz",
+            "os": "macos",
+            "runtime": "python",
+            "sha256": "2d41142d7676c7e74ee428e8eeba8326dba894e3d415e6e280f5db55777b3bd9",
+            "signature": {
+              "algorithm": "ed25519",
+              "key_id": "org.waveflow.release.2026-01",
+              "value": "ERGF/9qa02qe1kx3nuAxKkiiCpRB+Sv6rMkfcQH7iuamLv0DsTYLY4BlZZPMVzs4KqosjlurOOlO4Nsl34ZmBQ=="
+            },
+            "size_bytes": 10003
+          }
+        ],
+        "capabilities": [
+          "tv.resolve_stream"
+        ],
+        "core_version_range": ">=0.1.0 <1.0.0",
+        "dependencies": [],
+        "display_name": "StreamGet Provider Bundle",
+        "manifest_version": 1,
+        "owned_schemes": [
+          {
+            "contract": "tv_provider",
+            "scheme": "yy"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "bigo"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "blued"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "soop"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "netease"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "pandatv"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "maoer"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "look"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "flextv"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "popkontv"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "twitcasting"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "baidu"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "weibo"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "kugou"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "twitch"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "huajiao"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "showroom"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "inke"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "acfun"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "zhihu"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "chzzk"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "live17"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "langlive"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "changliao"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "jd"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "faceit"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "lianjie"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "sixroom"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "huamao"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "shopee"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "laixiu"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "picarto"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "bilibili"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "douyu"
+          },
+          {
+            "contract": "tv_provider",
+            "scheme": "douyin"
+          }
+        ],
+        "permissions": {
+          "network": {
+            "allowed_hosts": [
+              "www.yy.com",
+              "bigo.tv",
+              "blued.com",
+              "play.sooplive.com",
+              "cc.163.com",
+              "www.pandalive.co.kr",
+              "fm.missevan.com",
+              "www.look.163.com",
+              "www.ttinglive.com",
+              "www.popkontv.com",
+              "twitcasting.tv",
+              "live.baidu.com",
+              "weibo.com",
+              "fanxing.kugou.com",
+              "www.twitch.tv",
+              "www.huajiao.com",
+              "www.showroom-live.com",
+              "webapi.busi.inke.cn",
+              "live.acfun.cn",
+              "www.zhihu.com",
+              "chzzk.naver.com",
+              "www.lang.live",
+              "wap.tlclw.com",
+              "lives.jd.com",
+              "www.faceit.com",
+              "www.lailianjie.com",
+              "v.6.cn",
+              "www.huamao.com",
+              "live.shopee.com",
+              "www.laixiu.com",
+              "picarto.tv",
+              "live.bilibili.com",
+              "api.live.bilibili.com",
+              "www.douyu.com",
+              "playweb.douyucdn.cn",
+              "wxapp.douyucdn.cn",
+              "douyucdn2.cn",
+              "live.douyin.com"
+            ],
+            "direct": true
+          }
+        },
+        "plugin_api_version": "1.0",
+        "plugin_id": "streamget-providers",
+        "provider_contracts": [
+          {
+            "contract": "tv_provider",
+            "contract_version": "1.0",
+            "features": [
+              "resolve_stream"
+            ]
+          }
+        ],
+        "publisher_id": "org.waveflow",
+        "runtime": {
+          "dependency_lock": {
+            "artifacts": [
+              {
+                "abi_tag": "none",
+                "filename": "anyio-4.13.0-py3-none-any.whl",
+                "name": "anyio",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708",
+                "size_bytes": 114353,
+                "url": "https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl",
+                "version": "4.13.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "certifi-2026.5.20-py3-none-any.whl",
+                "name": "certifi",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+                "size_bytes": 134134,
+                "url": "https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl",
+                "version": "2026.5.20"
+              },
+              {
+                "abi_tag": "cp314",
+                "filename": "charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl",
+                "name": "charset-normalizer",
+                "platform_tag": "macosx_10_15_universal2",
+                "python_tag": "cp314",
+                "sha256": "c36c333c39be2dbca264d7803333c896ab8fa7d4d6f0ab7edb7dfd7aea6e98c0",
+                "size_bytes": 309234,
+                "url": "https://files.pythonhosted.org/packages/97/c8/c67cb8c70e19ef1960b97b22ed2a1567711de46c4ddf19799923adc836c2/charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl",
+                "version": "3.4.7"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "deprecated-1.3.1-py2.py3-none-any.whl",
+                "name": "deprecated",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f",
+                "size_bytes": 11298,
+                "url": "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl",
+                "version": "1.3.1"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "distro-1.9.0-py3-none-any.whl",
+                "name": "distro",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2",
+                "size_bytes": 20277,
+                "url": "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl",
+                "version": "1.9.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "h11-0.16.0-py3-none-any.whl",
+                "name": "h11",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+                "size_bytes": 37515,
+                "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+                "version": "0.16.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "h2-4.3.0-py3-none-any.whl",
+                "name": "h2",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd",
+                "size_bytes": 61779,
+                "url": "https://files.pythonhosted.org/packages/69/b2/119f6e6dcbd96f9069ce9a2665e0146588dc9f88f29549711853645e736a/h2-4.3.0-py3-none-any.whl",
+                "version": "4.3.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "hpack-4.1.0-py3-none-any.whl",
+                "name": "hpack",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496",
+                "size_bytes": 34357,
+                "url": "https://files.pythonhosted.org/packages/07/c6/80c95b1b2b94682a72cbdbfb85b81ae2daffa4291fbfa1b1464502ede10d/hpack-4.1.0-py3-none-any.whl",
+                "version": "4.1.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "httpcore-1.0.9-py3-none-any.whl",
+                "name": "httpcore",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+                "size_bytes": 78784,
+                "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+                "version": "1.0.9"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "httpx-0.28.1-py3-none-any.whl",
+                "name": "httpx",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+                "size_bytes": 73517,
+                "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+                "version": "0.28.1"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "hyperframe-6.1.0-py3-none-any.whl",
+                "name": "hyperframe",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5",
+                "size_bytes": 13007,
+                "url": "https://files.pythonhosted.org/packages/48/30/47d0bf6072f7252e6521f3447ccfa40b421b6824517f82854703d0f5a98b/hyperframe-6.1.0-py3-none-any.whl",
+                "version": "6.1.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "idna-3.16-py3-none-any.whl",
+                "name": "idna",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "cc246e3a3f89580c3a951b5ad298ca4638078b2cdd4f115654332b5c26daded5",
+                "size_bytes": 74165,
+                "url": "https://files.pythonhosted.org/packages/94/16/70255075a9859a0e3adb789b68ceb0e210dec03934245fd98d248226572f/idna-3.16-py3-none-any.whl",
+                "version": "3.16"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "loguru-0.7.3-py3-none-any.whl",
+                "name": "loguru",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c",
+                "size_bytes": 61595,
+                "url": "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl",
+                "version": "0.7.3"
+              },
+              {
+                "abi_tag": "abi3",
+                "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+                "name": "pycryptodome",
+                "platform_tag": "macosx_10_9_universal2",
+                "python_tag": "cp37",
+                "sha256": "187058ab80b3281b1de11c2e6842a357a1f71b42cb1e15bce373f3d238135c27",
+                "size_bytes": 2495627,
+                "url": "https://files.pythonhosted.org/packages/db/6c/a1f71542c969912bb0e106f64f60a56cc1f0fabecf9396f45accbe63fa68/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+                "version": "3.23.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "pyexecjs-1.5.1-py3-none-any.whl",
+                "name": "pyexecjs",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "f3c596ddc9529cc69f4d2b6b7e3d148f419e92b47a6040914f534563533090cf",
+                "size_bytes": 14649,
+                "url": "https://pypi.org/pypi/PyExecJS/1.5.1/json",
+                "version": "1.5.1"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "requests-2.34.2-py3-none-any.whl",
+                "name": "requests",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+                "size_bytes": 73075,
+                "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+                "version": "2.34.2"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "six-1.17.0-py2.py3-none-any.whl",
+                "name": "six",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+                "size_bytes": 11050,
+                "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+                "version": "1.17.0"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "streamget-4.0.10-py3-none-any.whl",
+                "name": "streamget",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "9e79a54f1338320996e7d3ba82252762fa88efa8d4b6fbca80e893e029232b64",
+                "size_bytes": 172045,
+                "url": "https://files.pythonhosted.org/packages/0e/b8/4208b11f719b0b9434a53246f9d68f40bc47b08ea765b1923b86c7d2789b/streamget-4.0.10-py3-none-any.whl",
+                "version": "4.0.10"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "tqdm-4.67.3-py3-none-any.whl",
+                "name": "tqdm",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "ee1e4c0e59148062281c49d80b25b67771a127c85fc9676d3be5f243206826bf",
+                "size_bytes": 78374,
+                "url": "https://files.pythonhosted.org/packages/16/e1/3079a9ff9b8e11b846c6ac5c8b5bfb7ff225eee721825310c91b3b50304f/tqdm-4.67.3-py3-none-any.whl",
+                "version": "4.67.3"
+              },
+              {
+                "abi_tag": "none",
+                "filename": "urllib3-2.7.0-py3-none-any.whl",
+                "name": "urllib3",
+                "platform_tag": "any",
+                "python_tag": "py3",
+                "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+                "size_bytes": 131087,
+                "url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
+                "version": "2.7.0"
+              },
+              {
+                "abi_tag": "cp314",
+                "filename": "wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl",
+                "name": "wrapt",
+                "platform_tag": "macosx_11_0_arm64",
+                "python_tag": "cp314",
+                "sha256": "64b7deeda4b70408e382328d8bbe52a256fe9bc63ae3db86d804608367e5422c",
+                "size_bytes": 81462,
+                "url": "https://files.pythonhosted.org/packages/13/3c/b74cfd984cef560b900fb1a727af20352d89e1f06bf2e1114dd3f00f5f5a/wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl",
+                "version": "2.2.1"
+              }
+            ],
+            "lock_version": 1
+          },
+          "entrypoint": "streamget-providers-1.3.0.pyz",
+          "ipc": "stdio_framed_json_v1",
+          "python_version_range": ">=3.14.0 <3.15.0",
+          "type": "python"
+        },
+        "state_schema_version": 1,
+        "version": "1.3.0"
+      },
+      "risk_level": "official_signed_not_sandboxed",
+      "schema_version": 1,
+      "source_origin": "official",
+      "source_policy": "signed_release",
+      "status": "active",
+      "updated_at": "2026-08-12T00:00:00Z",
+      "version": "1.3.0",
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "Multi-scheme"
+      ],
+      "regions": [],
+      "operators": [],
+      "providers": [
+        "StreamGet"
+      ],
+      "languages": [],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher": {
+        "id": "org.waveflow",
+        "name": "WaveFlow"
+      },
+      "published_at": "2026-08-12T00:00:00Z",
+      "compatibility": {
+        "min_waveflow_version": "0.1.0"
+      },
+      "links": {
+        "source": "https://github.com/AmPlace/wavebypass"
+      },
+      "catalog": {
+        "sort_weight": 0,
+        "featured": false
+      }
+    }
+  ],
+  "schema_version": 1,
+  "updated_at": "2026-08-12T00:00:00Z"
+}

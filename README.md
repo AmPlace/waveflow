@@ -1,11 +1,11 @@
 <div align="center">
 
-# 📻 WaveBypass
-[![Demo](https://img.shields.io/badge/Demo-在线体验-blue?style=flat-square)](https://fm.bgm.gs) ![Stars](https://img.shields.io/github/stars/amplace/wavebypass?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=FastAPI&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) [![License](https://img.shields.io/github/license/amplace/wavebypass)](./LICENSE)
+# 📻 WaveFlow
+[![Demo](https://img.shields.io/badge/Demo-在线体验-blue?style=flat-square)](https://fm.bgm.gs) ![Stars](https://img.shields.io/github/stars/amplace/waveflow?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=FastAPI&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) [![License](https://img.shields.io/github/license/amplace/waveflow)](./LICENSE)
 
 **跨地区网络电台聚合网关与现代化 Web 播放器**
 
-WaveBypass 是一个流媒体聚合平台，它通过后端的智能测速与代理，结合前端的响应式 UI，让你在一个页面内流畅收听并管理来自不同国家和地区的优质电台源
+WaveFlow 是一个流媒体聚合平台，它通过后端的智能测速与代理，结合前端的响应式 UI，让你在一个页面内流畅收听并管理来自不同国家和地区的优质电台源
 </div>
 
 
@@ -46,18 +46,21 @@ WaveBypass 是一个流媒体聚合平台，它通过后端的智能测速与代
 
 项目已提供 `docker-compose.yml` 示例配置。
 
-进入项目目录后，直接启动：
+进入项目目录后，先选择一个由同一提交构建的不可变镜像标签，再启动：
 
 ```bash
+export WAVEFLOW_RELEASE_VERSION=sha-<git-commit>
+docker compose config
 docker compose up -d
 ```
 
 服务启动后：
 
-- 前端默认运行在 `127.0.0.1:80` 端口
-- 后端 API 默认运行在 `8000` 端口
+- 前端默认发布在 `8080` 端口
+- 后端只在 Compose 网络中暴露给前端，不直接发布到宿主机
+- backend 与 frontend 使用同一个 `WAVEFLOW_RELEASE_VERSION`
 
-如需修改地域限制、Cookie 等配置，请编辑项目根目录下的 `.env.example` 文件并修改为 `.env`
+将 `.env.example` 复制为 `.env` 后填写部署模式、Cookie 和必要的环境配置；不要把真实 secret 写入镜像或提交到仓库。
 
 ---
 
@@ -71,32 +74,30 @@ docker compose up -d
 #### 1. 创建网络
 
 ```bash
-docker network create wavebypass-net
+docker network create waveflow-net
 ```
 
 #### 2. 启动后端
 
 ```bash
 docker run -d \
-  --name wavebypass-backend \
-  --network wavebypass-net \
-  -p 8000:8000 \
+  --name waveflow-backend \
+  --network waveflow-net \
+  -v waveflow-data:/app/data \
   -e HITFM_COOKIE="" \
-  -e GEO_RESTRICT="0" \
-  -e GEO_BLOCKED_REGIONS="" \
   --restart unless-stopped \
-  ghcr.io/amplace/wavebypass-backend:latest
+  ghcr.io/amplace/waveflow-backend:${WAVEFLOW_RELEASE_VERSION:?set WAVEFLOW_RELEASE_VERSION}
 ```
 
 #### 3. 启动前端
 
 ```bash
 docker run -d \
-  --name wavebypass-frontend \
-  --network wavebypass-net \
+  --name waveflow-frontend \
+  --network waveflow-net \
   -p 80:80 \
   --restart unless-stopped \
-  ghcr.io/amplace/wavebypass-frontend:latest
+  ghcr.io/amplace/waveflow-frontend:${WAVEFLOW_RELEASE_VERSION:?set WAVEFLOW_RELEASE_VERSION}
 ```
 
 </details>
@@ -109,9 +110,9 @@ docker run -d \
 #### 1. 后端
 
 ```bash
-git clone https://github.com/amplace/wavebypass.git
+git clone https://github.com/amplace/waveflow.git
 
-cd wavebypass/backend
+cd waveflow/backend
 
 pip install -r requirements.txt
 
@@ -136,8 +137,6 @@ npm run dev
 | 变量名 | 说明 | 默认值 |
 |---|---|---|
 | `HITFM_COOKIE` | Hit FM 官网 Cookie（可选填写） | 空 |
-| `GEO_RESTRICT` | 地域拦截全局开关，设为 `1` 启用拦截 | `0`（关闭） |
-| `GEO_BLOCKED_REGIONS` | 地域拦截黑名单标签，需配合上方开关使用，多个地区使用英文逗号分隔 | `TW` |
 
 ---
 

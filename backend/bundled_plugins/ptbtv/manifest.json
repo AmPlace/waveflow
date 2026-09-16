@@ -1,0 +1,152 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_id": "ptbtv",
+  "display_name": "PTBTV Provider",
+  "version": "1.0.0",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "provider_contracts": [
+    {
+      "contract": "tv_provider",
+      "contract_version": "1.0",
+      "features": [
+        "resolve_stream"
+      ]
+    }
+  ],
+  "owned_schemes": [
+    {
+      "scheme": "ptbtv",
+      "contract": "tv_provider"
+    }
+  ],
+  "capabilities": [
+    "tv.resolve_stream"
+  ],
+  "permissions": {
+    "network": {
+      "managed": true,
+      "direct": true,
+      "allowed_hosts": [
+        "www.ptbtv.com"
+      ]
+    }
+  },
+  "runtime": {
+    "type": "python",
+    "ipc": "stdio_framed_json_v1",
+    "python_version_range": ">=3.14.0 <3.15.0",
+    "entrypoint": "plugin.py",
+    "dependency_lock": {
+      "artifacts": [
+        {
+          "abi_tag": "abi3",
+          "filename": "curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+          "name": "curl-cffi",
+          "platform_tag": "macosx_11_0_arm64",
+          "python_tag": "cp310",
+          "sha256": "a25620d9bf989c9c029a7d1642999c4c265abb0bad811deb2f77b0b5b2b12e5b",
+          "size_bytes": 2573544,
+          "url": "https://files.pythonhosted.org/packages/83/2d/3915e238579b3c5a92cead5c79130c3b8d20caaba7616cc4d894650e1d6b/curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+          "version": "0.15.0"
+        },
+        {
+          "abi_tag": "cp314",
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "name": "cffi",
+          "platform_tag": "macosx_11_0_arm64",
+          "python_tag": "cp314",
+          "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+          "size_bytes": 181487,
+          "url": "https://files.pythonhosted.org/packages/59/dd/27e9fa567a23931c838c6b02d0764611c62290062a6d4e8ff7863daf9730/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "version": "2.0.0"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "certifi-2026.5.20-py3-none-any.whl",
+          "name": "certifi",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+          "size_bytes": 134134,
+          "url": "https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl",
+          "version": "2026.5.20"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "rich-15.0.0-py3-none-any.whl",
+          "name": "rich",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+          "size_bytes": 310654,
+          "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+          "version": "15.0.0"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "name": "pycparser",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+          "size_bytes": 48172,
+          "url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+          "version": "3.0"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+          "name": "markdown-it-py",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+          "size_bytes": 91687,
+          "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+          "version": "4.2.0"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "pygments-2.20.0-py3-none-any.whl",
+          "name": "pygments",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176",
+          "size_bytes": 1231151,
+          "url": "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl",
+          "version": "2.20.0"
+        },
+        {
+          "abi_tag": "none",
+          "filename": "mdurl-0.1.2-py3-none-any.whl",
+          "name": "mdurl",
+          "platform_tag": "any",
+          "python_tag": "py3",
+          "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+          "size_bytes": 9979,
+          "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+          "version": "0.1.2"
+        }
+      ],
+      "lock_version": 1
+    }
+  },
+  "artifacts": [
+    {
+      "os": "macos",
+      "arch": "arm64",
+      "runtime": "python",
+      "entrypoint": "plugin.py",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 1,
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      }
+    }
+  ],
+  "dependencies": [],
+  "state_schema_version": 1
+}

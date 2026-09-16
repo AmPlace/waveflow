@@ -1,0 +1,183 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+      "url": "payloads/gzstv-1.0.0.pyz"
+    }
+  ],
+  "dependency_references": [],
+  "description": "WaveFlow official GZSTV TV Provider.",
+  "display": {
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 GZSTV 直播地址解析。",
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "type": "builtin",
+        "name": "waveflow"
+      }
+    },
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    }
+  },
+  "id": "official::gzstv-plugin",
+  "kind": "plugin_package",
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "68jC3y0TIsfujrbZPdCHVcM1Rg2rZqujFk31KtiL+AeVvRtNNm7jePD5HrV0+aC3b1n7Nl6f3pGdZU+/nzoDDg=="
+  },
+  "name": "GZSTV Provider Plugin",
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "x86_64",
+        "entrypoint": "gzstv-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+        },
+        "size_bytes": 9216
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "gzstv-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+        },
+        "size_bytes": 9216
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "gzstv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+        },
+        "size_bytes": 9216
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "gzstv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+        },
+        "size_bytes": 9216
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "gzstv-1.0.0.pyz",
+        "os": "windows",
+        "runtime": "python",
+        "sha256": "ad5fa15eea01786e81149f01a5b2fc6e02b66867c340c643a0f724c95c3e5790",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "b9zLMQQrZ/QIW7iraAlxxxpTnBcJd4Rh7/lJa4zPHR5YdP9/lGebIDjHq4f110zMz0AprkguMStXFY0NtH6mCw=="
+        },
+        "size_bytes": 9216
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "GZSTV Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "gzstv"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "api.gzstv.com"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "gzstv",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "ipc": "stdio_framed_json_v1",
+      "type": "subprocess"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "updated_at": "2026-08-12T00:00:00Z",
+  "version": "1.0.0",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "gzstv"
+  ],
+  "regions": [],
+  "operators": [],
+  "providers": [
+    "GZSTV"
+  ],
+  "languages": [],
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "published_at": "2026-08-12T00:00:00Z",
+  "compatibility": {
+    "min_waveflow_version": "0.1.0"
+  },
+  "links": {
+    "source": "https://github.com/AmPlace/wavebypass"
+  },
+  "catalog": {
+    "sort_weight": 0,
+    "featured": false
+  }
+}

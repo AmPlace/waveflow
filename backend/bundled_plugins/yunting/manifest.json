@@ -1,0 +1,17 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_id": "yunting",
+  "display_name": "Yunting Radio Provider",
+  "version": "1.0.0",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "provider_contracts": [{"contract": "radio_provider", "contract_version": "1.0", "features": ["catalog", "resolve_stream", "programme"]}],
+  "owned_schemes": [{"scheme": "yunting", "contract": "radio_provider"}],
+  "capabilities": ["radio.catalog", "radio.resolve_stream", "radio.programme"],
+  "permissions": {"network": {"managed": true, "allowed_hosts": ["ytmsout.radio.cn"]}},
+  "runtime": {"type": "python", "ipc": "stdio_framed_json_v1", "python_version_range": ">=3.14.0 <3.15.0", "entrypoint": "plugin.py", "dependency_lock": {"lock_version": 1, "artifacts": []}},
+  "artifacts": [{"os": "macos", "arch": "arm64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "7ac78c49e0cb6d269a44f730cb8dab98b63874a8f095d06024e5afe5c1906de5", "size_bytes": 10779, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}, {"os": "windows", "arch": "x86_64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "7ac78c49e0cb6d269a44f730cb8dab98b63874a8f095d06024e5afe5c1906de5", "size_bytes": 10779, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}],
+  "dependencies": [],
+  "state_schema_version": 1
+}

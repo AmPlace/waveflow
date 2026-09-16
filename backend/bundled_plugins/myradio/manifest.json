@@ -1,0 +1,17 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_id": "myradio",
+  "display_name": "MyRadio.tw Provider",
+  "version": "1.0.0",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "provider_contracts": [{"contract": "radio_provider", "contract_version": "1.0", "features": ["catalog", "resolve_stream"]}],
+  "owned_schemes": [{"scheme": "myradio", "contract": "radio_provider"}],
+  "capabilities": ["radio.catalog", "radio.resolve_stream"],
+  "permissions": {"network": {"managed": true, "allowed_hosts": ["myradio-dev.zeabur.app", "myradio.com.tw", "pop.olis.com.tw", "best.olis.com.tw", "ipget.apple-line.com", "hichannel.com.tw"]}},
+  "runtime": {"type": "python", "ipc": "stdio_framed_json_v1", "python_version_range": ">=3.14.0 <3.15.0", "entrypoint": "plugin.py", "dependency_lock": {"lock_version": 1, "artifacts": []}},
+  "artifacts": [{"os": "macos", "arch": "arm64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "d3681ba09a90befca8fac2f6c35119f860b0087ae6268e35c66a7d5fd01b6f0a", "size_bytes": 10003, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}, {"os": "windows", "arch": "x86_64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "d3681ba09a90befca8fac2f6c35119f860b0087ae6268e35c66a7d5fd01b6f0a", "size_bytes": 10003, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}],
+  "dependencies": [],
+  "state_schema_version": 1
+}

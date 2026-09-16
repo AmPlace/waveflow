@@ -1,0 +1,63 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "capabilities": [
+    "tv.resolve_stream"
+  ],
+  "dependencies": [],
+  "state_schema_version": 1,
+  "plugin_id": "woniu",
+  "display_name": "Woniu Provider",
+  "version": "1.0.0",
+  "provider_contracts": [
+    {
+      "contract": "tv_provider",
+      "contract_version": "1.0",
+      "features": [
+        "resolve_stream"
+      ]
+    }
+  ],
+  "owned_schemes": [
+    {
+      "scheme": "woniu",
+      "contract": "tv_provider"
+    }
+  ],
+  "permissions": {
+    "network": {
+      "managed": false,
+      "direct": true,
+      "allowed_hosts": [
+        "119.44.12.12"
+      ]
+    }
+  },
+  "runtime": {
+    "type": "python",
+    "ipc": "stdio_framed_json_v1",
+    "python_version_range": ">=3.14.0 <3.15.0",
+    "entrypoint": "plugin.py",
+    "dependency_lock": {
+      "lock_version": 1,
+      "artifacts": []
+    }
+  },
+  "artifacts": [
+    {
+      "os": "macos",
+      "arch": "arm64",
+      "runtime": "python",
+      "entrypoint": "plugin.py",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 1,
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      }
+    }
+  ]
+}

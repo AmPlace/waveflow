@@ -1,0 +1,16 @@
+{
+  "publishers": [
+    {
+      "keys": [
+        {
+          "description": "WaveFlow official release signing key 2026-01",
+          "enabled": true,
+          "key_id": "org.waveflow.release.2026-01",
+          "public_key": "wzxiiRg6/t8tVfqY57iffOhDUzNt5b4LncHOsWVIzWo="
+        }
+      ],
+      "publisher_id": "org.waveflow"
+    }
+  ],
+  "schema_version": 1
+}

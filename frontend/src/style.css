@@ -5,19 +5,175 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg: #F3F4F6;
+    --bg-soft: #FFFFFF;
+    --surface: rgba(255,255,255,0.76);
+    --surface-strong: rgba(255,255,255,0.92);
+    --surface-hover: rgba(255,255,255,0.98);
+    --surface-active: rgba(15,23,42,0.07);
+    --border: rgba(15,23,42,0.10);
+    --border-strong: rgba(15,23,42,0.16);
+    --text-primary: rgba(0,0,0,0.88);
+    --text-secondary: rgba(0,0,0,0.58);
+    --text-tertiary: rgba(0,0,0,0.38);
+    --sidebar-bg: rgba(255,255,255,0.88);
+    --player-bg: rgba(255,255,255,0.92);
+    --card-bg: #FFFFFF;
+    --card-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 20px rgba(15,23,42,0.045);
+    --floating-shadow: 0 14px 34px rgba(15,23,42,0.12);
+    --fallback-card-bg: #DDE0E4;
+    --fallback-card-start: #EEF0F2;
+    --fallback-card-end: #C9CED4;
+    --fallback-card-soft: rgba(255,255,255,0.22);
+    --fallback-border: rgba(0,0,0,0.10);
+    --fallback-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 8px 18px rgba(15,23,42,0.06);
+    --iptv-logo-card-base-start: #FAFAFB;
+    --iptv-logo-card-base-mid: #F7F7F9;
+    --iptv-logo-card-base-soft: #F3F3F6;
+    --iptv-logo-card-base-end: #EFEFF2;
+    --iptv-logo-card-highlight: rgba(255,255,255,0.42);
+    --iptv-card-border: rgba(0,0,0,0.06);
+    --iptv-card-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 18px rgba(15,23,42,0.055);
+    --iptv-card-footer: rgba(255,255,255,0.88);
+    --iptv-card-footer-border: rgba(15,23,42,0.09);
+    --iptv-card-label-primary: rgba(16,20,24,0.84);
+    --iptv-card-label-secondary: rgba(16,20,24,0.48);
+    --sidebar-w: 232px;
+    --sidebar-w-collapsed: 72px;
+    --page-gutter: 20px;
+    --desktop-titlebar-height: 28px;
+    --page-top: calc(env(safe-area-inset-top) + 4rem);
+    --mini-player-height: 72px;
+    --mini-player-bottom-offset: calc(env(safe-area-inset-bottom) + 12px);
+    --mini-player-content-gap: 12px;
+    --mini-player-occupied-height: calc(var(--mini-player-height) + var(--mini-player-bottom-offset) + var(--mini-player-content-gap));
+    --card-radius: 16px;
+    --panel-radius: 20px;
+    --control-radius: 12px;
+    --card-padding: 18px;
+    --card-gap: 20px;
+    --control-height: 40px;
+    --control-height-small: 36px;
+    --chip-height: 40px;
+    --chip-hit-height: 44px;
+    --icon-button-size: 40px;
+    --icon-button-hit-size: 44px;
+    --drawer-width: 440px;
+  }
+
+  .dark {
+    --bg: #090A0B;
+    --bg-soft: #0D0E10;
+    --surface: rgba(255,255,255,0.045);
+    --surface-strong: rgba(255,255,255,0.075);
+    --surface-hover: rgba(255,255,255,0.095);
+    --surface-active: rgba(255,255,255,0.13);
+    --border: rgba(255,255,255,0.075);
+    --border-strong: rgba(255,255,255,0.13);
+    --text-primary: rgba(255,255,255,0.94);
+    --text-secondary: rgba(255,255,255,0.66);
+    --text-tertiary: rgba(255,255,255,0.42);
+    --sidebar-bg: rgba(10,11,12,0.84);
+    --player-bg: rgba(24,25,27,0.78);
+    --card-bg: rgba(255,255,255,0.045);
+    --card-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    --floating-shadow: 0 14px 36px rgba(0,0,0,0.34);
+    --fallback-card-bg: #25282D;
+    --fallback-card-start: #343840;
+    --fallback-card-end: #191C21;
+    --fallback-card-soft: rgba(255,255,255,0.055);
+    --fallback-border: rgba(255,255,255,0.08);
+    --fallback-shadow: none;
+    --iptv-logo-card-base-start: #1D1F24;
+    --iptv-logo-card-base-mid: #17191D;
+    --iptv-logo-card-base-soft: #14161A;
+    --iptv-logo-card-base-end: #101115;
+    --iptv-logo-card-highlight: rgba(255,255,255,0.055);
+    --iptv-card-border: rgba(255,255,255,0.08);
+    --iptv-card-shadow: none;
+    --iptv-card-footer: rgba(12,13,16,0.46);
+    --iptv-card-footer-border: rgba(255,255,255,0.055);
+    --iptv-card-label-primary: rgba(255,255,255,0.88);
+    --iptv-card-label-secondary: rgba(255,255,255,0.54);
+  }
+
   html {
+    height: 100%;
+    min-height: 100%;
+    background: var(--bg);
     color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   html.dark {
+    background: var(--bg);
     color-scheme: dark;
   }
 
   body {
     margin: 0;
+    height: 100%;
+    min-height: 100%;
     min-width: 320px;
+    background: var(--bg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark body {
+    background: var(--bg);
+  }
+
+  #app {
+    height: 100%;
+    min-height: 100%;
+    background: var(--bg);
+  }
+
+  html.dark #app {
+    background: var(--bg);
+  }
+
+  .auth-screen {
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+  }
+
+  .auth-input {
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.75rem 0.9rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .auth-input:focus {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  }
+
+  .auth-button {
+    width: 100%;
+    border-radius: 0.875rem;
+    background: var(--text-primary);
+    padding: 0.78rem 1rem;
+    color: var(--bg);
+    font-size: 0.875rem;
+    font-weight: 650;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .auth-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .auth-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
   }
 
   button,
@@ -26,7 +182,954 @@
   }
 }
 
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: 40px;
+    --page-top: 24px;
+  }
+}
+
 @layer components {
+  .app-root {
+    background: var(--bg);
+  }
+
+  .page-shell {
+    padding-top: var(--page-top);
+    padding-right: var(--page-gutter);
+    padding-left: var(--page-gutter);
+  }
+
+  .desktop-window-shell .desktop-window-drag-region {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 60;
+    display: block;
+    height: var(--desktop-titlebar-height);
+    background: transparent;
+    -webkit-app-region: drag;
+  }
+
+  .desktop-window-shell .app-main {
+    padding-top: var(--desktop-titlebar-height);
+  }
+
+  .desktop-window-shell .desktop-top-actions {
+    top: calc(var(--desktop-titlebar-height) + 1.5rem);
+  }
+
+  .desktop-window-shell > .fixed.inset-x-0.top-0 {
+    top: var(--desktop-titlebar-height);
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-w);
+    transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .sidebar-toggle {
+    /* 直接相对 aside（fixed 定位上下文）算位置，绕开内部容器宽度。
+       展开 232px：right 12px → 按钮右沿距侧栏右沿 12px ✓
+       折叠 72px：实际内容边界下 right 14px → 按钮中心与导航图标中心重合 ✓
+       两态 right 都是确定 px，过渡平滑。 */
+    position: absolute;
+    top: 24px;
+    right: 12px;
+    transition: right 260ms cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 200ms ease,
+                color 200ms ease;
+  }
+
+  .sidebar-collapsed .sidebar-toggle {
+    right: 14px;
+  }
+
+  .nav-label {
+    transition: opacity 180ms ease;
+  }
+
+  .nav-item-just-activated {
+    animation: nav-switch-pulse 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes nav-switch-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+  }
+
+  .sidebar-brand {
+    transition: opacity 180ms ease;
+  }
+
+  .sidebar-collapsed .nav-label,
+  .sidebar-collapsed .sidebar-brand {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+
+  .sidebar-collapsed {
+    --sidebar-w: var(--sidebar-w-collapsed);
+  }
+
+  .app-main {
+    transition: padding-left 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Keep the floating desktop actions on the same right edge as the
+     content's lg:px-10 boundary, including the native scrollbar gutter. */
+  .desktop-top-actions {
+    right: 56px;
+  }
+
+  .page-with-mini-player {
+    padding-bottom: var(--mini-player-occupied-height);
+  }
+
+  @media (min-width: 1024px) {
+    .desktop-shell .app-main {
+      padding-left: var(--sidebar-w);
+    }
+
+    .desktop-window-shell .app-sidebar {
+      padding-top: calc(1.5rem + var(--desktop-titlebar-height));
+    }
+
+    .desktop-window-shell .sidebar-toggle {
+      top: calc(1.5rem + var(--desktop-titlebar-height));
+    }
+  }
+
+  .mobile-action-btn,
+  .desktop-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-button-size);
+    height: var(--icon-button-size);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    transition: background-color 180ms ease, transform 180ms ease, border-color 180ms ease;
+  }
+
+  .mobile-action-btn:hover,
+  .desktop-action-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  /* The magnifier handle extends to the lower-right; offset the artwork
+     slightly so its optical center aligns with the action button center. */
+  .toolbar-search-icon {
+    transform: translate(-0.5px, -0.5px);
+  }
+
+  .mobile-action-btn:active,
+  .desktop-action-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Mobile header keeps a 44px hit target while the visible control stays
+     visually close to the existing compact 40px language. */
+  @media (max-width: 1023px) {
+    .mobile-header-row {
+      position: relative;
+    }
+
+    .mobile-mode-switch {
+      flex: 0 0 auto;
+      background: var(--bg-soft);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .dark .mobile-mode-switch {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .mobile-action-btn {
+      position: relative;
+      width: var(--icon-button-hit-size);
+      height: var(--icon-button-hit-size);
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .mobile-action-btn::before {
+      position: absolute;
+      inset: 2px;
+      content: '';
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-soft);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .dark .mobile-action-btn::before {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .mobile-action-btn:hover {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .mobile-action-btn:hover::before {
+      border-color: var(--border-strong);
+      background: var(--surface-hover);
+    }
+
+    .mobile-action-btn:active {
+      transform: none;
+    }
+
+    .mobile-action-btn:active::before {
+      transform: scale(0.96);
+    }
+
+    .mobile-action-btn > svg {
+      position: relative;
+      z-index: 1;
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+
+    .mobile-search-shell {
+      height: 2.75rem;
+      border-width: 0;
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .mobile-search-collapsed {
+      width: var(--icon-button-hit-size);
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .mobile-search-collapsed::before {
+      position: absolute;
+      inset: 2px;
+      content: '';
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-soft);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: background-color 180ms ease, border-color 180ms ease;
+    }
+
+    .dark .mobile-search-collapsed::before {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .mobile-search-collapsed:hover::before {
+      border-color: var(--border-strong);
+      background: var(--surface-hover);
+    }
+
+    .mobile-search-expanded {
+      width: clamp(9rem, calc(100vw - 15rem), 14rem);
+      border-width: 1px;
+      border-color: var(--border);
+      background: var(--bg-soft);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .dark .mobile-search-expanded {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .mobile-search-trigger {
+      position: relative;
+      z-index: 1;
+      width: var(--icon-button-hit-size);
+      height: 2.75rem;
+    }
+
+    .mobile-search-trigger > svg {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+
+    .mobile-nav-popover {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      z-index: 60;
+      width: min(14.5rem, calc(100vw - 2rem));
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
+      backdrop-filter: blur(18px) saturate(130%);
+    }
+
+    .mobile-nav-popover__title {
+      padding: 0.45rem 0.7rem 0.35rem;
+      color: var(--text-tertiary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .mobile-nav-popover__item {
+      display: flex;
+      width: 100%;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      border-radius: 0.75rem;
+      padding: 0.5rem 0.7rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      text-align: left;
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    .mobile-nav-popover__item:hover,
+    .mobile-nav-popover__item--active {
+      background: var(--surface-active);
+    }
+
+    .mobile-nav-popover__item--disabled {
+      color: var(--text-tertiary);
+      cursor: not-allowed;
+      opacity: 0.72;
+    }
+
+    .mobile-nav-popover__hint {
+      flex: 0 0 auto;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+  }
+
+  .channel-card {
+    container-type: inline-size;
+    isolation: isolate;
+    border-radius: var(--card-radius);
+    background-color: var(--fallback-card-bg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    box-shadow: none;
+  }
+
+  .channel-card-current {
+    border-color: var(--border-strong);
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+
+  .radio-main .channel-card-selected {
+    border-color: var(--border-strong);
+    outline: 2px solid var(--border-strong);
+    outline-offset: 2px;
+  }
+
+  .radio-main .channel-card-current {
+    border-color: var(--border-strong);
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+
+  .channel-card-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,0.72) 0%,
+        rgba(0,0,0,0.42) 28%,
+        rgba(0,0,0,0.10) 62%,
+        rgba(0,0,0,0.02) 100%
+      );
+    pointer-events: none;
+  }
+
+  .channel-index-badge {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 3;
+    display: inline-flex;
+    min-width: 26px;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.48);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1;
+    backdrop-filter: blur(8px) saturate(105%);
+  }
+
+  .card-info {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    z-index: 3;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-channel {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-logo {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.20);
+    object-fit: contain;
+    padding: 2px;
+  }
+
+  .card-channel-name {
+    min-width: 0;
+    overflow: hidden;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-program-name {
+    max-width: 42%;
+    flex: 0 1 auto;
+    overflow: hidden;
+    color: rgba(255,255,255,0.82);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .has-cover-image {
+    background-color: #171819;
+  }
+
+  .channel-card--logo-card {
+    border-color: var(--fallback-border);
+    background: var(--fallback-card-bg);
+    box-shadow: var(--fallback-shadow);
+  }
+
+  .channel-card__logo-card-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at 50% 34%,
+        var(--fallback-card-soft) 0%,
+        transparent 52%
+      ),
+      linear-gradient(
+        145deg,
+        var(--fallback-card-start) 0%,
+        var(--fallback-card-end) 100%
+      );
+    pointer-events: none;
+  }
+
+  .channel-card__center-logo {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    max-width: 42%;
+    max-height: 38%;
+    width: auto;
+    height: auto;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 10px;
+    box-shadow: none !important;
+    object-fit: contain;
+    object-position: center;
+    opacity: 0.92;
+    padding: 0 !important;
+    filter: none;
+    transform: translate(-50%, -50%);
+    transform-origin: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .channel-card__logo-card-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,0.58) 0%,
+        rgba(0,0,0,0.20) 18%,
+        rgba(0,0,0,0.045) 34%,
+        transparent 52%
+      );
+    pointer-events: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card--logo-card {
+    --iptv-card-footer-height: 44px;
+    border-color: var(--iptv-card-border);
+    background:
+      linear-gradient(
+        145deg,
+        var(--iptv-logo-card-base-start) 0%,
+        var(--iptv-logo-card-base-mid) 46%,
+        var(--iptv-logo-card-base-end) 100%
+      );
+    box-shadow: var(--iptv-card-shadow);
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card--logo-card {
+    box-shadow: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card--logo-card::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: var(--iptv-card-footer-height);
+    border-top: 1px solid var(--iptv-card-footer-border);
+    background: var(--iptv-card-footer);
+    pointer-events: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__logo-card-visual {
+    bottom: var(--iptv-card-footer-height);
+    background:
+      linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        var(--iptv-logo-card-highlight) 52%,
+        rgba(255,255,255,0) 100%
+      ),
+      linear-gradient(
+        145deg,
+        var(--iptv-logo-card-base-start) 0%,
+        var(--iptv-logo-card-base-mid) 44%,
+        var(--iptv-logo-card-base-soft) 68%,
+        var(--iptv-logo-card-base-end) 100%
+      );
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__logo-card-shade {
+    display: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__logo-stage {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 12%;
+    bottom: 12%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__logo-stage--badge {
+    left: 14%;
+    right: 14%;
+    top: 14%;
+    bottom: 14%;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.54) 0%, rgba(255,255,255,0.24) 42%, rgba(255,255,255,0) 72%);
+    box-shadow: none;
+    padding: clamp(4px, 3%, 8px);
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card__logo-stage--badge {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.035) 44%, rgba(255,255,255,0) 72%);
+    box-shadow: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__logo-stage--cover {
+    inset: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__center-logo {
+    position: static;
+    max-width: 74%;
+    max-height: 62%;
+    opacity: 1;
+    transform: none;
+    filter:
+      drop-shadow(0 0 1px rgba(15,23,42,0.68))
+      drop-shadow(0 2px 5px rgba(15,23,42,0.24))
+      drop-shadow(0 1px 0 rgba(255,255,255,0.36));
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__center-logo--badge {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 0;
+    filter:
+      drop-shadow(0 1px 2px rgba(15,23,42,0.20));
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__center-logo--cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    filter: none;
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card__center-logo {
+    filter:
+      drop-shadow(0 1px 1px rgba(255,255,255,0.08))
+      drop-shadow(0 3px 8px rgba(0,0,0,0.38));
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card__center-logo--badge {
+    filter:
+      drop-shadow(0 2px 5px rgba(0,0,0,0.28));
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card__center-logo--cover {
+    filter: none;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__text-logo {
+    display: -webkit-box;
+    width: min(82%, 360px);
+    max-height: 100%;
+    overflow: hidden;
+    color: rgba(28,28,32,0.88);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+    text-align: center;
+    text-overflow: ellipsis;
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.75),
+      0 2px 8px rgba(0,0,0,0.06);
+    text-wrap: balance;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .dark :is(.iptv-main, .radio-main) .channel-card__text-logo {
+    color: rgba(248,248,250,0.94);
+    text-shadow:
+      0 1px 2px rgba(0,0,0,0.55),
+      0 4px 12px rgba(0,0,0,0.18);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__text-logo--xl {
+    font-size: clamp(22px, 13cqw, 34px);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__text-logo--lg {
+    font-size: clamp(20px, 11cqw, 29px);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__text-logo--md {
+    font-size: clamp(18px, 9.5cqw, 24px);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-card__text-logo--sm {
+    font-size: clamp(17px, 8cqw, 20px);
+  }
+
+  :is(.iptv-main, .radio-main) .card-info {
+    height: var(--iptv-card-footer-height);
+    bottom: 0;
+    align-items: center;
+  }
+
+  :is(.iptv-main, .radio-main) .card-channel {
+    gap: 7px;
+  }
+
+  :is(.iptv-main, .radio-main) .card-channel-name {
+    color: var(--iptv-card-label-primary);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  :is(.iptv-main, .radio-main) .card-program-name {
+    max-width: 46%;
+    color: var(--iptv-card-label-secondary);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-play-state-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+  }
+
+  :is(.iptv-main, .radio-main) .channel-play-state-dot--live {
+    background: #22C55E;
+    box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-play-state-dot--neutral {
+    background: #9CA3AF;
+    box-shadow: 0 0 0 3px rgba(156,163,175,0.12);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-play-state-dot--warn {
+    background: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+  }
+
+  :is(.iptv-main, .radio-main) .channel-play-state-dot--danger {
+    background: #DC2626;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
+  }
+
+  @media (max-width: 768px) {
+    :is(.iptv-main, .radio-main) .channel-card__text-logo--xl {
+      font-size: 25px;
+    }
+
+    :is(.iptv-main, .radio-main) .channel-card__text-logo--lg {
+      font-size: 22px;
+    }
+
+    :is(.iptv-main, .radio-main) .channel-card__text-logo--md {
+      font-size: 19px;
+    }
+
+    :is(.iptv-main, .radio-main) .channel-card__text-logo--sm {
+      font-size: 17px;
+    }
+  }
+
+  .default-cover-placeholder {
+    background:
+      radial-gradient(
+        circle at 50% 36%,
+        rgba(110,118,130,0.09),
+        transparent 54%
+      ),
+      linear-gradient(
+        145deg,
+        #1a1c20 0%,
+        #0c0e11 100%
+      );
+  }
+
+  .default-cover-tv {
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.14), transparent 34%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 8px),
+      linear-gradient(135deg, #27292c, #111214 72%);
+  }
+
+  .default-cover-radio {
+    background:
+      radial-gradient(circle at 70% 42%, transparent 0 16%, rgba(255,255,255,0.10) 16.5% 17.5%, transparent 18% 29%, rgba(255,255,255,0.08) 29.5% 30.5%, transparent 31%),
+      linear-gradient(135deg, #2b2c2f, #111214);
+  }
+
+  .default-cover-cctv {
+    background:
+      linear-gradient(90deg, transparent 0 52%, rgba(255,255,255,0.08) 52% 53%, transparent 53%),
+      linear-gradient(135deg, #303235, #151618);
+  }
+
+  .default-cover-satellite {
+    background:
+      radial-gradient(circle at 78% 28%, rgba(255,255,255,0.18), transparent 17%),
+      linear-gradient(155deg, #34363a, #111214 68%);
+  }
+
+  .default-cover-local {
+    background:
+      linear-gradient(0deg, rgba(255,255,255,0.07) 0 2px, transparent 2px 100%),
+      linear-gradient(90deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 100%),
+      linear-gradient(135deg, #292b2e, #121315);
+    background-size: auto, 42px 42px, auto;
+  }
+
+  .dock-side-control {
+    display: flex;
+    width: var(--icon-button-hit-size);
+    height: var(--icon-button-hit-size);
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  .dock-side-control:not(:disabled):hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+  }
+
+  .dock-side-control:disabled {
+    opacity: 0.42;
+  }
+
+  .bottom-player-dock {
+    bottom: var(--mini-player-bottom-offset);
+    pointer-events: none;
+  }
+
+  .mobile-player-shell {
+    cursor: pointer;
+    pointer-events: auto;
+    border-radius: var(--panel-radius);
+    box-shadow: var(--floating-shadow);
+  }
+
+  .mobile-player-shell:focus-visible {
+    outline: 2px solid var(--border-strong);
+    outline-offset: 3px;
+  }
+
+  .mobile-player-action-control {
+    flex: 0 0 auto;
+    border: 1px solid transparent;
+  }
+
+  .mobile-player-action-control:focus-visible {
+    outline: 2px solid var(--border-strong);
+    outline-offset: 2px;
+  }
+
+  .mobile-player-action-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .mobile-player-play-icon--play {
+    transform: translateX(-1px);
+  }
+
+  @media (max-width: 1023px) {
+    .mobile-player-shell {
+      height: 4.5rem;
+      gap: 0.5rem;
+      border-radius: var(--panel-radius);
+      padding-inline: 0.75rem;
+    }
+
+    .mobile-player-info {
+      flex-basis: 40%;
+      gap: 0.5rem;
+    }
+
+    .mobile-player-logo {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.625rem;
+      padding: 0.1875rem;
+    }
+
+    .mobile-player-title {
+      font-size: 0.875rem;
+      line-height: 1.2;
+    }
+
+    .mobile-player-status {
+      margin-top: 0.125rem;
+      font-size: 0.75rem;
+      line-height: 1.2;
+    }
+
+    .mobile-player-controls {
+      gap: 0.25rem;
+    }
+
+    .mobile-player-play-btn {
+      width: 3.25rem;
+      height: 3.25rem;
+    }
+
+    .mobile-player-play-btn > svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .mobile-player-actions {
+      flex-basis: 30%;
+      gap: 0.25rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --mini-player-height: 64px;
+      --mini-player-bottom-offset: 28px;
+      --mini-player-content-gap: 20px;
+    }
+
+    .bottom-player-dock {
+      left: calc(var(--sidebar-w) + 40px);
+      right: 40px;
+      max-width: 600px;
+      margin-inline: 0;
+      margin-left: auto;
+      margin-right: auto;
+      transition: left 260ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
   /* 去掉 Firefox range 轨道默认边框。 */
   input[type='range']::-moz-range-track {
     border: 0;
@@ -45,4 +1148,285 @@
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* IPTV Home density control. Keep this scoped to IPTV so Radio cards retain
+   their existing card/footer presentation. */
+.iptv-density-toggle {
+  position: relative;
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.iptv-density-toggle:hover,
+.iptv-density-toggle--standard {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.iptv-density-toggle svg {
+  position: relative;
+  z-index: 1;
+  width: 1rem;
+  height: 1rem;
+}
+
+.iptv-main.iptv-density-compact .channel-card--logo-card {
+  --iptv-card-footer-height: 0px;
+  border-radius: 14px;
+}
+
+.iptv-main.iptv-density-compact {
+  --card-gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .iptv-main.iptv-density-compact {
+    --card-gap: 18px;
+  }
+}
+
+.iptv-main.iptv-density-compact .channel-card--logo-card::after,
+.iptv-main.iptv-density-compact .card-info {
+  display: none;
+}
+
+.iptv-main.iptv-density-compact .channel-card__logo-card-visual {
+  bottom: 0;
+}
+
+.iptv-main.iptv-density-compact .channel-card__logo-stage:not(.channel-card__logo-stage--cover) {
+  left: 9%;
+  right: 9%;
+  top: 9%;
+  bottom: 9%;
+}
+
+.iptv-main.iptv-density-compact .channel-card__center-logo--badge {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.iptv-main.iptv-density-compact .channel-card__text-logo {
+  width: min(88%, 360px);
+}
+
+.iptv-main.iptv-density-compact .channel-card__compact-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.iptv-main.iptv-density-compact .channel-card__compact-status.channel-play-state-dot--warn {
+  background: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.14);
+}
+
+.iptv-main.iptv-density-compact .channel-card__compact-status.channel-play-state-dot--danger {
+  background: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.14);
+}
+
+/* IPTV-only optical sizing. Radio continues using the shared legacy sizing. */
+.iptv-main .channel-card__center-logo--badge {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.iptv-main .channel-card__logo-stage--wide {
+  left: 5%;
+  right: 5%;
+  top: 29%;
+  bottom: 29%;
+  padding: 0;
+  background: none;
+}
+
+.iptv-main .channel-card__center-logo--wide {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* Light-only identity-logo edge; cover artwork and text fallback stay clean. */
+.iptv-main .channel-card__center-logo {
+  filter: none;
+}
+
+.iptv-main .channel-card__center-logo--badge,
+.iptv-main .channel-card__center-logo--wide {
+  filter:
+    drop-shadow(0 0 1px rgba(15, 23, 42, 0.52))
+    drop-shadow(0 1px 1px rgba(15, 23, 42, 0.18));
+}
+
+.iptv-main .channel-card__center-logo--cover {
+  filter: none;
+}
+
+.iptv-main.iptv-density-compact .channel-card__logo-stage--wide {
+  top: 31%;
+  bottom: 31%;
+}
+
+.iptv-main .channel-card__text-logo {
+  font-weight: 650;
+}
+
+.iptv-main .channel-card__text-logo--xl {
+  font-size: clamp(18px, 9cqw, 21px);
+}
+
+.iptv-main .channel-card__text-logo--lg {
+  font-size: clamp(17px, 8.5cqw, 19px);
+}
+
+.iptv-main .channel-card__text-logo--md {
+  font-size: clamp(16px, 8cqw, 18px);
+}
+
+.iptv-main .channel-card__text-logo--sm {
+  font-size: clamp(15px, 7.5cqw, 17px);
+}
+
+.iptv-main.iptv-density-compact .channel-card__text-logo--xl {
+  font-size: clamp(17px, 9cqw, 18px);
+}
+
+.iptv-main.iptv-density-compact .channel-card__text-logo--lg {
+  font-size: clamp(16px, 8.5cqw, 17px);
+}
+
+.iptv-main.iptv-density-compact .channel-card__text-logo--md {
+  font-size: clamp(16px, 8cqw, 16.5px);
+}
+
+.iptv-main.iptv-density-compact .channel-card__text-logo--sm {
+  font-size: clamp(15px, 7.5cqw, 16px);
+}
+
+@media (max-width: 1023px) {
+  /* A 44px hit target carries a 40px visual chip. This keeps the existing
+     row measurement and expand/collapse semantics unchanged. */
+  .iptv-main .tag-filter-row__item,
+  .iptv-main .tag-filter-row__more {
+    position: relative;
+    isolation: isolate;
+    height: 2.75rem;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .iptv-main .tag-filter-row__item:not(.tag-filter-row__item--selected),
+  .iptv-main .tag-filter-row__more {
+    background: transparent;
+  }
+
+  .iptv-main .tag-filter-row__item::before,
+  .iptv-main .tag-filter-row__more::before {
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    content: '';
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .iptv-main .tag-filter-row__item:hover::before,
+  .iptv-main .tag-filter-row__more:hover::before {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+  }
+
+  .iptv-main .tag-filter-row__item--selected::before {
+    border-color: var(--text-primary);
+    background: var(--text-primary);
+  }
+
+  .iptv-main .tag-filter-row__item--selected:hover::before {
+    border-color: var(--border-strong);
+  }
+
+  .iptv-main .iptv-density-toggle {
+    position: relative;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .iptv-main .iptv-density-toggle::before {
+    position: absolute;
+    inset: 2px;
+    content: '';
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .iptv-main .iptv-density-toggle:hover::before,
+  .iptv-main .iptv-density-toggle--standard::before {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+  }
+
+  .iptv-main .iptv-density-toggle svg {
+    position: relative;
+    z-index: 1;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .iptv-main .iptv-sort-trigger {
+    position: relative;
+    isolation: isolate;
+    height: 2.75rem;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .iptv-main .iptv-sort-trigger::before {
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    content: '';
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .iptv-main .iptv-sort-trigger:hover::before {
+    border-color: var(--border-strong);
+    background: var(--surface-hover);
+  }
+
+  .iptv-main .iptv-sort-trigger > svg {
+    position: relative;
+    z-index: 1;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
 }

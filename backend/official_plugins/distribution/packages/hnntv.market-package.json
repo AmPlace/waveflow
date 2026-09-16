@@ -1,0 +1,142 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+      "url": "payloads/hnntv-1.0.0.pyz"
+    }
+  ],
+  "dependency_references": [],
+  "description": "WaveFlow official HNNTV TV Provider.",
+  "display": {
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 HNNTV 直播地址解析。",
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "type": "builtin",
+        "name": "waveflow"
+      }
+    },
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    }
+  },
+  "id": "official::hnntv-plugin",
+  "kind": "plugin_package",
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "PNbdgkXfMsvsoV0zJv7vSo89CQ6aUGrP9F/CGkNrgtl6bhLPj/sGr31yJa+5kNJ5ZfXOQKoM/0GiSFuEEeMOBQ=="
+  },
+  "name": "HNNTV Provider Plugin",
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "x86_64",
+        "entrypoint": "hnntv-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "rJeDluYrAPM08fZGeS2ZSMkSK7tt5HEfD1SNx/2LCmXNd5aLawKZaIn8xMOwQIB7evY7+bmhJYQgxTdJYsJBDw=="
+        },
+        "size_bytes": 10287
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "hnntv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "e3b43ec350b0c6391ee76eb52d8ba34ecacfcafa9d15f5ccf2916aa1cccac43c",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "rJeDluYrAPM08fZGeS2ZSMkSK7tt5HEfD1SNx/2LCmXNd5aLawKZaIn8xMOwQIB7evY7+bmhJYQgxTdJYsJBDw=="
+        },
+        "size_bytes": 10287
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "HNNTV Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "hnntv"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "www.hnntv.cn",
+          "ps.hnntv.cn"
+        ],
+        "direct": true,
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "hnntv",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "ipc": "stdio_framed_json_v1",
+      "type": "subprocess"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "risk_level": "official_signed_not_sandboxed",
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "updated_at": "2026-08-12T00:00:00Z",
+  "version": "1.0.0",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "hnntv"
+  ],
+  "regions": [],
+  "operators": [],
+  "providers": [
+    "HNNTV"
+  ],
+  "languages": [],
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "published_at": "2026-08-12T00:00:00Z",
+  "compatibility": {
+    "min_waveflow_version": "0.1.0"
+  },
+  "links": {
+    "source": "https://github.com/AmPlace/wavebypass"
+  },
+  "catalog": {
+    "sort_weight": 0,
+    "featured": false
+  }
+}

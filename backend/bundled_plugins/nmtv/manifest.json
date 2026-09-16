@@ -1,0 +1,65 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_id": "nmtv",
+  "display_name": "NMTV Provider",
+  "version": "1.1.0",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "provider_contracts": [
+    {
+      "contract": "tv_provider",
+      "contract_version": "1.0",
+      "features": ["resolve_stream"]
+    }
+  ],
+  "owned_schemes": [
+    {"scheme": "nmtv", "contract": "tv_provider"}
+  ],
+  "capabilities": ["tv.resolve_stream"],
+  "permissions": {
+    "network": {
+      "managed": true,
+      "allowed_hosts": ["api-bt.nmtv.cn"]
+    }
+  },
+  "runtime": {
+    "type": "python",
+    "ipc": "stdio_framed_json_v1",
+    "python_version_range": ">=3.11.0 <3.15.0",
+    "entrypoint": "plugin.py",
+    "dependency_lock": {
+      "lock_version": 1,
+      "artifacts": [
+        {
+          "name": "xxtea",
+          "version": "5.0.0",
+          "filename": "xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "url": "https://files.pythonhosted.org/packages/7c/76/1e4ced8038904aada6716ec729ddffbce509c12784c6b3f659cd8206e544/xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "sha256": "83212c868cd88decde39467579282464853942e36764031f9507ee81e803ac9a",
+          "size_bytes": 12565,
+          "python_tag": "cp314",
+          "abi_tag": "cp314",
+          "platform_tag": "macosx_11_0_arm64"
+        },
+        {
+          "name": "xxtea",
+          "version": "5.0.0",
+          "filename": "xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/b5/69/432aa20f5d3e56be939cdb2e4fcff80e84da5f07fbff94bd5cc190f9aabb/xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "sha256": "b11d6b8119e1f4413e07f24741b6d1ad78a93012d968afabd15448b9912712ac",
+          "size_bytes": 43062,
+          "python_tag": "cp311",
+          "abi_tag": "cp311",
+          "platform_tag": "manylinux2014_x86_64"
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {"os": "linux", "arch": "x86_64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size_bytes": 1, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}},
+    {"os": "macos", "arch": "arm64", "runtime": "python", "entrypoint": "plugin.py", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size_bytes": 1, "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}
+  ],
+  "dependencies": [],
+  "state_schema_version": 1
+}

@@ -1,0 +1,23 @@
+{
+  "python_version": "3.14.7",
+  "python_abi": "cp314",
+  "os": "windows",
+  "arch": "x86_64",
+  "source": {
+    "kind": "python.org official Windows x64 installer",
+    "filename": "python-3.14.7-amd64.exe",
+    "url": "https://www.python.org/ftp/python/3.14.7/python-3.14.7-amd64.exe",
+    "provenance_url": "https://www.python.org/downloads/release/python-3147/",
+    "sigstore_url": "https://www.python.org/ftp/python/3.14.7/python-3.14.7-amd64.exe.sigstore",
+    "sha256": "9d9eb2709ef81bf5cd30db3c2096bdbc4ea10087c22e62f27d356b36f6ae9649"
+  },
+  "ca_bundle": {
+    "package": "certifi",
+    "version": "2026.5.20",
+    "filename": "certifi-2026.5.20-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl",
+    "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+    "pem_path": "certifi/cacert.pem",
+    "pem_sha256": "7cef540c6af3bf0a3c7d0070bd3fd7aae34f8aa805b408d1c27a01c8aeb305df"
+  }
+}

@@ -1,21 +1,29 @@
 {
-  "name": "wavebypass-frontend",
+  "name": "waveflow-frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "test": "node --test tests/unit/*.test.js",
+    "test:e2e": "node --test tests/e2e/*.test.js",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
+    "hls.js": "^1.6.16",
+    "mpegts.js": "1.8.0",
     "pinia": "^3.0.0",
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "vue-router": "^5.0.7"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.0",
+    "@vue/compiler-sfc": "^3.5.40",
+    "@vue/test-utils": "^2.4.11",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
     "vite": "^5.4.11",

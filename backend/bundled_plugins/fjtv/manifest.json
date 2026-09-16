@@ -1,0 +1,112 @@
+{
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "entrypoint": "plugin.py",
+      "os": "linux",
+      "runtime": "python",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      },
+      "size_bytes": 1
+    },
+    {
+      "arch": "arm64",
+      "entrypoint": "plugin.py",
+      "os": "linux",
+      "runtime": "python",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      },
+      "size_bytes": 1
+    },
+    {
+      "arch": "x86_64",
+      "entrypoint": "plugin.py",
+      "os": "macos",
+      "runtime": "python",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      },
+      "size_bytes": 1
+    },
+    {
+      "arch": "arm64",
+      "entrypoint": "plugin.py",
+      "os": "macos",
+      "runtime": "python",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      },
+      "size_bytes": 1
+    },
+    {
+      "arch": "x86_64",
+      "entrypoint": "plugin.py",
+      "os": "windows",
+      "runtime": "python",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      },
+      "size_bytes": 1
+    }
+  ],
+  "capabilities": [
+    "tv.resolve_stream"
+  ],
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "dependencies": [],
+  "display_name": "FJTV Provider",
+  "manifest_version": 1,
+  "owned_schemes": [
+    {
+      "contract": "tv_provider",
+      "scheme": "fjtv"
+    }
+  ],
+  "permissions": {
+    "network": {
+      "allowed_hosts": [
+        "live.fjtv.net",
+        "mapi-plus.fjtv.net",
+        "mapi1.kxm.xmtv.cn",
+        "mapi.ijjnews.com",
+        "mapi-new.chinashishi.net"
+      ],
+      "managed": true
+    }
+  },
+  "plugin_api_version": "1.0",
+  "plugin_id": "fjtv",
+  "provider_contracts": [
+    {
+      "contract": "tv_provider",
+      "contract_version": "1.0",
+      "features": [
+        "resolve_stream"
+      ]
+    }
+  ],
+  "publisher_id": "org.waveflow",
+  "runtime": {
+    "ipc": "stdio_framed_json_v1",
+    "type": "subprocess"
+  },
+  "state_schema_version": 1,
+  "version": "1.0.0"
+}

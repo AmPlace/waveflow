@@ -1,0 +1,236 @@
+{
+  "artifacts": [
+    {
+      "abi_tag": "none",
+      "filename": "anyio-4.13.0-py3-none-any.whl",
+      "name": "anyio",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708",
+      "size_bytes": 114353,
+      "url": "https://files.pythonhosted.org/packages/da/42/e921fccf5015463e32a3cf6ee7f980a6ed0f395ceeaa45060b61d86486c2/anyio-4.13.0-py3-none-any.whl",
+      "version": "4.13.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "certifi-2026.5.20-py3-none-any.whl",
+      "name": "certifi",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "3c52e209ba0a4ad7aebe60436a4ab349c39e1e602e8c134221e546902ad25897",
+      "size_bytes": 134134,
+      "url": "https://files.pythonhosted.org/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl",
+      "version": "2026.5.20"
+    },
+    {
+      "abi_tag": "cp314",
+      "filename": "charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl",
+      "name": "charset-normalizer",
+      "platform_tag": "macosx_10_15_universal2",
+      "python_tag": "cp314",
+      "sha256": "c36c333c39be2dbca264d7803333c896ab8fa7d4d6f0ab7edb7dfd7aea6e98c0",
+      "size_bytes": 309234,
+      "url": "https://files.pythonhosted.org/packages/97/c8/c67cb8c70e19ef1960b97b22ed2a1567711de46c4ddf19799923adc836c2/charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl",
+      "version": "3.4.7"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "deprecated-1.3.1-py2.py3-none-any.whl",
+      "name": "deprecated",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f",
+      "size_bytes": 11298,
+      "url": "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl",
+      "version": "1.3.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "distro-1.9.0-py3-none-any.whl",
+      "name": "distro",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2",
+      "size_bytes": 20277,
+      "url": "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl",
+      "version": "1.9.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "h11-0.16.0-py3-none-any.whl",
+      "name": "h11",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "size_bytes": 37515,
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "version": "0.16.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "h2-4.3.0-py3-none-any.whl",
+      "name": "h2",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd",
+      "size_bytes": 61779,
+      "url": "https://files.pythonhosted.org/packages/69/b2/119f6e6dcbd96f9069ce9a2665e0146588dc9f88f29549711853645e736a/h2-4.3.0-py3-none-any.whl",
+      "version": "4.3.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "hpack-4.1.0-py3-none-any.whl",
+      "name": "hpack",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496",
+      "size_bytes": 34357,
+      "url": "https://files.pythonhosted.org/packages/07/c6/80c95b1b2b94682a72cbdbfb85b81ae2daffa4291fbfa1b1464502ede10d/hpack-4.1.0-py3-none-any.whl",
+      "version": "4.1.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "httpcore-1.0.9-py3-none-any.whl",
+      "name": "httpcore",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+      "size_bytes": 78784,
+      "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+      "version": "1.0.9"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "httpx-0.28.1-py3-none-any.whl",
+      "name": "httpx",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+      "size_bytes": 73517,
+      "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+      "version": "0.28.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "hyperframe-6.1.0-py3-none-any.whl",
+      "name": "hyperframe",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5",
+      "size_bytes": 13007,
+      "url": "https://files.pythonhosted.org/packages/48/30/47d0bf6072f7252e6521f3447ccfa40b421b6824517f82854703d0f5a98b/hyperframe-6.1.0-py3-none-any.whl",
+      "version": "6.1.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "idna-3.16-py3-none-any.whl",
+      "name": "idna",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "cc246e3a3f89580c3a951b5ad298ca4638078b2cdd4f115654332b5c26daded5",
+      "size_bytes": 74165,
+      "url": "https://files.pythonhosted.org/packages/94/16/70255075a9859a0e3adb789b68ceb0e210dec03934245fd98d248226572f/idna-3.16-py3-none-any.whl",
+      "version": "3.16"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "loguru-0.7.3-py3-none-any.whl",
+      "name": "loguru",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c",
+      "size_bytes": 61595,
+      "url": "https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl",
+      "version": "0.7.3"
+    },
+    {
+      "abi_tag": "abi3",
+      "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+      "name": "pycryptodome",
+      "platform_tag": "macosx_10_9_universal2",
+      "python_tag": "cp37",
+      "sha256": "187058ab80b3281b1de11c2e6842a357a1f71b42cb1e15bce373f3d238135c27",
+      "size_bytes": 2495627,
+      "url": "https://files.pythonhosted.org/packages/db/6c/a1f71542c969912bb0e106f64f60a56cc1f0fabecf9396f45accbe63fa68/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+      "version": "3.23.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "pyexecjs-1.5.1-py3-none-any.whl",
+      "name": "pyexecjs",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "f3c596ddc9529cc69f4d2b6b7e3d148f419e92b47a6040914f534563533090cf",
+      "size_bytes": 14649,
+      "url": "https://pypi.org/pypi/PyExecJS/1.5.1/json",
+      "version": "1.5.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "requests-2.34.2-py3-none-any.whl",
+      "name": "requests",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "size_bytes": 73075,
+      "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+      "version": "2.34.2"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "six-1.17.0-py2.py3-none-any.whl",
+      "name": "six",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+      "size_bytes": 11050,
+      "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+      "version": "1.17.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "streamget-4.0.10-py3-none-any.whl",
+      "name": "streamget",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "9e79a54f1338320996e7d3ba82252762fa88efa8d4b6fbca80e893e029232b64",
+      "size_bytes": 172045,
+      "url": "https://files.pythonhosted.org/packages/0e/b8/4208b11f719b0b9434a53246f9d68f40bc47b08ea765b1923b86c7d2789b/streamget-4.0.10-py3-none-any.whl",
+      "version": "4.0.10"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "tqdm-4.67.3-py3-none-any.whl",
+      "name": "tqdm",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "ee1e4c0e59148062281c49d80b25b67771a127c85fc9676d3be5f243206826bf",
+      "size_bytes": 78374,
+      "url": "https://files.pythonhosted.org/packages/16/e1/3079a9ff9b8e11b846c6ac5c8b5bfb7ff225eee721825310c91b3b50304f/tqdm-4.67.3-py3-none-any.whl",
+      "version": "4.67.3"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "urllib3-2.7.0-py3-none-any.whl",
+      "name": "urllib3",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+      "size_bytes": 131087,
+      "url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
+      "version": "2.7.0"
+    },
+    {
+      "abi_tag": "cp314",
+      "filename": "wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl",
+      "name": "wrapt",
+      "platform_tag": "macosx_11_0_arm64",
+      "python_tag": "cp314",
+      "sha256": "64b7deeda4b70408e382328d8bbe52a256fe9bc63ae3db86d804608367e5422c",
+      "size_bytes": 81462,
+      "url": "https://files.pythonhosted.org/packages/13/3c/b74cfd984cef560b900fb1a727af20352d89e1f06bf2e1114dd3f00f5f5a/wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl",
+      "version": "2.2.1"
+    }
+  ],
+  "lock_version": 1
+}

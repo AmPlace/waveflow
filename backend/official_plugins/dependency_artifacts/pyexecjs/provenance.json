@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "artifact_type": "official_source_built_wheel",
+  "package": {
+    "name": "pyexecjs",
+    "upstream_name": "PyExecJS",
+    "version": "1.5.1",
+    "license": "MIT"
+  },
+  "source": {
+    "filename": "PyExecJS-1.5.1.tar.gz",
+    "type": "sdist",
+    "url": "https://files.pythonhosted.org/packages/ba/8e/aedef81641c8dca6fd0fb7294de5bed9c45f3397d67fddf755c1042c2642/PyExecJS-1.5.1.tar.gz",
+    "sha256": "34cc1d070976918183ff7bdc0ad71f8157a891c92708c00c5fbbff7a769f505c",
+    "size_bytes": 13344,
+    "registry": "PyPI",
+    "release_metadata_url": "https://pypi.org/pypi/PyExecJS/1.5.1/json",
+    "project_url": "https://github.com/doloopwhile/PyExecJS"
+  },
+  "build": {
+    "command": "python -m build --wheel --no-isolation",
+    "backend": "setuptools.build_meta:__legacy__",
+    "python_version": "3.14.4",
+    "build_version": "1.3.0",
+    "setuptools_version": "82.0.1",
+    "wheel_version": "0.45.1",
+    "packaging_version": "26.3",
+    "pyproject_hooks_version": "1.2.0",
+    "source_date_epoch": 0,
+    "build_environment": "isolated release-build virtualenv",
+    "network_during_build": false
+  },
+  "artifact": {
+    "filename": "pyexecjs-1.5.1-py3-none-any.whl",
+    "sha256": "f3c596ddc9529cc69f4d2b6b7e3d148f419e92b47a6040914f534563533090cf",
+    "size_bytes": 14649,
+    "python_tag": "py3",
+    "abi_tag": "none",
+    "platform_tag": "any",
+    "requires_dist": ["six>=1.10.0"]
+  },
+  "runtime_dependencies": [
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "filename": "six-1.17.0-py2.py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+      "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+      "size_bytes": 11050,
+      "python_tag": "py2.py3",
+      "abi_tag": "none",
+      "platform_tag": "any"
+    }
+  ]
+}

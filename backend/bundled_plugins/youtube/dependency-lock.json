@@ -1,0 +1,225 @@
+{
+  "artifacts": [
+    {
+      "abi_tag": "none",
+      "filename": "attrs-26.1.0-py3-none-any.whl",
+      "name": "attrs",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "size_bytes": 67548,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/attrs-26.1.0-py3-none-any.whl",
+      "version": "26.1.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "certifi-2026.7.22-py3-none-any.whl",
+      "name": "certifi",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+      "size_bytes": 136983,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/certifi-2026.7.22-py3-none-any.whl",
+      "version": "2026.7.22"
+    },
+    {
+      "abi_tag": "cp314",
+      "filename": "charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl",
+      "name": "charset-normalizer",
+      "platform_tag": "macosx_10_15_universal2",
+      "python_tag": "cp314",
+      "sha256": "1f99a8c3a1da5d955edbad18208b3d627bdd54c48a6e739fa877bdca98c686d6",
+      "size_bytes": 341384,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl",
+      "version": "3.5.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "h11-0.16.0-py3-none-any.whl",
+      "name": "h11",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "size_bytes": 37515,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/h11-0.16.0-py3-none-any.whl",
+      "version": "0.16.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "idna-3.18-py3-none-any.whl",
+      "name": "idna",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2",
+      "size_bytes": 65455,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/idna-3.18-py3-none-any.whl",
+      "version": "3.18"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "isodate-0.7.2-py3-none-any.whl",
+      "name": "isodate",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15",
+      "size_bytes": 22320,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/isodate-0.7.2-py3-none-any.whl",
+      "version": "0.7.2"
+    },
+    {
+      "abi_tag": "cp314",
+      "filename": "lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl",
+      "name": "lxml",
+      "platform_tag": "macosx_10_15_universal2",
+      "python_tag": "cp314",
+      "sha256": "19b7ab10b210b0b3ad7985d9ac4eb66ab09a90b20fe6e2f7ba55d01a234345d0",
+      "size_bytes": 8577146,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl",
+      "version": "6.1.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "outcome-1.3.0.post0-py2.py3-none-any.whl",
+      "name": "outcome",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "e771c5ce06d1415e356078d3bdd68523f284b4ce5419828922b6871e65eda82b",
+      "size_bytes": 10692,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/outcome-1.3.0.post0-py2.py3-none-any.whl",
+      "version": "1.3.0.post0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "pycountry-26.2.16-py3-none-any.whl",
+      "name": "pycountry",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "115c4baf7cceaa30f59a4694d79483c9167dbce7a9de4d3d571c5f3ea77c305a",
+      "size_bytes": 8044600,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/pycountry-26.2.16-py3-none-any.whl",
+      "version": "26.2.16"
+    },
+    {
+      "abi_tag": "abi3",
+      "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+      "name": "pycryptodome",
+      "platform_tag": "macosx_10_9_universal2",
+      "python_tag": "cp37",
+      "sha256": "187058ab80b3281b1de11c2e6842a357a1f71b42cb1e15bce373f3d238135c27",
+      "size_bytes": 2495627,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+      "version": "3.23.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "PySocks-1.7.1-py3-none-any.whl",
+      "name": "pysocks",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5",
+      "size_bytes": 16725,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/PySocks-1.7.1-py3-none-any.whl",
+      "version": "1.7.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "requests-2.34.2-py3-none-any.whl",
+      "name": "requests",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "size_bytes": 73075,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/requests-2.34.2-py3-none-any.whl",
+      "version": "2.34.2"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "sniffio-1.3.1-py3-none-any.whl",
+      "name": "sniffio",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2",
+      "size_bytes": 10235,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/sniffio-1.3.1-py3-none-any.whl",
+      "version": "1.3.1"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "sortedcontainers-2.4.0-py2.py3-none-any.whl",
+      "name": "sortedcontainers",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0",
+      "size_bytes": 29575,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/sortedcontainers-2.4.0-py2.py3-none-any.whl",
+      "version": "2.4.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "streamlink-8.4.0-py3-none-any.whl",
+      "name": "streamlink",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "eb261a5c4b7330b3a0b4576f994b6b315ad21c2b0273130ad94544c4c29b3842",
+      "size_bytes": 565095,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/streamlink-8.4.0-py3-none-any.whl",
+      "version": "8.4.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "trio-0.34.0-py3-none-any.whl",
+      "name": "trio",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "6c7c9f49917694dcdcd5f67abd168df5599eca480d61f29854d17a61a75c2f05",
+      "size_bytes": 511840,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/trio-0.34.0-py3-none-any.whl",
+      "version": "0.34.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "trio_websocket-0.12.2-py3-none-any.whl",
+      "name": "trio-websocket",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "df605665f1db533f4a386c94525870851096a223adcb97f72a07e8b4beba45b6",
+      "size_bytes": 21221,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/trio_websocket-0.12.2-py3-none-any.whl",
+      "version": "0.12.2"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "urllib3-2.7.0-py3-none-any.whl",
+      "name": "urllib3",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+      "size_bytes": 131087,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/urllib3-2.7.0-py3-none-any.whl",
+      "version": "2.7.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "websocket_client-1.9.0-py3-none-any.whl",
+      "name": "websocket-client",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "af248a825037ef591efbf6ed20cc5faa03d3b47b9e5a2230a529eeee1c1fc3ef",
+      "size_bytes": 82616,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/websocket_client-1.9.0-py3-none-any.whl",
+      "version": "1.9.0"
+    },
+    {
+      "abi_tag": "none",
+      "filename": "wsproto-1.3.2-py3-none-any.whl",
+      "name": "wsproto",
+      "platform_tag": "any",
+      "python_tag": "py3",
+      "sha256": "61eea322cdf56e8cc904bd3ad7573359a242ba65688716b0710a5eb12beab584",
+      "size_bytes": 24405,
+      "url": "https://files.pythonhosted.org/packages/waveflow-official/youtube/wsproto-1.3.2-py3-none-any.whl",
+      "version": "1.3.2"
+    }
+  ],
+  "lock_version": 1
+}

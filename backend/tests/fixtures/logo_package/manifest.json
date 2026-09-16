@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "fixture::logo-pack",
+  "name": "WaveFlow Logo Fixture",
+  "kind": "logo_pack",
+  "package_type": "content_package",
+  "version": "1.0.0",
+  "content_capabilities": ["logos"],
+  "logo_priority": 10,
+  "assets": [
+    {"asset_id": "cctv5", "path": "assets/logo-1.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "cctv5-plus", "path": "assets/logo-2.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "hunan", "path": "assets/logo-3.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "southeast", "path": "assets/logo-4.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "fujian-general", "path": "assets/logo-5.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "alias-sample", "path": "assets/logo-6.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70},
+    {"asset_id": "ambiguous-sample", "path": "assets/logo-7.png", "media_type": "image/png", "sha256": "5533e7ceb197fbfc4cfc1c88b88dc8e0cd5590c598c0bb74522da078e5a2ef53", "size": 70}
+  ],
+  "logos": [
+    {"canonical_key": "cctv5", "asset_id": "cctv5"},
+    {"canonical_key": "cctv5+", "asset_id": "cctv5-plus"},
+    {"canonical_key": "hunan卫视", "asset_id": "hunan"},
+    {"canonical_key": "东南卫视", "asset_id": "southeast"},
+    {"canonical_key": "福建综合", "asset_id": "fujian-general"},
+    {"canonical_key": "福建综合", "aliases": ["福建综合频道"], "asset_id": "alias-sample"},
+    {"canonical_key": "新闻综合", "asset_id": "ambiguous-sample"}
+  ]
+}

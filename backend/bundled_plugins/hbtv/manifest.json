@@ -1,0 +1,25 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_id": "hbtv",
+  "display_name": "HBTV Provider",
+  "version": "1.0.0",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "provider_contracts": [{"contract": "tv_provider", "contract_version": "1.0", "features": ["resolve_stream"]}],
+  "owned_schemes": [{"scheme": "hbtv", "contract": "tv_provider"}],
+  "capabilities": ["tv.resolve_stream"],
+  "permissions": {"network": {"managed": true, "allowed_hosts": ["api.cmc.hebtv.com"]}},
+  "runtime": {
+    "type": "python",
+    "ipc": "stdio_framed_json_v1",
+    "python_version_range": ">=3.14.0 <3.15.0",
+    "entrypoint": "plugin.py",
+    "dependency_lock": {"lock_version": 1, "artifacts": []}
+  },
+  "artifacts": [{"os": "macos", "arch": "arm64", "runtime": "python", "entrypoint": "plugin.py",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size_bytes": 1,
+    "signature": {"algorithm": "ed25519", "key_id": "org.waveflow.release.2026-01", "value": "UNSIGNED"}}],
+  "dependencies": [],
+  "state_schema_version": 1
+}

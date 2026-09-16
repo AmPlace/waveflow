@@ -1,0 +1,187 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+      "url": "payloads/fjtv-1.0.0.pyz"
+    }
+  ],
+  "dependency_references": [],
+  "description": "WaveFlow official FJTV TV Provider.",
+  "display": {
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 FJTV 直播地址解析。",
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "type": "builtin",
+        "name": "waveflow"
+      }
+    },
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    }
+  },
+  "id": "official::fjtv-plugin",
+  "kind": "plugin_package",
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "gyvnhoahPb0zwQOp9iW5pkCSszOf4uxKkvx3mUsZLsPbtfqctEpQ2PXFm+Zys0QgHkDQFt4YJtR1v7oQybeyBg=="
+  },
+  "name": "FJTV Provider Plugin",
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "x86_64",
+        "entrypoint": "fjtv-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+        },
+        "size_bytes": 8812
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "fjtv-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+        },
+        "size_bytes": 8812
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "fjtv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+        },
+        "size_bytes": 8812
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "fjtv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+        },
+        "size_bytes": 8812
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "fjtv-1.0.0.pyz",
+        "os": "windows",
+        "runtime": "python",
+        "sha256": "3f0f00898a637fdd6b6100af0c0af09e679627830cdc84573061368e05578ee0",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1iLAiHTyqBAShFVANvyZVuYFW7Nao8p6yW1bigoqhsvVrxCKdilaNQefLwVTcg33FdHNrG+kusiZdfaMt8vTCQ=="
+        },
+        "size_bytes": 8812
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "FJTV Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "fjtv"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "live.fjtv.net",
+          "mapi-plus.fjtv.net",
+          "mapi1.kxm.xmtv.cn",
+          "mapi.ijjnews.com",
+          "mapi-new.chinashishi.net"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "fjtv",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "ipc": "stdio_framed_json_v1",
+      "type": "subprocess"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "updated_at": "2026-08-12T00:00:00Z",
+  "version": "1.0.0",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "fjtv"
+  ],
+  "regions": [],
+  "operators": [],
+  "providers": [
+    "FJTV"
+  ],
+  "languages": [],
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "published_at": "2026-08-12T00:00:00Z",
+  "compatibility": {
+    "min_waveflow_version": "0.1.0"
+  },
+  "links": {
+    "source": "https://github.com/AmPlace/wavebypass"
+  },
+  "catalog": {
+    "sort_weight": 0,
+    "featured": false
+  }
+}

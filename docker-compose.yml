@@ -1,29 +1,41 @@
 services:
   backend:
-    image: ghcr.io/amplace/wavebypass-backend:latest
-    container_name: wavebypass-backend
-    ports:
-      - "8000:8000"
+    image: ghcr.io/amplace/waveflow-backend:${WAVEFLOW_RELEASE_VERSION:?WAVEFLOW_RELEASE_VERSION_required}
+    container_name: waveflow-backend
+    labels:
+      org.opencontainers.image.version: ${WAVEFLOW_RELEASE_VERSION:?WAVEFLOW_RELEASE_VERSION_required}
+    expose:
+      - "8000"
     environment:
+      WAVEFLOW_MODE: ${WAVEFLOW_MODE:-nas}
+      WAVEFLOW_ALLOWED_ORIGINS: ${WAVEFLOW_ALLOWED_ORIGINS:-}
+      WAVEFLOW_PRODUCTION: ${WAVEFLOW_PRODUCTION:-}
+      WAVEFLOW_PROXY_HANDLE_SECRET: ${WAVEFLOW_PROXY_HANDLE_SECRET:-}
+      WAVEFLOW_SESSION_SECRET: ${WAVEFLOW_SESSION_SECRET:-}
       HITFM_COOKIE: ${HITFM_COOKIE:-}
-      GEO_RESTRICT: ${GEO_RESTRICT:-}
-      GEO_BLOCKED_REGIONS: ${GEO_BLOCKED_REGIONS:-TW}
+    volumes:
+      - waveflow-data:/app/data
     networks:
-      - wavebypass-net
+      - waveflow-net
     restart: unless-stopped
 
   # 前端服务
   frontend:
-    image: ghcr.io/amplace/wavebypass-frontend:latest
-    container_name: wavebypass-frontend
+    image: ghcr.io/amplace/waveflow-frontend:${WAVEFLOW_RELEASE_VERSION:?WAVEFLOW_RELEASE_VERSION_required}
+    container_name: waveflow-frontend
+    labels:
+      org.opencontainers.image.version: ${WAVEFLOW_RELEASE_VERSION:?WAVEFLOW_RELEASE_VERSION_required}
     depends_on:
       - backend
     ports:
-      - "127.0.0.1:80:80"
+      - "${WAVEFLOW_PORT:-8080}:80"
     networks:
-      - wavebypass-net
+      - waveflow-net
     restart: unless-stopped
 
 networks:
-  wavebypass-net:
+  waveflow-net:
     driver: bridge
+
+volumes:
+  waveflow-data:

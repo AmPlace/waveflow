@@ -1,0 +1,650 @@
+{
+  "plugins": [
+    {
+      "description": "WaveFlow official JSTV TV Provider.",
+      "name": "JSTV Provider Plugin",
+      "plugin_id": "jstv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/jstv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 JSTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "jstv"
+      ],
+      "providers": [
+        "JSTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official FJTV TV Provider.",
+      "name": "FJTV Provider Plugin",
+      "plugin_id": "fjtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/fjtv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 FJTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "fjtv"
+      ],
+      "providers": [
+        "FJTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official ND0593TV TV Provider.",
+      "name": "ND0593TV Provider Plugin",
+      "plugin_id": "nd0593tv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/nd0593tv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 ND0593TV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nd0593tv"
+      ],
+      "providers": [
+        "ND0593TV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official GZSTV TV Provider.",
+      "name": "GZSTV Provider Plugin",
+      "plugin_id": "gzstv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/gzstv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 GZSTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "gzstv"
+      ],
+      "providers": [
+        "GZSTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official NOW TV Provider.",
+      "name": "NOW TV Provider Plugin",
+      "plugin_id": "nowtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "source": "../bundled_plugins/nowtv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 NOW TV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nowtv"
+      ],
+      "providers": [
+        "NOW TV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "dependency_sources": [
+        {
+          "filename": "xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/nmtv/xxtea-5.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+          "source": "dependency_artifacts/nmtv/xxtea-5.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+        }
+      ],
+      "description": "WaveFlow official NMTV TV Provider.",
+      "name": "NMTV Provider Plugin",
+      "plugin_id": "nmtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "source": "../bundled_plugins/nmtv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 NMTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "nmtv"
+      ],
+      "providers": [
+        "NMTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "dependency_sources": [
+        {
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/sdtv/pycparser-3.0-py3-none-any.whl"
+        }
+      ],
+      "description": "WaveFlow official SDTV TV Provider.",
+      "name": "SDTV Provider Plugin",
+      "plugin_id": "sdtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed",
+        "eligible_platforms": [
+          {
+            "arch": "arm64",
+            "os": "macos",
+            "python_version_range": ">=3.14.0 <3.15.0"
+          }
+        ]
+      },
+      "source": "../bundled_plugins/sdtv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 SDTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "sdtv"
+      ],
+      "providers": [
+        "SDTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official PTBTV TV Provider.",
+      "name": "PTBTV Provider Plugin",
+      "plugin_id": "ptbtv",
+      "dependency_sources": [
+        {
+          "filename": "certifi-2026.5.20-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/certifi-2026.5.20-py3-none-any.whl"
+        },
+        {
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/ptbtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/ptbtv/curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/markdown_it_py-4.2.0-py3-none-any.whl"
+        },
+        {
+          "filename": "mdurl-0.1.2-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/mdurl-0.1.2-py3-none-any.whl"
+        },
+        {
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/pycparser-3.0-py3-none-any.whl"
+        },
+        {
+          "filename": "pygments-2.20.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/pygments-2.20.0-py3-none-any.whl"
+        },
+        {
+          "filename": "rich-15.0.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/rich-15.0.0-py3-none-any.whl"
+        }
+      ],
+      "source": "../bundled_plugins/ptbtv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 PTBTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "ptbtv"
+      ],
+      "providers": [
+        "PTBTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official HNNTV TV Provider.",
+      "name": "HNNTV Provider Plugin",
+      "plugin_id": "hnntv",
+      "source": "../bundled_plugins/hnntv",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "为 WaveFlow 提供 HNNTV 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "hnntv"
+      ],
+      "providers": [
+        "HNNTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official StreamGet multi-scheme Provider Bundle.",
+      "name": "StreamGet Provider Bundle",
+      "plugin_id": "streamget-providers",
+      "dependency_sources": [
+        {
+          "filename": "anyio-4.13.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/anyio-4.13.0-py3-none-any.whl"
+        },
+        {
+          "filename": "certifi-2026.5.20-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/certifi-2026.5.20-py3-none-any.whl"
+        },
+        {
+          "filename": "charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl",
+          "source": "dependency_artifacts/streamget-providers/charset_normalizer-3.4.7-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "filename": "deprecated-1.3.1-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/deprecated-1.3.1-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "distro-1.9.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/distro-1.9.0-py3-none-any.whl"
+        },
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/h11-0.16.0-py3-none-any.whl"
+        },
+        {
+          "filename": "h2-4.3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/h2-4.3.0-py3-none-any.whl"
+        },
+        {
+          "filename": "hpack-4.1.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/hpack-4.1.0-py3-none-any.whl"
+        },
+        {
+          "filename": "httpcore-1.0.9-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/httpcore-1.0.9-py3-none-any.whl"
+        },
+        {
+          "filename": "httpx-0.28.1-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/httpx-0.28.1-py3-none-any.whl"
+        },
+        {
+          "filename": "hyperframe-6.1.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/hyperframe-6.1.0-py3-none-any.whl"
+        },
+        {
+          "filename": "idna-3.16-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/idna-3.16-py3-none-any.whl"
+        },
+        {
+          "filename": "loguru-0.7.3-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/loguru-0.7.3-py3-none-any.whl"
+        },
+        {
+          "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/streamget-providers/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "pyexecjs-1.5.1-py3-none-any.whl",
+          "source": "dependency_artifacts/pyexecjs/pyexecjs-1.5.1-py3-none-any.whl"
+        },
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/requests-2.34.2-py3-none-any.whl"
+        },
+        {
+          "filename": "six-1.17.0-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/pyexecjs/six-1.17.0-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "streamget-4.0.10-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/streamget-4.0.10-py3-none-any.whl"
+        },
+        {
+          "filename": "tqdm-4.67.3-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/tqdm-4.67.3-py3-none-any.whl"
+        },
+        {
+          "filename": "urllib3-2.7.0-py3-none-any.whl",
+          "source": "dependency_artifacts/streamget-providers/urllib3-2.7.0-py3-none-any.whl"
+        },
+        {
+          "filename": "wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/streamget-providers/wrapt-2.2.1-cp314-cp314-macosx_11_0_arm64.whl"
+        }
+      ],
+      "source": "../bundled_plugins/streamget-providers",
+      "display": {
+        "subtitle": "Multi-scheme Provider Plugin",
+        "summary": "为 WaveFlow 提供 StreamGet 多 scheme 直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "Multi-scheme"
+      ],
+      "providers": [
+        "StreamGet"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official Yunting Radio Provider.",
+      "name": "Yunting Radio Provider Plugin",
+      "plugin_id": "yunting",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/yunting",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供云听电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "yunting"],
+      "providers": ["Yunting"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official MyRadio Radio Provider.",
+      "name": "MyRadio Provider Plugin",
+      "plugin_id": "myradio",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/myradio",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供 MyRadio 电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "myradio"],
+      "providers": ["MyRadio"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official HitFM Radio Provider.",
+      "name": "HitFM Provider Plugin",
+      "plugin_id": "hitfm",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/hitfm",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供 HitFM 电台目录和播放地址解析。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Catalog", "hitfm"],
+      "providers": ["HitFM"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official HK/SG Radio Provider.",
+      "name": "HK/SG Radio Provider Plugin",
+      "plugin_id": "hk-sg-radio",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/hk_sg_radio",
+      "display": {
+        "subtitle": "Radio Provider Plugin",
+        "summary": "为 WaveFlow 提供香港和新加坡电台目录及播放地址。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "HK", "SG", "Static Catalog"],
+      "regions": ["HK", "SG"],
+      "providers": ["RTHK", "Singapore Radio"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official RadioBrowser directory Provider.",
+      "name": "RadioBrowser Provider Plugin",
+      "plugin_id": "radiobrowser",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "../bundled_plugins/radiobrowser",
+      "display": {
+        "subtitle": "Radio Directory Provider Plugin",
+        "summary": "为 WaveFlow 提供 RadioBrowser 国家筛选、搜索和分页目录。",
+        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
+        "badge": {"text": "WF", "tone": "violet"}
+      },
+      "tags": ["Radio Provider", "Directory", "RadioBrowser"],
+      "providers": ["RadioBrowser"],
+      "categories": ["插件", "Radio"],
+      "publisher_name": "WaveFlow"
+    }
+  ],
+  "publisher_id": "org.waveflow",
+  "release_version": "1.8.0",
+  "schema_version": 1,
+  "updated_at": "2026-09-14T00:00:00Z"
+}

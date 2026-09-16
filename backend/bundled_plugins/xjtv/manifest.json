@@ -1,0 +1,119 @@
+{
+  "manifest_version": 1,
+  "publisher_id": "org.waveflow",
+  "plugin_api_version": "1.0",
+  "core_version_range": ">=0.1.0 <1.0.0",
+  "capabilities": [
+    "tv.resolve_stream"
+  ],
+  "dependencies": [],
+  "state_schema_version": 1,
+  "plugin_id": "xjtv",
+  "display_name": "XJTV Provider",
+  "version": "1.0.0",
+  "provider_contracts": [
+    {
+      "contract": "tv_provider",
+      "contract_version": "1.0",
+      "features": [
+        "resolve_stream"
+      ]
+    }
+  ],
+  "owned_schemes": [
+    {
+      "scheme": "xjtv",
+      "contract": "tv_provider"
+    }
+  ],
+  "permissions": {
+    "network": {
+      "managed": true,
+      "direct": false,
+      "allowed_hosts": [
+        "slstapi.xjtvs.com.cn"
+      ]
+    }
+  },
+  "runtime": {
+    "type": "python",
+    "ipc": "stdio_framed_json_v1",
+    "python_version_range": ">=3.11.0 <3.15.0",
+    "entrypoint": "plugin.py",
+    "dependency_lock": {
+      "lock_version": 1,
+      "artifacts": [
+        {
+          "name": "cryptography",
+          "version": "48.0.1",
+          "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+          "url": "https://files.pythonhosted.org/packages/1b/bc/ee4137cbbe105652c0ee4252792b78fc8e7afa4b8e61d9d5dc05a7f45731/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+          "sha256": "3e4a1a3232eef2e6c732827d5722db29a0cc8b27af2a4d865b094cf954be9ca1",
+          "size_bytes": 8008324,
+          "python_tag": "cp311",
+          "abi_tag": "abi3",
+          "platform_tag": "macosx_10_9_universal2"
+        },
+        {
+          "name": "cryptography",
+          "version": "48.0.1",
+          "filename": "cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/9c/87/c85d147b53323c7eb4d850920c8901377323c2a0ff8d79c262d4fee89aa2/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "sha256": "f0d27a5696721ef7a672b8c810f6aded391058e0b9486e63e6d93baf765da691",
+          "size_bytes": 4713235,
+          "python_tag": "cp311",
+          "abi_tag": "abi3",
+          "platform_tag": "manylinux2014_x86_64"
+        },
+        {
+          "name": "cffi",
+          "version": "2.0.0",
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "url": "https://files.pythonhosted.org/packages/59/dd/27e9fa567a23931c838c6b02d0764611c62290062a6d4e8ff7863daf9730/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "sha256": "c654de545946e0db659b3400168c9ad31b5d29593291482c43e3564effbcee13",
+          "size_bytes": 181487,
+          "python_tag": "cp314",
+          "abi_tag": "cp314",
+          "platform_tag": "macosx_11_0_arm64"
+        },
+        {
+          "name": "cffi",
+          "version": "2.0.0",
+          "filename": "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "url": "https://files.pythonhosted.org/packages/d7/91/500d892b2bf36529a75a77958edfcd5ad8e2ce4064ce2ecfeab2125d72d1/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "sha256": "8941aaadaf67246224cee8c3803777eed332a19d909b47e29c9842ef1e79ac26",
+          "size_bytes": 215574,
+          "python_tag": "cp311",
+          "abi_tag": "cp311",
+          "platform_tag": "manylinux2014_x86_64"
+        },
+        {
+          "name": "pycparser",
+          "version": "3.0",
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/0c/c3/44f3fbbfa403ea2a7c779186dc20772604442dde72947e7d01069cbe98e3/pycparser-3.0-py3-none-any.whl",
+          "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+          "size_bytes": 48172,
+          "python_tag": "py3",
+          "abi_tag": "none",
+          "platform_tag": "any"
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "os": "macos",
+      "arch": "arm64",
+      "runtime": "python",
+      "entrypoint": "plugin.py",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 1,
+      "signature": {
+        "algorithm": "ed25519",
+        "key_id": "org.waveflow.release.2026-01",
+        "value": "UNSIGNED"
+      }
+    }
+  ]
+}

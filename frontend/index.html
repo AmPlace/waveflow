@@ -2,21 +2,20 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="WaveBypass 是一个极简电台聚合播放器"
+      content="WaveFlow 是一个极简电台聚合播放器"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <!-- theme-color 由 vite-plugin-pwa 从 manifest 注入，无需手动写 -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#f8f8f7" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
-    <title>WaveBypass</title>
+    <title>WaveFlow</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
   </head>
-  <body class="bg-gray-100 text-neutral-950 antialiased transition-colors duration-300 dark:bg-neutral-900 dark:text-neutral-50">
+  <body class="text-neutral-950 antialiased transition-colors duration-300 dark:text-neutral-50">
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
 
-    container_name: wavebypass-backend
+    container_name: waveflow-backend
 
     ports:
       - "8000:8000"
@@ -12,11 +12,12 @@ services:
 
     environment:
       HITFM_COOKIE: ${HITFM_COOKIE:-}
-      GEO_RESTRICT: ${GEO_RESTRICT:-}
-      GEO_BLOCKED_REGIONS: ${GEO_BLOCKED_REGIONS:-TW}
+
+    volumes:
+      - waveflow-data:/app/data
 
     networks:
-      - wavebypass-net
+      - waveflow-net
 
     restart: unless-stopped
 
@@ -25,7 +26,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
 
-    container_name: wavebypass-frontend
+    container_name: waveflow-frontend
 
     depends_on:
       - backend
@@ -34,10 +35,13 @@ services:
       - "127.0.0.1:80:80"
 
     networks:
-      - wavebypass-net
+      - waveflow-net
 
     restart: unless-stopped
 
 networks:
-  wavebypass-net:
+  waveflow-net:
     driver: bridge
+
+volumes:
+  waveflow-data:

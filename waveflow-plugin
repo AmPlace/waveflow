@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+import os
+from pathlib import Path
+import sys
+
+root = Path(__file__).resolve().parent
+managed_python = root / "backend" / ".venv" / "bin" / "python"
+managed_prefix = root / "backend" / ".venv"
+if managed_python.is_file() and Path(sys.prefix) != managed_prefix:
+    os.execv(str(managed_python), [str(managed_python), str(Path(__file__).resolve()), *sys.argv[1:]])
+
+sys.path.insert(0, str(root / "backend"))
+from waveflow_plugin_cli import main
+
+raise SystemExit(main())
