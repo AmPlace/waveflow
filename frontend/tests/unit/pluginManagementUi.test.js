@@ -46,6 +46,8 @@ test('Plugin stable errors 使用 code 映射而非回显任意服务端消息',
 
 test('Market 保留 Content presenter 并增加独立 package type 和 Plugin detail', () => {
   const market = source('src/views/MarketView.vue')
+  // requires_resolver 的文案必须写明「解析由插件提供」，不能再承诺 Core 内置解析。
+  assert.match(market, /不再提供内置解析/)
   assert.match(market, /market-package-type-switch/)
   assert.match(market, /内容[\s\S]*Plugins/)
   assert.match(market, /packageType === 'plugins'/)
@@ -69,6 +71,8 @@ test('Settings Plugins 只做 runtime management 并把 update/uninstall 留给 
     assert.match(view, new RegExp(label))
   }
   assert.doesNotMatch(view, /updatePlugin|uninstallPlugin|安装 Plugin/)
+  // Provider resolution 为 Plugin-only，设置页不得再宣传 Core 内置解析器。
+  assert.doesNotMatch(view, /内置解析器|切回内置解析|内置兼容解析/)
   assert.match(view, /暂无已安装的 Plugins/)
   assert.match(view, /detailError/)
   assert.match(view, /role="dialog"/)
@@ -83,4 +87,41 @@ test('Plugins API client 集中封装 lifecycle、permission 与 ownership endpo
   assert.match(api, /\/enable/)
   assert.match(api, /\/disable/)
   assert.match(api, /\/recover/)
+})
+
+// Provider resolution 已收敛为 Plugin-only：Core 不再持有 provider-specific 解析器，
+// 也不存在「切回内置解析」的回退路径。以下三个短语是旧语义的载体，一旦回流即视为回归。
+const RETIRED_PROVIDER_COPY = ['内置解析器', '切回内置解析', '内置兼容解析']
+
+const frontendSourceFiles = () => {
+  const srcRoot = path.join(frontendRoot, 'src')
+  return fs
+    .readdirSync(srcRoot, { recursive: true, withFileTypes: true })
+    .filter(entry => entry.isFile() && /\.(vue|js|ts)$/.test(entry.name))
+    .map(entry => path.join(entry.parentPath ?? entry.path, entry.name))
+}
+
+test('前端不再宣传 Core 内置解析器（Provider resolution 为 Plugin-only）', () => {
+  const files = frontendSourceFiles()
+  // 扫描面必须非空：否则「零命中」只说明没扫到文件，而非文案已清理。
+  assert.ok(files.length > 30, `扫描到的前端源文件过少（${files.length}），护栏失效`)
+
+  const offenders = []
+  for (const file of files) {
+    const text = fs.readFileSync(file, 'utf8')
+    for (const retired of RETIRED_PROVIDER_COPY) {
+      if (text.includes(retired)) {
+        offenders.push(`${path.relative(frontendRoot, file)}: ${retired}`)
+      }
+    }
+  }
+  assert.deepEqual(offenders, [], `Core 内置解析器旧文案回流：\n${offenders.join('\n')}`)
+})
+
+test('护栏自身有效：能识别被植入的旧文案', () => {
+  // 防止 RETIRED_PROVIDER_COPY 被改空/改错导致上面的扫描恒真。
+  const probe = '本频道由内置解析器处理，可在设置中切回内置解析。'
+  const hit = RETIRED_PROVIDER_COPY.filter(retired => probe.includes(retired))
+  assert.deepEqual(hit, ['内置解析器', '切回内置解析'])
+  assert.ok(frontendSourceFiles().length > 30)
 })

@@ -845,16 +845,17 @@ const availabilitySummary = computed(() => {
     return {
       headline: '需通过代理播放',
       detail: pkg.requires_resolver
-        ? 'WaveFlow 将通过后端代理访问源站，并根据播放地址按需调用内置解析器。'
+        ? 'WaveFlow 将通过后端代理访问源站；播放地址的解析由拥有对应 scheme 的插件提供，Core 不再提供内置解析。'
         : '该频道包不能直接连接源站，播放请求将通过 WaveFlow 后端代理转发。',
     }
   }
 
-  // 3) 仅声明 Resolver。Resolver 不强制每条频道使用，仅按 URL scheme 自动识别。
+  // 3) 仅声明 Resolver。Resolver 不强制每条频道使用，仅按 URL scheme 自动识别；
+  //    解析只能由拥有该 scheme 的插件完成，Core 不再提供内置解析。
   if (pkg.requires_resolver) {
     return {
       headline: '可直接使用',
-      detail: 'WaveFlow 会根据播放地址自动识别处理方式，并在需要时调用内置解析器，无需手动配置。',
+      detail: 'WaveFlow 会根据播放地址自动识别处理方式；解析由拥有对应 scheme 的插件提供，Core 不再提供内置解析。',
     }
   }
 
@@ -865,7 +866,8 @@ const availabilitySummary = computed(() => {
 // 详情"播放方式"分区：字段名 + 当前处理方式。
 // 项目语义审查（backend/market.py）：
 //   - requires_proxy → WaveFlow 后端自动代理转发；不要求用户配置代理。
-//   - requires_resolver → 按 URL scheme 自动识别，仅在匹配时按需调用内置解析器。
+//   - requires_resolver → 按 URL scheme 自动识别；解析只能由拥有该 scheme 的插件
+//     完成，Core 不提供 provider-specific 内置解析，无插件接管时该来源不可用。
 //   - requires_referer / requires_custom_ua → 真实值由 manifest headers 自动携带，
 //     用户无需准备；同时强制走后端代理。
 //   - requires_cookie → V1 实际是声明类信息：包含 Cookie 的源在 _normalize_source 中
@@ -883,7 +885,7 @@ const playbackMethods = computed(() => {
     {
       key: 'resolver',
       label: '地址解析',
-      value: pkg.requires_resolver ? '自动识别，按需使用内置解析器' : '自动识别',
+      value: pkg.requires_resolver ? '由对应插件解析' : '自动识别',
       warn: false,
     },
     {
