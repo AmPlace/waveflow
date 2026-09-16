@@ -632,6 +632,41 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
             desktop.provider_resolver.mode(scheme) == UNOWNED_MODE for scheme in TARGET_SCHEMES
         ))
 
+    async def test_reconciling_a_scheme_without_ownership_stays_unowned(self):
+        from plugin_runtime import PluginError
+
+        """Reconciliation must mirror the database, not invent a legacy row.
+
+        Before Plugin-only routing, projecting a scheme with no ownership row
+        synthesised ``mode="legacy"``, so ``mode()`` disagreed with the durable
+        store depending on whether reconciliation had run for that scheme.
+        """
+        subsystem = await self._subsystem()
+        await subsystem.startup()
+
+        durable = await subsystem._reconcile_ownership_serialized("redbook")
+
+        self.assertEqual(durable["mode"], UNOWNED_MODE)
+        self.assertEqual(durable["plugin_identity"], "")
+        self.assertEqual(subsystem.provider_resolver.mode("redbook"), UNOWNED_MODE)
+        self.assertNotIn(
+            "redbook", {row["scheme"] for row in await self.db.list_plugin_scheme_ownership()},
+        )
+        with self.assertRaises(PluginError) as ctx:
+            await subsystem.provider_resolver.resolve("redbook://room-1", self.client)
+        self.assertEqual(ctx.exception.code, "PLUGIN_UNAVAILABLE")
+
+    async def test_ownership_row_survives_reconciliation_as_its_stored_mode(self):
+        """The mirror holds in the other direction: a stored row is preserved."""
+        subsystem = await self._subsystem()
+        await subsystem.startup()
+        await subsystem.set_ownership("jstv", "legacy")
+
+        durable = await subsystem._reconcile_ownership_serialized("jstv")
+
+        self.assertEqual(durable["mode"], "legacy")
+        self.assertEqual(subsystem.provider_resolver.mode("jstv"), "legacy")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -137,6 +137,28 @@ class UnhealthyPluginFailsClosedTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ctx.exception.code, "PLUGIN_UNAVAILABLE")
 
 
+class UnownedProjectionTest(unittest.TestCase):
+    """Forgetting a projection must read back as unowned, not as legacy."""
+
+    def test_forget_makes_an_owned_scheme_unowned_again(self):
+        resolver = ProviderResolver(runtime=None)
+        resolver.set_mode("jstv", "plugin", "org.waveflow/jstv")
+        self.assertEqual(resolver.mode("jstv"), "plugin")
+
+        resolver.forget("jstv")
+
+        self.assertEqual(resolver.mode("jstv"), UNOWNED_MODE)
+        self.assertTrue(resolver.is_available("jstv"))
+
+    def test_forget_drops_a_legacy_projection(self):
+        resolver = ProviderResolver(runtime=None, ownership={"jstv": "legacy"})
+        self.assertEqual(resolver.mode("jstv"), "legacy")
+
+        resolver.forget("jstv")
+
+        self.assertEqual(resolver.mode("jstv"), UNOWNED_MODE)
+
+
 class UnsupportedProviderSchemeTest(unittest.IsolatedAsyncioTestCase):
     """Criterion D: redbook and tiktok are explicitly unsupported, not legacy."""
 

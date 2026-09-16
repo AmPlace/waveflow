@@ -101,6 +101,17 @@ class ProviderResolver:
         else:
             self._unavailable.add(normalized)
 
+    def forget(self, scheme: str) -> None:
+        """Drop any projected ownership so the scheme reads as ``UNOWNED_MODE``.
+
+        Used when the durable store holds no row for the scheme: there is no
+        Plugin owner and no Core adapter to fall back to.
+        """
+        normalized = str(scheme).lower()
+        self._ownership.pop(normalized, None)
+        self._expected_plugins.pop(normalized, None)
+        self._unavailable.discard(normalized)
+
     def fail_closed(self, scheme: str) -> None:
         self._unavailable.add(str(scheme).lower())
 

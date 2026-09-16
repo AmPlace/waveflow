@@ -32,7 +32,7 @@ from plugin_python_runtime import PythonEnvironmentManager, select_dependency_ar
 from plugin_desktop_runtime import resolve_plugin_python_executable
 from plugin_runtime import LifecycleState, PluginError, PluginRuntime, validate_manifest
 from plugin_runtime.permissions import PermissionPolicy
-from provider_resolver import ProviderResolver
+from provider_resolver import UNOWNED_MODE, ProviderResolver
 from radio_core import RadioCatalogBridge, RadioResolver
 from plugin_capabilities import CapabilityGateway, CoreCapabilityDispatcher
 from plugin_permissions import permission_projection, require_high_risk_approvals
@@ -893,7 +893,11 @@ class ProductionPluginSubsystem:
         self.provider_resolver.fail_closed(scheme)
         row = await self._ownership_row(scheme)
         if row is None:
-            row = {"scheme": scheme, "mode": "legacy", "plugin_identity": ""}
+            # No ownership row: no Plugin owns the scheme.  Core ships no
+            # provider adapter to fall back to, so project "unowned" instead of
+            # inventing a durable "legacy" row the database does not contain.
+            self.provider_resolver.forget(scheme)
+            return {"scheme": scheme, "mode": UNOWNED_MODE, "plugin_identity": ""}
         mode = str(row.get("mode") or "legacy")
         identity = str(row.get("plugin_identity") or "")
         self.provider_resolver.set_mode(scheme, mode, identity, available=False)
@@ -914,7 +918,7 @@ class ProductionPluginSubsystem:
         self.provider_resolver.fail_closed(scheme)
         row = await self._ownership_row(scheme)
         identity = "" if row is None else str(row.get("plugin_identity") or "")
-        mode = "legacy" if row is None else str(row.get("mode") or "legacy")
+        mode = UNOWNED_MODE if row is None else str(row.get("mode") or "legacy")
         if identity and mode != "legacy":
             async with self.service.lifecycle_lock(identity):
                 return await self._project_durable_ownership_locked(scheme)
