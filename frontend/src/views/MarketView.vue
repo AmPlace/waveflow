@@ -1876,7 +1876,7 @@ async function handleUninstall(pkg) {
   menuOpenId.value = null
   const ok = await toastStore.askConfirm({
     message: isPluginPackage(pkg)
-      ? `确认卸载「${pkg.name}」？如果 scheme 仍由该 Plugin 拥有，后端会拒绝并要求先切回 Legacy。`
+      ? `确认卸载「${pkg.name}」？如果 scheme 仍由该 Plugin 拥有，后端会拒绝并要求先取消该 scheme 的插件接管。`
       : `确认卸载「${pkg.name}」？`,
     confirmText: packageActionLabel(pkg, 'uninstall'), danger: true,
   })

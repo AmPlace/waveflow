@@ -40,7 +40,7 @@ test('Plugin stable errors 使用 code 映射而非回显任意服务端消息',
     detail: { detail: { code: 'SCHEME_CONFLICT', message: 'raw sensitive backend message' } },
   })
   assert.equal(pluginErrorCode(error), 'SCHEME_CONFLICT')
-  assert.match(pluginErrorMessage(error), /切回 Legacy/)
+  assert.match(pluginErrorMessage(error), /取消插件接管/)
   assert.doesNotMatch(pluginErrorMessage(error), /sensitive/)
 })
 
@@ -65,7 +65,7 @@ test('Settings Plugins 只做 runtime management 并把 update/uninstall 留给 
   for (const symbol of ['fetchPlugins', 'fetchPlugin', 'enablePlugin', 'disablePlugin', 'recoverPlugin', 'approvePluginPermission', 'revokePluginPermission', 'setPluginOwnership']) {
     assert.match(view, new RegExp(`\\b${symbol}\\b`))
   }
-  for (const label of ['运行状态', '权限', '运行依赖', '交由插件解析', '切回内置解析', '在 Market 中查看']) {
+  for (const label of ['运行状态', '权限', '运行依赖', '交由插件解析', '取消插件接管', '在 Market 中查看']) {
     assert.match(view, new RegExp(label))
   }
   assert.doesNotMatch(view, /updatePlugin|uninstallPlugin|安装 Plugin/)

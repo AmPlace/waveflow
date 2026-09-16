@@ -92,7 +92,7 @@ export function pluginErrorMessage(error, fallback = '插件操作失败，请�
     PLATFORM_UNSUPPORTED: '当前平台不支持这个插件',
     PLUGIN_INCOMPATIBLE: '插件版本与当前 WaveFlow 不兼容',
     PERMISSION_APPROVAL_REQUIRED: '安装前需要批准高风险权限',
-    SCHEME_CONFLICT: '请先将相关 scheme 切回 Legacy，再执行此操作',
+    SCHEME_CONFLICT: '请先将相关 scheme 取消插件接管，再执行此操作',
     CAPABILITY_DENIED: '当前权限策略不允许此操作',
     DEVELOPER_MODE_REQUIRED: '请先在 Developer Mode 中启用本地插件安装',
     ARTIFACT_INTEGRITY_FAILED: '插件本地包完整性校验失败',

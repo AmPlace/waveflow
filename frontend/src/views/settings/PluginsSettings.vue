@@ -126,8 +126,8 @@
                 <p v-if="featureLabels(selected.provider_contracts).length" class="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{{ featureLabels(selected.provider_contracts).join(' · ') }}</p>
                 <div v-if="selected.ownership?.length" class="mt-3 space-y-2">
                   <div v-for="item in selected.ownership" :key="item.scheme" class="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div><p class="text-sm font-medium text-[var(--text-primary)]">{{ item.scheme }}://</p><p class="mt-1 text-xs text-[var(--text-secondary)]">当前：{{ item.mode === 'plugin' ? '插件解析' : '内置兼容解析' }}</p></div>
-                    <button type="button" class="plugin-btn" :disabled="acting || !selected.enabled" @click="switchOwnership(item)">{{ item.mode === 'plugin' ? '切回内置解析' : '交由插件解析' }}</button>
+                    <div><p class="text-sm font-medium text-[var(--text-primary)]">{{ item.scheme }}://</p><p class="mt-1 text-xs text-[var(--text-secondary)]">当前：{{ item.mode === 'plugin' ? '插件解析' : '未由插件解析' }}</p></div>
+                    <button type="button" class="plugin-btn" :disabled="acting || !selected.enabled" @click="switchOwnership(item)">{{ item.mode === 'plugin' ? '取消插件接管' : '交由插件解析' }}</button>
                   </div>
                 </div>
               </DetailSection>
@@ -285,7 +285,7 @@ async function installLocalPlugin() {
 async function toggleEnabled(plugin) {
   const action = plugin.enabled ? '停用' : '启用'
   await runConfirmedAction(
-    { title: `${action}插件`, message: plugin.enabled ? '停用不会自动转交解析权。若来源仍由此插件解析，后端会拒绝此操作，请先切回内置兼容解析。' : '启用后插件恢复运行，但不会自动接管任何解析协议。', confirmText: action, danger: plugin.enabled },
+    { title: `${action}插件`, message: plugin.enabled ? '停用不会自动转交解析权。若来源仍由此插件解析，后端会拒绝此操作，请先取消该 scheme 的插件接管。' : '启用后插件恢复运行，但不会自动接管任何解析协议。', confirmText: action, danger: plugin.enabled },
     () => plugin.enabled ? disablePlugin(plugin.plugin) : enablePlugin(plugin.plugin),
     `插件已${action}`,
     plugin.plugin,
@@ -293,8 +293,8 @@ async function toggleEnabled(plugin) {
 }
 async function recoverSelected() { const identity = selectedIdentity.value; await runConfirmedAction({ title: '恢复插件', message: 'WaveFlow 将清除隔离状态。恢复后仍需显式启用或重新检查运行状态。', confirmText: '恢复' }, () => recoverPlugin(identity), '插件已恢复', identity) }
 async function approvePermission(permission) { const identity = selectedIdentity.value; const packageId = selected.value?.market?.package_id || ''; await runConfirmedAction({ title: '允许高风险权限', message: permission === 'network.direct' ? '此插件需要直接访问网络。该能力不经过 Core managed HTTP，并非强安全沙箱。' : permission === 'network.managed_http' ? '此插件需要通过 Core managed HTTP 访问明文 HTTP。目标、DNS、重定向和 SSRF 检查仍然有效。' : `允许 ${permission}？`, confirmText: '允许并继续', danger: true }, () => approvePluginPermission(identity, permission, packageId), '权限已允许', identity) }
-async function revokePermission(permission) { const identity = selectedIdentity.value; await runConfirmedAction({ title: '撤销权限', message: '撤销会停止插件运行。若来源仍由此插件解析，后端会拒绝并要求先切回内置兼容解析。', confirmText: '撤销', danger: true }, () => revokePluginPermission(identity, permission), '权限已撤销', identity) }
-async function switchOwnership(item) { const identity = selectedIdentity.value; const toPlugin = item.mode !== 'plugin'; const message = toPlugin ? `切换后，${item.scheme}:// 来源将由 ${selected.value.display_name} 解析。内置兼容解析仍保留，可切回。` : `切换后，${item.scheme}:// 来源将重新由内置兼容解析处理。`; await runConfirmedAction({ title: toPlugin ? '交由插件解析' : '切回内置解析', message, confirmText: toPlugin ? '交由插件解析' : '切回内置解析', danger: toPlugin }, () => setPluginOwnership(item.scheme, toPlugin ? 'plugin' : 'legacy', toPlugin ? identity : ''), `已切换到${toPlugin ? '插件解析' : '内置兼容解析'}`, identity) }
+async function revokePermission(permission) { const identity = selectedIdentity.value; await runConfirmedAction({ title: '撤销权限', message: '撤销会停止插件运行。若来源仍由此插件解析，后端会拒绝并要求先取消该 scheme 的插件接管。', confirmText: '撤销', danger: true }, () => revokePluginPermission(identity, permission), '权限已撤销', identity) }
+async function switchOwnership(item) { const identity = selectedIdentity.value; const toPlugin = item.mode !== 'plugin'; const message = toPlugin ? `切换后，${item.scheme}:// 来源将由 ${selected.value.display_name} 解析。` : `切换后，${item.scheme}:// 将不再由插件解析，且 Core 不再提供内置解析，该来源会变为不支持。`; await runConfirmedAction({ title: toPlugin ? '交由插件解析' : '取消插件接管', message, confirmText: toPlugin ? '交由插件解析' : '取消插件接管', danger: !toPlugin }, () => setPluginOwnership(item.scheme, toPlugin ? 'plugin' : 'legacy', toPlugin ? identity : ''), `已${toPlugin ? '交由插件解析' : '取消插件接管'}`, identity) }
 async function runConfirmedAction(confirmOptions, action, success, identity) {
   if (acting.value || componentDisposed) return
   acting.value = true
@@ -313,7 +313,7 @@ async function runConfirmedAction(confirmOptions, action, success, identity) {
 }
 
 function statusClass(plugin) { if (plugin.quarantined || !plugin.runtime_available && plugin.enabled) return 'is-danger'; if (!plugin.enabled) return 'is-muted'; return 'is-healthy' }
-function ownershipSummary(plugin) { const values = plugin.ownership || []; if (!values.length) return '未声明解析协议'; const owned = values.filter((item) => item.mode === 'plugin').length; return owned ? `${owned}/${values.length} 由插件解析` : '内置兼容解析' }
+function ownershipSummary(plugin) { const values = plugin.ownership || []; if (!values.length) return '未声明解析协议'; const owned = values.filter((item) => item.mode === 'plugin').length; return owned ? `${owned}/${values.length} 由插件解析` : '未由插件解析' }
 function contractLabels(contracts) { return (contracts || []).map((item) => contractLabel(typeof item === 'string' ? item : item.contract)).join(' · ') || '未声明提供方契约' }
 function isPending(name) { return Boolean(selected.value?.permissions?.pending?.some((item) => item.name === name)) }
 function isRevocable(name) { return (name === 'network.direct' || name === 'network.managed_http') && Boolean(selected.value?.permissions?.approved?.some((item) => item.name === name)) }
