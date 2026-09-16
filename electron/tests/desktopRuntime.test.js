@@ -69,7 +69,10 @@ test('Electron fails closed when the Windows sidecar is missing', () => {
 
 test('Windows packaging stages the locked runtime and does not use latest ffmpeg discovery', () => {
   assert.match(windowsBuildSource, /build-desktop-python-runtime\.ps1/)
-  assert.match(windowsBuildSource, /hidden-import adapters\.17live/)
+  // Provider resolution is Plugin-only and the Core `adapters` package is gone,
+  // so a `--hidden-import adapters.*` flag would be dead load. Assert the
+  // absence instead of pinning the retired flag that used to be here.
+  assert.doesNotMatch(windowsBuildSource, /hidden-import\s+adapters/)
   assert.match(windowsBuildSource, /collect-data zhconv/)
   assert.match(windowsBuildSource, /WAVEFLOW_DESKTOP_FFMPEG_SHA256/)
   assert.doesNotMatch(windowsBuildSource, /download-ffmpeg\.sh/)
