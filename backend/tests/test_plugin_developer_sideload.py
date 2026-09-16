@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from tests.plugin_sources import plugin_source
 import importlib
 import base64
 import json
@@ -23,7 +24,7 @@ class DeveloperPackageTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             project = Path(directory) / "yunting"
-            shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+            shutil.copytree(plugin_source("yunting"), project)
             built = build_project(project)
             package = load_developer_package(built["manifest"])
             self.assertEqual(package["market_source"]["source_key"], "developer_local")
@@ -89,7 +90,7 @@ class DeveloperSideloadLifecycleTest(unittest.IsolatedAsyncioTestCase):
         from waveflow_plugin_cli import build_project
 
         project = Path(self.tmp.name) / "yunting"
-        shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+        shutil.copytree(plugin_source("yunting"), project)
         return str(build_project(project)["manifest"])
 
     async def test_developer_mode_gate_restart_recovery_and_disable_semantics(self):
@@ -131,7 +132,7 @@ class DeveloperSideloadLifecycleTest(unittest.IsolatedAsyncioTestCase):
         await subsystem.install_developer_local(local_manifest)
 
         project = Path(self.tmp.name) / "yunting-official"
-        shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+        shutil.copytree(plugin_source("yunting"), project)
         manifest = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
         manifest["version"] = "1.1.0"
         (project / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -169,7 +170,7 @@ class DeveloperSideloadLifecycleTest(unittest.IsolatedAsyncioTestCase):
         subsystem = await self._make_subsystem()
         await subsystem.set_developer_mode(True)
         project = Path(self.tmp.name) / "direct-yunting"
-        shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+        shutil.copytree(plugin_source("yunting"), project)
         manifest = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
         manifest["permissions"]["network"]["direct"] = True
         (project / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -191,7 +192,7 @@ class DeveloperSideloadLifecycleTest(unittest.IsolatedAsyncioTestCase):
         subsystem = await self._make_subsystem()
         await subsystem.set_developer_mode(True)
         project = Path(self.tmp.name) / "plain-http-yunting"
-        shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+        shutil.copytree(plugin_source("yunting"), project)
         manifest = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
         manifest["permissions"]["network"]["allow_http"] = True
         (project / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -214,7 +215,7 @@ class DeveloperSideloadLifecycleTest(unittest.IsolatedAsyncioTestCase):
         subsystem = await self._make_subsystem()
         await subsystem.set_developer_mode(True)
         project = Path(self.tmp.name) / "revoke-plain-http-yunting"
-        shutil.copytree(Path(__file__).parents[1] / "bundled_plugins" / "yunting", project)
+        shutil.copytree(plugin_source("yunting"), project)
         manifest = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
         manifest["permissions"]["network"]["allow_http"] = True
         (project / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")

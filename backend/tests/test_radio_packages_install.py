@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 import httpx
 
+from tests.plugin_sources import plugin_source
 from tests import test_plugin_developer_sideload as developer_tests
 
 
@@ -70,10 +71,10 @@ class RadioPackagesInstallTest(unittest.IsolatedAsyncioTestCase):
         subsystem.service.lifecycle_changed = observed_reconcile
         try:
             with patch.object(subsystem.capability_gateway, "_validate_http_target", fixture_target):
-                for folder, plugin_id, count in (("hk_sg_radio", "hk-sg-radio", 34), ("radiobrowser", "radiobrowser", 1)):
+                for plugin_id, count in (("hk-sg-radio", 34), ("radiobrowser", 1)):
                     with self.subTest(plugin=plugin_id):
                         built = build_project(
-                            Path(__file__).parents[1] / "bundled_plugins" / folder,
+                            plugin_source(plugin_id),
                             output=subsystem.download_root / plugin_id / "plugin.pyz",
                         )
                         data = json.loads(Path(built["manifest"]).read_text())

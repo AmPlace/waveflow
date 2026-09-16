@@ -10,6 +10,7 @@ production code paths rather than stubs.
 
 from __future__ import annotations
 
+from tests.plugin_sources import plugins_root
 import base64
 import copy
 import hashlib
@@ -26,7 +27,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 
-PLUGIN_ROOT = Path(__file__).parents[1] / "bundled_plugins"
+PLUGIN_ROOT = plugins_root()
 CANARY_DIR = Path(__file__).parent / "fixtures" / "market_content_canary"
 CANARY_MARKET = CANARY_DIR / "market.json"
 CANARY_MANIFEST = CANARY_DIR / "fjtv-content-canary.manifest.json"

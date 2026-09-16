@@ -13,6 +13,7 @@ SDK plus a review of the matching assertion here.
 """
 from __future__ import annotations
 
+from tests.plugin_sources import all_plugin_source_files
 import ast
 import inspect
 import io
@@ -502,8 +503,8 @@ class InternalLeakageTest(unittest.TestCase):
         self.assertEqual(set(), _backend_modules(roots))
         self.assertTrue(roots)  # the scan must actually have found imports
 
-    def test_bundled_plugins_import_no_core_internals(self):
-        roots = _absolute_import_roots(sorted((BACKEND / "bundled_plugins").glob("*/plugin.py")))
+    def test_official_plugins_import_no_core_internals(self):
+        roots = _absolute_import_roots(all_plugin_source_files())
         leaked = _backend_modules(roots) - {"waveflow_plugin_sdk"}
         self.assertEqual(set(), leaked)
 

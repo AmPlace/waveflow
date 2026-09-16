@@ -9,8 +9,9 @@ Plugin authority that the runtime does not already enforce.
 Stability
 ---------
 ``V1_PUBLIC_SURFACE`` is the frozen SDK V1 contract.  Every name in it is
-exercised by at least one official Plugin under ``backend/bundled_plugins`` or
-by the SDK conformance suite.  It changes only with a major SDK version.
+exercised by at least one official Plugin in the market repository's
+``plugins/`` tree, or by the SDK conformance suite.  It changes only with a
+major SDK version.
 
 ``PREVIEW_SURFACE`` is implemented and reachable, but no official Plugin adopts
 it yet.  Preview names may change or be removed without a major SDK version and

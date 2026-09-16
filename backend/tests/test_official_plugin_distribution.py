@@ -20,6 +20,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from packaging import tags
 
+from tests.plugin_sources import legacy_root, plugin_source, plugins_root
+
 
 BASE_IDENTITIES = {
     "org.waveflow/jstv", "org.waveflow/fjtv", "org.waveflow/nd0593tv", "org.waveflow/gzstv",
@@ -36,18 +38,16 @@ DIRECT_IDENTITIES = {"org.waveflow/ptbtv", "org.waveflow/hnntv", STREAMGET_IDENT
 IDENTITIES = BASE_IDENTITIES | DIRECT_IDENTITIES
 SCHEMES = ({identity.rsplit("/", 1)[1] for identity in IDENTITIES - {STREAMGET_IDENTITY}} | STREAMGET_SCHEMES)
 BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
-BUNDLED_PLUGINS_ROOT = Path(__file__).parents[1] / "bundled_plugins"
-# Bundled Plugin sources with no official release channel.  Core keeps a legacy
-# adapter for every one of their schemes, so they are not part of the official
-# distribution and their sources are build-time/test-only inputs.
-LEGACY_ONLY_BUNDLED_PLUGINS = {
+# Plugin sources no longer live in this repository; Core resolves them through
+# an explicit external root (see ``plugin_sources``).  The Plugin id is the
+# source directory name, so a plan ``source`` is just the id.
+#
+# Plugin ids that are implemented against the SDK but have no official release
+# channel yet.  Core keeps a legacy adapter for every one of their schemes.
+LEGACY_ONLY_PLUGINS = {
     "hbtv", "hntv", "huya", "kuaishou", "migu", "qukan", "sdly", "sxbc",
     "tvb", "woniu", "xjtv", "youtube",
 }
-# Plugin id -> source directory.  The two names differ only where the Plugin id
-# is not a valid Python package name, which is required because the sources are
-# imported directly by their test suites.
-PLUGIN_SOURCE_DIRECTORY = {"hk-sg-radio": "hk_sg_radio"}
 DEPENDENCIES = {
     "org.waveflow/nowtv": [],
     "org.waveflow/nmtv": [("xxtea", "5.0.0")],
@@ -104,7 +104,7 @@ class OfficialReleaseBuildTest(unittest.TestCase):
             }))
             build_release(
                 signing_key=key_path, key_id="fixture-release-key",
-                output=root / "release", trust_path=trust,
+                output=root / "release", trust_path=trust, plugin_source_root=plugins_root(),
             )
             market = json.loads((root / "release" / "market.json").read_text())
             radio_ids = {
@@ -274,18 +274,20 @@ class OfficialReleaseBuildTest(unittest.TestCase):
                 }]}],
             }))
             first, second = root / "first", root / "second"
-            build_release(signing_key=key_path, key_id="fixture-release-key", output=first, trust_path=trust)
-            build_release(signing_key=key_path, key_id="fixture-release-key", output=second, trust_path=trust)
+            build_release(signing_key=key_path, key_id="fixture-release-key", output=first, trust_path=trust,
+                          plugin_source_root=plugins_root())
+            build_release(signing_key=key_path, key_id="fixture-release-key", output=second, trust_path=trust,
+                          plugin_source_root=plugins_root())
             self.assertEqual(_tree(first), _tree(second))
 
 
 class ExternalPluginSourceRootTest(unittest.TestCase):
     """The official builder must accept Plugin sources that live outside the repository.
 
-    Extraction of ``backend/bundled_plugins`` into its own repository is only
-    possible if the release pipeline can be pointed at an explicitly configured
-    external source root, without weakening the artifact/dependency path checks
-    and without deriving anything from the process working directory.
+    Every Plugin source now lives outside the repository, so the release
+    pipeline is pointed at an explicitly configured external source root.  That
+    root must not weaken the artifact/dependency path checks and must never be
+    derived from the process working directory.
     """
 
     def _release_key(self, root: Path) -> tuple[Path, Path]:
@@ -336,7 +338,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             key_path, trust = self._release_key(root)
             external = root / "external-plugins"
             external.mkdir()
-            shutil.copytree(BUNDLED_PLUGINS_ROOT / "yunting", external / "yunting")
+            shutil.copytree(plugin_source("yunting"), external / "yunting")
             self.assertFalse(external.is_relative_to(REPOSITORY_ROOT))
 
             external_plan = self._plan(root / "external-plan.json", source="yunting", source_root="external")
@@ -351,24 +353,24 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             self.assertEqual(market["market_version"], "1.8.0")
             self.assertTrue((external_output / "payloads" / "yunting-1.0.0.pyz").is_file())
 
-            # The identical source declared against the in-repository root still
-            # builds, and the external root does not change the produced bytes.
-            repo_plan = self._plan(root / "repo-plan.json", source="../bundled_plugins/yunting")
-            repo_output = root / "repo-release"
+            # The same source built straight from the real checkout produces
+            # identical bytes, so the configured root is not part of the release.
+            checkout_plan = self._plan(root / "checkout-plan.json", source="yunting", source_root="external")
+            checkout_output = root / "checkout-release"
             build_release(
-                signing_key=key_path, key_id="fixture-release-key", output=repo_output,
-                trust_path=trust, plan_path=repo_plan,
+                signing_key=key_path, key_id="fixture-release-key", output=checkout_output,
+                trust_path=trust, plugin_source_root=plugins_root(), plan_path=checkout_plan,
             )
-            self.assertEqual(_tree(repo_output), _tree(external_output))
+            self.assertEqual(_tree(checkout_output), _tree(external_output))
 
     def test_the_whole_release_plan_builds_identically_from_an_external_source_root(self):
         """Every official Plugin source can leave the repository unchanged.
 
-        This is the full-scale form of the extraction smoke test: all plan
-        entries are copied outside the repository, declared as external, and
-        rebuilt.  The produced release must be byte-identical to the one built
-        from the in-repository sources, which is what makes "the source location
-        is not part of the release" an evidenced claim rather than an assumption.
+        This is the full-scale form of the extraction smoke test: every plan
+        entry is copied to a second external root and rebuilt.  The produced
+        release must be byte-identical to the one built straight from the
+        checkout, which is what makes "the source location is not part of the
+        release" an evidenced claim rather than an assumption.
         """
         from build_official_plugins import OFFICIAL_DISTRIBUTION_ROOT, build_release
 
@@ -380,27 +382,27 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             external.mkdir()
             external_plugins = []
             for item in plan["plugins"]:
-                source = (OFFICIAL_DISTRIBUTION_ROOT / item["source"]).resolve()
+                source = plugin_source(item["source"])
                 self.assertTrue(source.is_dir(), item["source"])
                 shutil.copytree(source, external / source.name)
                 external_plugins.append({**item, "source": source.name, "source_root": "external"})
             external_plan = root / "external-plan.json"
             external_plan.write_text(json.dumps({**plan, "plugins": external_plugins}))
 
-            in_repository = root / "in-repository-release"
-            out_of_repository = root / "external-release"
+            from_checkout = root / "checkout-release"
+            from_copy = root / "copied-release"
             build_release(
                 signing_key=key_path, key_id="fixture-release-key",
-                output=in_repository, trust_path=trust,
+                output=from_checkout, trust_path=trust, plugin_source_root=plugins_root(),
             )
             build_release(
                 signing_key=key_path, key_id="fixture-release-key",
-                output=out_of_repository, trust_path=trust,
+                output=from_copy, trust_path=trust,
                 plugin_source_root=external, plan_path=external_plan,
             )
 
-            self.assertEqual(_tree(in_repository), _tree(out_of_repository))
-            market = json.loads((out_of_repository / "market.json").read_text())
+            self.assertEqual(_tree(from_checkout), _tree(from_copy))
+            market = json.loads((from_copy / "market.json").read_text())
             self.assertEqual(
                 {item["plugin_manifest"]["plugin_id"] for item in market["packages"]},
                 {item["plugin_id"] for item in plan["plugins"]},
@@ -408,7 +410,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             # The dependency-locked Plugins go through the untouched dependency
             # artifact path checks from the external source root as well.
             self.assertEqual(
-                {path.name for path in (out_of_repository / "payloads" / "dependencies").iterdir()},
+                {path.name for path in (from_copy / "payloads" / "dependencies").iterdir()},
                 {"nmtv", "sdtv", "ptbtv", "streamget-providers"},
             )
 
@@ -421,9 +423,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             key_path, trust = self._release_key(root)
             external = root / "external-plugins"
             external.mkdir()
-            shutil.copytree(
-                BUNDLED_PLUGINS_ROOT / "yunting", root / "outside" / "yunting",
-            )
+            shutil.copytree(plugin_source("yunting"), root / "outside" / "yunting")
 
             def build(name: str, *, source: str, source_root: str | None = None, configured: Path | None):
                 plan = self._plan(root / f"{name}.json", source=source, source_root=source_root)
@@ -435,7 +435,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             # Positive control: a Plugin that really is inside the configured
             # root builds.  Without this the rejections below would also pass
             # when external roots are simply unsupported.
-            shutil.copytree(BUNDLED_PLUGINS_ROOT / "yunting", external / "yunting")
+            shutil.copytree(plugin_source("yunting"), external / "yunting")
             inside = build("inside", source="yunting", source_root="external", configured=external)
             self.assertEqual(inside["packages"], ["official::yunting-plugin"])
 
@@ -465,7 +465,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             key_path, trust = self._release_key(root)
             external = root / "external-plugins"
             external.mkdir()
-            shutil.copytree(BUNDLED_PLUGINS_ROOT / "yunting", external / "yunting")
+            shutil.copytree(plugin_source("yunting"), external / "yunting")
             plan = self._plan(root / "external-plan.json", source="yunting", source_root="external")
 
             def build(output: str, **kwargs):
@@ -502,23 +502,21 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             self.assertEqual(invalid.exception.code, "INVALID_PLUGIN_RESPONSE")
 
     def test_repository_source_root_marker_matches_the_implicit_default(self):
-        from build_official_plugins import build_release
+        """The ``repository`` marker stays equivalent to omitting it.
 
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            key_path, trust = self._release_key(root)
-            implicit = self._plan(root / "implicit.json", source="../bundled_plugins/yunting")
-            explicit = self._plan(
-                root / "explicit.json", source="../bundled_plugins/yunting", source_root="repository",
-            )
-            outputs = {}
-            for name, plan in (("implicit", implicit), ("explicit", explicit)):
-                outputs[name] = root / f"{name}-release"
-                build_release(
-                    signing_key=key_path, key_id="fixture-release-key", output=outputs[name],
-                    trust_path=trust, plan_path=plan,
-                )
-            self.assertEqual(_tree(outputs["implicit"]), _tree(outputs["explicit"]))
+        No Plugin source lives in the repository any more, so the rule is
+        exercised at the resolution level: both forms must resolve to the same
+        in-repository directory and stay inside the repository.
+        """
+        from build_official_plugins import (
+            OFFICIAL_DISTRIBUTION_ROOT, REPOSITORY_ROOT, _resolve_plugin_source,
+        )
+
+        implicit = _resolve_plugin_source({"source": "distribution"}, None)
+        explicit = _resolve_plugin_source({"source": "distribution", "source_root": "repository"}, None)
+        self.assertEqual(implicit, explicit)
+        self.assertEqual(implicit, (OFFICIAL_DISTRIBUTION_ROOT / "distribution").resolve())
+        self.assertTrue(implicit.is_relative_to(REPOSITORY_ROOT))
 
     def test_signing_key_must_stay_outside_the_repository(self):
         import build_official_plugins as builder
@@ -532,7 +530,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             repository = root / "repository"
             repository.mkdir()
             key_path, trust = self._release_key(repository)
-            plan = self._plan(root / "repo-plan.json", source="../bundled_plugins/yunting")
+            plan = self._plan(root / "repo-plan.json", source="yunting")
             with mock.patch.object(builder, "REPOSITORY_ROOT", repository):
                 with self.assertRaises(PluginError) as inside:
                     builder.build_release(
@@ -572,19 +570,20 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
 
 
 class OfficialPluginInventoryTest(unittest.TestCase):
-    """Pin the bundled/plan/distribution classification that extraction depends on.
+    """Pin the plan/distribution classification that extraction depends on.
 
-    ``backend/bundled_plugins`` is a build-time input only: the frozen desktop
-    build ships ``official_plugins`` alone, and no Core module reads the source
-    tree.  These guards keep that invariant explicit so a Plugin cannot silently
-    gain or lose an official distribution channel.
+    Plugin sources live in the market repository, split into ``plugins/`` (what
+    the release plan publishes) and ``legacy/`` (implemented against the SDK,
+    no official channel yet).  These guards keep the split explicit so a Plugin
+    cannot silently gain or lose an official channel, and so no Plugin source
+    tree creeps back into this repository.
     """
 
     def _plan(self) -> dict:
         return json.loads((Path(__file__).parents[1] / "official_plugins" / "release-plan.json").read_text())
 
     def test_release_plan_entries_match_their_source_manifests(self):
-        from build_official_plugins import OFFICIAL_DISTRIBUTION_ROOT, REPOSITORY_ROOT
+        from build_official_plugins import REPOSITORY_ROOT
         from plugin_runtime import validate_manifest
 
         plan = self._plan()
@@ -593,41 +592,55 @@ class OfficialPluginInventoryTest(unittest.TestCase):
         self.assertEqual(len(entries), len(plan["plugins"]), "release plan repeats a plugin_id")
         for plugin_id, item in entries.items():
             with self.subTest(plugin=plugin_id):
-                source = (OFFICIAL_DISTRIBUTION_ROOT / item["source"]).resolve()
-                self.assertTrue(source.is_relative_to(REPOSITORY_ROOT))
+                # The plan stores no absolute path and no repository-relative
+                # escape, only a directory name resolved against the root the
+                # build is handed.
+                self.assertEqual(item.get("source_root"), "external")
+                self.assertEqual(item["source"], plugin_id)
+                source = plugin_source(item["source"])
                 self.assertTrue(source.is_dir(), item["source"])
+                self.assertFalse(source.is_relative_to(REPOSITORY_ROOT))
                 manifest = validate_manifest(json.loads((source / "manifest.json").read_text()))
                 # Identity comes from the manifest; the plan must agree with it.
                 self.assertEqual(manifest.plugin_id, plugin_id)
                 self.assertEqual(manifest.publisher_id, "org.waveflow")
-                self.assertEqual(source.name, PLUGIN_SOURCE_DIRECTORY.get(plugin_id, plugin_id))
+                self.assertEqual(source.name, plugin_id)
                 self.assertTrue(item.get("name"), "release plan entry has no name")
                 self.assertTrue(item.get("description"), "release plan entry has no description")
 
-    def test_every_bundled_plugin_is_either_official_or_legacy_only(self):
+    def test_every_plugin_source_is_either_official_or_legacy_only(self):
         from adapters import parse_adapter_url
         from plugin_runtime import validate_manifest
 
-        plan = self._plan()
-        plan_directories = {Path(item["source"]).name for item in plan["plugins"]}
-        bundled_directories = {path.name for path in BUNDLED_PLUGINS_ROOT.iterdir() if path.is_dir()}
+        plan_directories = {item["source"] for item in self._plan()["plugins"]}
+        official_directories = {path.name for path in plugins_root().iterdir() if path.is_dir()}
+        legacy_directories = {path.name for path in legacy_root().iterdir() if path.is_dir()}
 
         # Every source directory is accounted for exactly once, so adding a
         # Plugin forces an explicit publish-or-not decision.
-        self.assertEqual(bundled_directories, plan_directories | LEGACY_ONLY_BUNDLED_PLUGINS)
-        self.assertEqual(plan_directories & LEGACY_ONLY_BUNDLED_PLUGINS, set())
+        self.assertEqual(official_directories, plan_directories)
+        self.assertEqual(legacy_directories, LEGACY_ONLY_PLUGINS)
+        self.assertEqual(official_directories & legacy_directories, set())
 
         # Plugins without an official channel keep their Core legacy adapter, so
-        # moving the sources out of the repository removes no production path.
-        for name in sorted(LEGACY_ONLY_BUNDLED_PLUGINS):
+        # waiting in legacy/ removes no production path.
+        for name in sorted(LEGACY_ONLY_PLUGINS):
             with self.subTest(plugin=name):
-                self.assertNotIn(name, {item["plugin_id"] for item in plan["plugins"]})
+                self.assertNotIn(name, plan_directories)
                 manifest = validate_manifest(
-                    json.loads((BUNDLED_PLUGINS_ROOT / name / "manifest.json").read_text()),
+                    json.loads((legacy_root() / name / "manifest.json").read_text()),
                 )
                 self.assertTrue(manifest.owned_schemes)
                 for scheme, _contract in manifest.owned_schemes:
                     self.assertEqual(parse_adapter_url(f"{scheme}://probe").adapter, scheme)
+
+    def test_no_plugin_source_tree_remains_in_the_repository(self):
+        """Extraction only holds while the source tree stays out of the repo."""
+        from build_official_plugins import REPOSITORY_ROOT
+
+        for relative in ("bundled_plugins", "backend/bundled_plugins"):
+            with self.subTest(path=relative):
+                self.assertFalse((REPOSITORY_ROOT / relative).exists())
 
     def test_distribution_never_contains_a_plugin_outside_the_release_plan(self):
         from official_plugin_distribution import OFFICIAL_RELEASE_ROOT, load_bundled_official_market
@@ -661,8 +674,8 @@ class OfficialPluginInventoryTest(unittest.TestCase):
 class ExternalPluginSourceRootInstallTest(unittest.IsolatedAsyncioTestCase):
     """外部 source root 的端到端冒烟：构建 → 签名/打包 → 装载目录 → 安装激活。
 
-    这是「搬出 Core repo」的可行性证明：``backend/bundled_plugins`` 搬到别的
-    仓库之后，用外部 source root 构建出的发布产物必须仍然能走完整的官方通路。
+    这是抽取后的常规通路：Plugin 源码已不在本仓库，用外部 source root 构建出的
+    发布产物必须仍然能走完整的官方安装/激活链路。
     """
 
     async def asyncSetUp(self):
@@ -713,7 +726,7 @@ class ExternalPluginSourceRootInstallTest(unittest.IsolatedAsyncioTestCase):
         # The Plugin source lives outside the Core repository.
         external = root / "external-plugins"
         external.mkdir()
-        shutil.copytree(BUNDLED_PLUGINS_ROOT / "yunting", external / "yunting")
+        shutil.copytree(plugin_source("yunting"), external / "yunting")
         plan = root / "external-plan.json"
         plan.write_text(json.dumps({
             "schema_version": 1, "publisher_id": "org.waveflow",
@@ -1418,7 +1431,8 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
             }]}))
             from build_official_plugins import build_release
             from official_plugin_distribution import load_bundled_official_market
-            build_release(signing_key=key_path, key_id="test-key", output=root / "release", trust_path=trust_path)
+            build_release(signing_key=key_path, key_id="test-key", output=root / "release",
+                          trust_path=trust_path, plugin_source_root=plugins_root())
             _market, test_packages = load_bundled_official_market(root / "release")
             await self.db.upsert_plugin_publisher_trust(
                 publisher_id="org.waveflow", key_id="test-key", public_key=test_public,
@@ -1488,14 +1502,14 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         root = Path(self.tmp.name) / "signed-update"
         artifact = root / "jstv.pyz"
         artifact.parent.mkdir(parents=True)
-        build_sdk_artifact(OFFICIAL_DISTRIBUTION_ROOT.parent / "bundled_plugins" / "jstv" / "plugin.py", artifact)
+        build_sdk_artifact(plugin_source("jstv") / "plugin.py", artifact)
         payload = artifact.read_bytes()
         os_name, arch = current_platform()
 
         def package(version: str, *, source: Path = artifact) -> dict:
             source_payload = source.read_bytes()
             source_digest = hashlib.sha256(source_payload).hexdigest()
-            data = json.loads((OFFICIAL_DISTRIBUTION_ROOT.parent / "bundled_plugins" / "jstv" / "manifest.json").read_text())
+            data = json.loads((plugin_source("jstv") / "manifest.json").read_text())
             data["version"] = version
             data["artifacts"] = [{
                 "os": os_name, "arch": arch, "runtime": "python", "entrypoint": "jstv.pyz",

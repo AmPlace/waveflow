@@ -76,7 +76,6 @@ try {
     --collect-data zhconv `
     --add-data "config;config" `
     --add-data "official_plugins;official_plugins" `
-    --add-data "bundled_plugins;bundled_plugins" `
     --name waveflow-backend `
     desktop_entry.py
   Pop-Location
