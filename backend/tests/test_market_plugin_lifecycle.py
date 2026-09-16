@@ -146,6 +146,77 @@ class MarketPluginLifecycleTest(unittest.IsolatedAsyncioTestCase):
             "market_source": {"source_key": source_key},
         }
 
+    def test_package_envelope_must_not_contradict_its_manifest(self):
+        from plugin_runtime import PluginError
+
+        def candidates(package):
+            return self.pm.candidates_from_packages([package], os_name="linux", arch="x86_64")
+
+        # Positive control: an envelope that agrees with its manifest is accepted.
+        self.assertEqual(len(candidates(self.package())), 1)
+
+        # A package may not declare one publisher while carrying another's manifest.
+        mismatched_publisher = self.package()
+        mismatched_publisher["publisher"] = {"id": "evil.corp", "name": "Evil"}
+        with self.assertRaises(PluginError) as publisher_error:
+            candidates(mismatched_publisher)
+        self.assertEqual(publisher_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        # The advertised version must be the version that actually installs.
+        mismatched_version = self.package()
+        mismatched_version["version"] = "9.9.9"
+        with self.assertRaises(PluginError) as version_error:
+            candidates(mismatched_version)
+        self.assertEqual(version_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        # The official namespace is reserved for the official publisher.
+        stolen_namespace = self.package(publisher="evil.corp")
+        stolen_namespace["id"] = "official::fixture-plugin"
+        with self.assertRaises(PluginError) as namespace_error:
+            candidates(stolen_namespace)
+        self.assertEqual(namespace_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        # Manifest and artifact signatures must belong to the same key.
+        foreign_signature = self.package()
+        foreign_signature["manifest_signature"] = {
+            "algorithm": "ed25519", "key_id": "other-key",
+            "value": base64.b64encode(b"not-a-signature").decode(),
+        }
+        with self.assertRaises(PluginError) as signature_error:
+            candidates(foreign_signature)
+        self.assertEqual(signature_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        # A declared field that is malformed must not be silently ignored.
+        malformed_publisher = self.package()
+        malformed_publisher["publisher"] = "org.waveflow"
+        with self.assertRaises(PluginError) as malformed_publisher_error:
+            candidates(malformed_publisher)
+        self.assertEqual(malformed_publisher_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        malformed_signature = self.package()
+        malformed_signature["manifest_signature"] = "unsigned"
+        with self.assertRaises(PluginError) as malformed_signature_error:
+            candidates(malformed_signature)
+        self.assertEqual(malformed_signature_error.exception.code, "PLUGIN_INCOMPATIBLE")
+
+        # An explicitly absent signature stays valid, as Developer packages rely on it.
+        unsigned = self.package()
+        unsigned["manifest_signature"] = None
+        self.assertEqual(len(candidates(unsigned)), 1)
+
+    async def test_install_rejects_a_package_that_declares_one_plugin_and_carries_another(self):
+        from plugin_runtime import PluginError
+
+        identity = "org.waveflow/fixture-multi-provider"
+        package = self.package()
+        package["publisher"] = {"id": "evil.corp", "name": "Evil"}
+        package["version"] = "9.9.9"
+
+        with self.assertRaises(PluginError) as rejected:
+            await self.service.install_from_packages([package], identity)
+        self.assertEqual(rejected.exception.code, "PLUGIN_INCOMPATIBLE")
+        self.assertIsNone(await self.db.get_plugin_installation("org.waveflow", "fixture-multi-provider"))
+
     async def _wait_reconciliation(self, subsystem) -> None:
         """Wait for the lifecycle callback's durable/live projection to settle."""
         for _ in range(20):

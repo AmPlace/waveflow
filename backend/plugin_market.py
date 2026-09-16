@@ -19,6 +19,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 import database as db
+from official_plugin_distribution import OFFICIAL_PUBLISHER_ID, OFFICIAL_SOURCE_KEY
 from plugin_runtime import LifecycleState, PluginError, PluginInstance, PluginManifest, PluginRuntime, validate_manifest
 from plugin_runtime.manifest import _range_allows, _version_tuple
 from plugin_python_runtime import PythonEnvironmentManager, select_dependency_artifacts, validate_python_runtime
@@ -327,6 +328,70 @@ def _artifact_reference(package: dict, sha256: str) -> Path:
     return Path(str(matches[0]["local_path"]))
 
 
+def _assert_package_manifest_consistency(package: dict, manifest: PluginManifest) -> None:
+    """Reject a package envelope that contradicts the manifest it carries.
+
+    Publisher, version and signature material are declared twice: once on the
+    Market package and once inside ``plugin_manifest``.  The manifest is
+    authoritative, so an envelope that disagrees is rejected rather than
+    silently ignored -- otherwise a third-party or remote package could present
+    itself as one Plugin while installing another.
+
+    This runs at package validation time and therefore does not depend on the
+    official builder having produced the package.  Each check is applied only
+    when the envelope actually declares the field, because a package is allowed
+    to omit envelope metadata entirely.  A declared field that is malformed is
+    rejected rather than ignored.
+    """
+    publisher = package.get("publisher")
+    if publisher is not None:
+        if not isinstance(publisher, dict):
+            raise PluginError(
+                "PLUGIN_INCOMPATIBLE",
+                "Plugin package publisher is malformed",
+                category="market",
+            )
+        declared_publisher = str(publisher.get("id") or "")
+        if declared_publisher and declared_publisher != manifest.publisher_id:
+            raise PluginError(
+                "PLUGIN_INCOMPATIBLE",
+                "Plugin package publisher does not match the manifest publisher",
+                category="market",
+            )
+    declared_version = str(package.get("version") or "")
+    if declared_version and declared_version != manifest.version:
+        raise PluginError(
+            "PLUGIN_INCOMPATIBLE",
+            "Plugin package version does not match the manifest version",
+            category="market",
+        )
+    if (str(package.get("id") or "").startswith(f"{OFFICIAL_SOURCE_KEY}::")
+            and manifest.publisher_id != OFFICIAL_PUBLISHER_ID):
+        raise PluginError(
+            "PLUGIN_INCOMPATIBLE",
+            "Only the official publisher may publish into the official package namespace",
+            category="market",
+        )
+    signature = package.get("manifest_signature")
+    if signature is not None:
+        if not isinstance(signature, dict):
+            raise PluginError(
+                "PLUGIN_INCOMPATIBLE",
+                "Plugin package manifest signature is malformed",
+                category="market",
+            )
+        signature_key_id = str(signature.get("key_id") or "")
+        if signature_key_id:
+            for artifact in manifest.artifacts:
+                artifact_key_id = str((artifact.get("signature") or {}).get("key_id") or "")
+                if artifact_key_id and artifact_key_id != signature_key_id:
+                    raise PluginError(
+                        "PLUGIN_INCOMPATIBLE",
+                        "Plugin package manifest signature does not match its artifact signature",
+                        category="market",
+                    )
+
+
 def candidates_from_packages(
     packages: Iterable[dict], *, os_name: str, arch: str, core_version: str = "0.1.0"
 ) -> list[PluginCandidate]:
@@ -335,6 +400,7 @@ def candidates_from_packages(
         if package.get("package_type") != PLUGIN_PACKAGE_TYPE:
             continue
         manifest = validate_manifest(package.get("plugin_manifest"), core_version=core_version)
+        _assert_package_manifest_consistency(package, manifest)
         artifacts = [item for item in manifest.artifacts if item["os"] == os_name and item["arch"] == arch]
         if not artifacts:
             continue

@@ -24,6 +24,14 @@ from waveflow_plugin_cli import build_project, sign_build, validate_project
 PLAN_PATH = OFFICIAL_DISTRIBUTION_ROOT / "release-plan.json"
 DEFAULT_OUTPUT = OFFICIAL_DISTRIBUTION_ROOT / "distribution"
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+# A plan entry opts into an out-of-repository source root with
+# ``"source_root": "external"``.  The external root is never discovered from
+# the working directory: it is passed explicitly by the caller (CLI flag or
+# ``plugin_source_root`` argument) and must be an absolute, existing directory.
+# Entries without a ``source_root`` keep resolving against
+# ``OFFICIAL_DISTRIBUTION_ROOT`` and must stay inside ``REPOSITORY_ROOT``.
+SOURCE_ROOT_REPOSITORY = "repository"
+SOURCE_ROOT_EXTERNAL = "external"
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -109,10 +117,63 @@ def _copy_plugin_resources(source: Path, project: Path, entrypoint: str) -> None
         shutil.copyfile(path, target)
 
 
-def _private_key(path: Path) -> Ed25519PrivateKey:
+def _plugin_source_root(value: str | Path) -> Path:
+    """Canonicalize an explicitly configured external Plugin source root.
+
+    The root is never derived from the process working directory: a relative
+    value is rejected outright so that a build cannot silently depend on where
+    it was invoked from.
+    """
+    candidate = Path(value).expanduser()
+    if not candidate.is_absolute():
+        raise PluginError(
+            "INVALID_PLUGIN_RESPONSE", "External Plugin source root must be absolute", category="release",
+        )
+    root = candidate.resolve()
+    if not root.is_dir():
+        raise PluginError(
+            "ARTIFACT_NOT_FOUND", "External Plugin source root is unavailable", category="release",
+        )
+    return root
+
+
+def _resolve_plugin_source(item: dict[str, Any], external_root: Path | None) -> Path:
+    """Resolve a release plan entry to a Plugin source directory.
+
+    In-repository sources keep the original containment guarantee: the resolved
+    path must stay inside ``REPOSITORY_ROOT``.  External sources are resolved
+    against the explicitly configured external root and must stay inside it, so
+    neither form can escape its declared root.
+    """
+    declared = item.get("source_root")
+    relative = str(item.get("source") or "")
+    if declared in (None, SOURCE_ROOT_REPOSITORY):
+        source = (OFFICIAL_DISTRIBUTION_ROOT / relative).resolve()
+        if not source.is_relative_to(REPOSITORY_ROOT) or not source.is_dir():
+            raise PluginError("ARTIFACT_NOT_FOUND", "Official Plugin source is unavailable", category="release")
+        return source
+    if declared != SOURCE_ROOT_EXTERNAL:
+        raise PluginError("INVALID_PLUGIN_RESPONSE", "Official Plugin source root is invalid", category="release")
+    if external_root is None:
+        raise PluginError(
+            "ARTIFACT_NOT_FOUND",
+            "Release plan requires an external Plugin source root that is not configured",
+            category="release",
+        )
+    source = (external_root / relative).resolve()
+    if not source.is_relative_to(external_root) or not source.is_dir():
+        raise PluginError("ARTIFACT_NOT_FOUND", "External Plugin source is unavailable", category="release")
+    return source
+
+
+def _private_key(path: Path, external_root: Path | None = None) -> Ed25519PrivateKey:
     resolved = path.expanduser().resolve(strict=True)
-    if resolved.is_relative_to(REPOSITORY_ROOT):
-        raise PluginError("AUTH_FAILED", "Official signing key must remain outside the repository", category="trust")
+    if resolved.is_relative_to(REPOSITORY_ROOT) or (
+        external_root is not None and resolved.is_relative_to(external_root)
+    ):
+        raise PluginError(
+            "AUTH_FAILED", "Official signing key must remain outside the Plugin source roots", category="trust",
+        )
     raw = resolved.read_bytes()
     try:
         key = serialization.load_pem_private_key(raw, password=None)
@@ -135,10 +196,12 @@ def _assert_anchor(key: Ed25519PrivateKey, key_id: str, trust_path: Path | None 
 
 def build_release(
     *, signing_key: Path, key_id: str, output: Path = DEFAULT_OUTPUT, trust_path: Path | None = None,
+    plugin_source_root: str | Path | None = None, plan_path: Path = PLAN_PATH,
 ) -> dict[str, Any]:
-    key = _private_key(signing_key)
+    external_root = None if plugin_source_root is None else _plugin_source_root(plugin_source_root)
+    key = _private_key(signing_key, external_root)
     _assert_anchor(key, key_id, trust_path)
-    plan = _json(PLAN_PATH)
+    plan = _json(plan_path)
     if (plan.get("schema_version") != 1 or plan.get("publisher_id") != OFFICIAL_PUBLISHER_ID
             or not isinstance(plan.get("plugins"), list) or not plan["plugins"]):
         raise PluginError("INVALID_PLUGIN_RESPONSE", "Official release plan is invalid", category="release")
@@ -153,9 +216,7 @@ def build_release(
         workspace_root = Path(directory)
         for item in sorted(plan["plugins"], key=lambda value: str(value.get("plugin_id") or "")):
             plugin_id = str(item.get("plugin_id") or "")
-            source = (OFFICIAL_DISTRIBUTION_ROOT / str(item.get("source") or "")).resolve()
-            if not source.is_relative_to(REPOSITORY_ROOT) or not source.is_dir():
-                raise PluginError("ARTIFACT_NOT_FOUND", "Official Plugin source is unavailable", category="release")
+            source = _resolve_plugin_source(item, external_root)
             project = workspace_root / plugin_id
             project.mkdir()
             manifest_source = source / "manifest.json"
@@ -251,9 +312,23 @@ def main() -> int:
     parser.add_argument("--signing-key", type=Path, required=True)
     parser.add_argument("--key-id", required=True)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--plugin-source-root", type=Path, default=None,
+        help="Absolute root holding Plugins declared with \"source_root\": \"external\" in the release plan",
+    )
     args = parser.parse_args()
+    source_root = args.plugin_source_root
+    if source_root is not None:
+        source_root = source_root.expanduser()
+        if not source_root.is_absolute():
+            # Resolving a relative root would silently bind the release to the
+            # process working directory.
+            parser.error("--plugin-source-root must be an absolute path")
     try:
-        result = build_release(signing_key=args.signing_key, key_id=args.key_id, output=args.output)
+        result = build_release(
+            signing_key=args.signing_key, key_id=args.key_id, output=args.output,
+            plugin_source_root=source_root,
+        )
     except (OSError, ValueError, json.JSONDecodeError, PluginError) as exc:
         if isinstance(exc, PluginError):
             print(json.dumps({"error": exc.as_contract()}, ensure_ascii=False))
