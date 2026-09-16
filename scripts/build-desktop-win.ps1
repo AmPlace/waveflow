@@ -71,9 +71,8 @@ try {
   & (Join-Path $buildVenv "Scripts\pyinstaller.exe") `
     --clean `
     --noconfirm `
-    --onedir `
-    --hidden-import adapters.17live `
-    --collect-data zhconv `
+     --onedir `
+     --collect-data zhconv `
     --add-data "config;config" `
     --add-data "official_plugins;official_plugins" `
     --name waveflow-backend `

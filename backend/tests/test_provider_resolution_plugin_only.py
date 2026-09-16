@@ -191,6 +191,20 @@ class NoLegacyMachineryRemainsTest(unittest.TestCase):
         self.assertNotIn("legacy", ROUTABLE_MODES)
         self.assertIn("plugin", ROUTABLE_MODES)
 
+    def test_build_scripts_do_not_import_the_deleted_adapter_package(self):
+        # Packaging lives outside backend/, so the production source scan above
+        # cannot see it.  A --hidden-import for a deleted module is dead load
+        # that would silently rot again.
+        repo_root = BACKEND_ROOT.parent
+        scripts = sorted((repo_root / "scripts").glob("build-*"))
+        self.assertTrue(scripts, "no build scripts found to scan")
+        offenders = [
+            f"{path.relative_to(repo_root)}"
+            for path in scripts
+            if "adapters" in path.read_text(encoding="utf-8", errors="replace")
+        ]
+        self.assertEqual(offenders, [])
+
 
 if __name__ == "__main__":
     unittest.main()

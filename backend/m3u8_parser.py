@@ -27,7 +27,7 @@ _STREAM_URL_PREFIXES = (
     'langlive://', 'changliao://', 'jd://', 'faceit://', 'lianjie://',
     'sixroom://', 'huamao://', 'shopee://', 'laixiu://',
     'picarto://', 'youtube://', 'adapter://',
-    # 大陆电视台 adapter（2026-06 新增；与 backend/adapters/__init__.py 对齐）
+    # 大陆电视台 provider（2026-06 新增；与 provider_reference.py 的已知 scheme 对齐）
     'fjtv://', 'ptbtv://', 'nd0593tv://', 'qukan://', 'woniu://',
 )
 
