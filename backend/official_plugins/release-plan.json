@@ -1383,6 +1383,45 @@
           "source": "dependency_artifacts/youtube/wsproto-1.3.2-py3-none-any.whl"
         }
       ]
+    },
+    {
+      "description": "WaveFlow official 山东广播电视台 TV Provider.",
+      "name": "SDLY Provider Plugin",
+      "plugin_id": "sdly",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "sdly",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "山东广电地方频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "sdly"
+      ],
+      "providers": [
+        "SDLY"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
     }
   ],
   "publisher_id": "org.waveflow",

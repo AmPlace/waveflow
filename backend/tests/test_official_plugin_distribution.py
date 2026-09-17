@@ -48,11 +48,12 @@ BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
 # no provider adapter for them either, so their schemes stay unowned until a
 # Plugin is published for them.
 #
-# Phase H promoted ten of the twelve once their manifest, implementation tests,
-# build and live upstream were verified.  These two stay because of facts, not
-# paperwork: ``sdly``'s upstream endpoint answers 404 while the host is up, and
-# ``woniu`` needs release-time credentials that Plugin SDK V1 cannot deliver.
-LEGACY_ONLY_PLUGINS = {"sdly", "woniu"}
+# Phase H promoted all twelve once their manifest, implementation tests, build,
+# local install and live upstream were verified.  ``woniu`` was dropped by
+# product decision (unstable provider, credentials Plugin SDK V1 has no channel
+# to deliver); ``sdly`` was promoted last, after a re-probe showed its earlier
+# 404 was a transient upstream fault rather than a retired contract.
+LEGACY_ONLY_PLUGINS: set[str] = set()
 DEPENDENCIES = {
     "org.waveflow/nowtv": [],
     "org.waveflow/nmtv": [("xxtea", "5.0.0")],
