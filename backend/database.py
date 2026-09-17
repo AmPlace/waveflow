@@ -4292,6 +4292,30 @@ async def set_plugin_permission_approval(
     return await asyncio.to_thread(_set)
 
 
+async def delete_plugin_permission_approvals(publisher_id: str, plugin_id: str) -> int:
+    """Delete every approval row for one Plugin; return how many were removed.
+
+    Approvals are keyed by a fingerprint that is constant per permission name
+    (``plugin_permissions._request`` hashes only the name and the boolean value),
+    so a row left behind after uninstall would silently re-authorise the same
+    high-risk permission — including ``network.direct`` — for a later reinstall
+    of the same Plugin id, even at a different version.  Uninstall removes them
+    so a reinstall has to be approved again.
+    """
+    def _delete():
+        conn = _connect()
+        try:
+            with conn:
+                cursor = conn.execute(
+                    "DELETE FROM plugin_permission_approvals WHERE publisher_id=? AND plugin_id=?",
+                    (publisher_id, plugin_id),
+                )
+                return int(cursor.rowcount)
+        finally:
+            conn.close()
+    return await asyncio.to_thread(_delete)
+
+
 async def list_plugin_artifacts(publisher_id: str, plugin_id: str, *, state: str = '') -> list[dict]:
     def _list():
         conn = _connect()
@@ -4899,6 +4923,54 @@ async def set_plugin_scheme_ownership(scheme: str, mode: str, plugin_identity: s
         finally:
             conn.close()
     return await asyncio.to_thread(_set)
+
+
+async def delete_plugin_scheme_ownership(scheme: str) -> bool:
+    """Delete one ownership row so the scheme reads as unowned.
+
+    This is the durable counterpart of ``ProviderResolver.forget``: with no row
+    there is no Plugin owner and no Core adapter to fall back to, so the scheme
+    projects as ``UNOWNED_MODE`` and fails closed.  Releasing a scheme used to
+    mean writing a ``mode='legacy'`` row, which left a tombstone behind; this
+    removes the row instead.
+    """
+    def _delete():
+        conn = _connect()
+        try:
+            with conn:
+                cursor = conn.execute(
+                    "DELETE FROM plugin_scheme_ownership WHERE scheme=?", (scheme,)
+                )
+                return cursor.rowcount == 1
+        finally:
+            conn.close()
+    return await asyncio.to_thread(_delete)
+
+
+async def delete_plugin_scheme_ownership_for_identity(plugin_identity: str) -> list[str]:
+    """Delete every ownership row owned by ``plugin_identity``; return the schemes.
+
+    Used by uninstall so a removed Plugin cannot leave a durable routing claim
+    behind.  Only rows that name this identity are touched: rows owned by other
+    Plugins, and released rows whose identity has already been cleared, are left
+    exactly as they are.
+    """
+    def _delete():
+        conn = _connect()
+        try:
+            with conn:
+                rows = conn.execute(
+                    "SELECT scheme FROM plugin_scheme_ownership WHERE plugin_identity=?",
+                    (plugin_identity,),
+                ).fetchall()
+                conn.execute(
+                    "DELETE FROM plugin_scheme_ownership WHERE plugin_identity=?",
+                    (plugin_identity,),
+                )
+                return [str(row["scheme"]) for row in rows]
+        finally:
+            conn.close()
+    return await asyncio.to_thread(_delete)
 
 
 async def recover_quarantined_plugin(publisher_id: str, plugin_id: str) -> bool:

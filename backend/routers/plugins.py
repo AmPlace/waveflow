@@ -405,3 +405,31 @@ async def set_ownership(scheme: str, body: OwnershipRequest, request: Request) -
         return await _subsystem(request).set_ownership(scheme, body.mode, body.plugin)
     except PluginError as exc:
         raise _error(exc) from exc
+
+
+@router.post("/{publisher_id}/{plugin_id}/purge")
+async def purge_uninstalled_plugin(publisher_id: str, plugin_id: str, request: Request) -> dict[str, Any]:
+    """Remove durable residue of an identity that is no longer installed.
+
+    ``uninstall`` already leaves nothing behind; this is the operator path for
+    residue that predates that contract.  It refuses while the Plugin is still
+    installed so it cannot be used to skip the normal lifecycle.
+    """
+    try:
+        return await _subsystem(request).purge_uninstalled(f"{publisher_id}/{plugin_id}")
+    except PluginError as exc:
+        raise _error(exc) from exc
+
+
+@router.delete("/ownership/{scheme}")
+async def clear_ownership(scheme: str, request: Request) -> dict[str, Any]:
+    """Release a scheme by deleting its ownership row.
+
+    ``PUT`` with ``mode=legacy`` releases routing but leaves a durable row. This
+    removes the row so the scheme projects as unowned instead of keeping a
+    tombstone for a Plugin that may no longer be installed.
+    """
+    try:
+        return await _subsystem(request).clear_ownership(scheme)
+    except PluginError as exc:
+        raise _error(exc) from exc

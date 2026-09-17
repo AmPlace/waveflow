@@ -27,6 +27,37 @@ def python_runtime_identity(executable: str = sys.executable) -> str:
     return f"cpython-{sys.version_info.major}.{sys.version_info.minor}-{sys.implementation.cache_tag}-{sysconfig.get_platform()}"
 
 
+def prune_empty_parents(path: str | Path, *, stop: str | Path) -> int:
+    """Remove ``path`` and its now-empty parents, never ascending past ``stop``.
+
+    Deleting a leaf directory — an environment digest, an installed artifact, a
+    Plugin workspace — used to leave empty ``publisher/plugin/version`` shells
+    behind.  This walks upwards and removes only directories that are empty, so
+    it can never touch a sibling version, another Plugin, or a shared root: the
+    walk stops at the first non-empty directory and never removes ``stop``
+    itself.  ``path`` may already be gone; that counts as empty.
+    """
+    stop_path = Path(stop).resolve()
+    current = Path(path).resolve()
+    removed = 0
+    while current != stop_path and current.is_relative_to(stop_path):
+        # The caller has usually deleted ``path`` already, so a missing
+        # directory counts as empty and the walk simply continues upwards.
+        if current.exists():
+            try:
+                if any(current.iterdir()):
+                    break
+            except OSError:
+                break
+            try:
+                current.rmdir()
+            except OSError:
+                break
+            removed += 1
+        current = current.parent
+    return removed
+
+
 def dependency_lock_digest(lock: dict[str, Any]) -> str:
     encoded = json.dumps(lock, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
@@ -212,6 +243,10 @@ class PythonEnvironmentManager:
         resolved = Path(path).resolve()
         if resolved.is_relative_to(self.environments_root):
             shutil.rmtree(resolved, ignore_errors=True)
+            # Leave no empty publisher/plugin/version shells behind; the walk
+            # stops at the first non-empty directory, so a sibling version or
+            # another Plugin's environment can never be affected.
+            prune_empty_parents(resolved, stop=self.environments_root)
 
     def cache_objects(self) -> list[Path]:
         return list(self.dependencies_root.glob("*/*/*.whl"))

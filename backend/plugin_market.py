@@ -22,7 +22,12 @@ import database as db
 from official_plugin_distribution import OFFICIAL_PUBLISHER_ID, OFFICIAL_SOURCE_KEY
 from plugin_runtime import LifecycleState, PluginError, PluginInstance, PluginManifest, PluginRuntime, validate_manifest
 from plugin_runtime.manifest import _range_allows, _version_tuple
-from plugin_python_runtime import PythonEnvironmentManager, select_dependency_artifacts, validate_python_runtime
+from plugin_python_runtime import (
+    PythonEnvironmentManager,
+    prune_empty_parents,
+    select_dependency_artifacts,
+    validate_python_runtime,
+)
 from plugin_permissions import HIGH_RISK_PERMISSIONS, permission_projection, require_high_risk_approvals, requested_permissions
 
 
@@ -294,8 +299,13 @@ class PluginArtifactStore:
 
     def remove_plugin(self, publisher_id: str, plugin_id: str) -> None:
         relative = Path(self._part(publisher_id)) / self._part(plugin_id)
-        shutil.rmtree(self.staged_root / relative, ignore_errors=True)
-        shutil.rmtree(self.installed_root / relative, ignore_errors=True)
+        for root in (self.staged_root, self.installed_root):
+            target = root / relative
+            shutil.rmtree(target, ignore_errors=True)
+            # Drop the publisher directory too when this was its last Plugin;
+            # the walk stops at the first non-empty directory, so a shared
+            # publisher namespace is never removed.
+            prune_empty_parents(target, stop=root)
 
     def cleanup_orphan_staging(self, live_paths: Iterable[str]) -> int:
         live = {str(Path(path).resolve()) for path in live_paths}
@@ -1431,8 +1441,14 @@ class PluginMarketService:
         for path in await db.delete_plugin_python_environments(row["publisher_id"], row["plugin_id"]):
             await asyncio.to_thread(self.python_environments.remove_environment, path)
         await asyncio.to_thread(self.store.remove_plugin, row["publisher_id"], row["plugin_id"])
-        await asyncio.to_thread(shutil.rmtree,
-                                self._working_directory(validate_manifest(json.loads(row["manifest_json"])), create=False), True)
+        workspace = self._working_directory(validate_manifest(json.loads(row["manifest_json"])), create=False)
+        await asyncio.to_thread(shutil.rmtree, workspace, True)
+        await asyncio.to_thread(prune_empty_parents, workspace, stop=self.workspaces_root)
+        # Approvals are keyed by a fingerprint that only encodes the permission
+        # name, so a surviving row would silently re-authorise a high-risk
+        # permission -- network.direct included -- for a later reinstall of the
+        # same Plugin id.  Uninstall drops them so a reinstall is re-approved.
+        await db.delete_plugin_permission_approvals(row["publisher_id"], row["plugin_id"])
         await self._notify_lifecycle_changed(identity)
         return removed
 
@@ -1505,6 +1521,34 @@ class PluginMarketService:
             approved=True, actor=actor, manifest_version=candidate.manifest.version,
         )
         return await permission_projection(candidate.manifest)
+
+    def remove_identity_directories(self, publisher_id: str, plugin_id: str) -> list[str]:
+        """Delete and prune the store, workspace and environment namespaces.
+
+        Used by the operator purge for an identity that is no longer installed.
+        Only paths belonging to this publisher/plugin are touched, and pruning
+        stops at the first non-empty directory, so a shared publisher namespace
+        or a sibling Plugin is never affected.
+        """
+        removed: list[str] = []
+        self.store.remove_plugin(publisher_id, plugin_id)
+        relative = Path(self.store._part(publisher_id)) / self.store._part(plugin_id)
+        for root in (self.store.staged_root, self.store.installed_root):
+            path = root / relative
+            prune_empty_parents(path, stop=root)
+            if not path.exists():
+                removed.append(str(path))
+        workspace = self.workspaces_root / relative
+        shutil.rmtree(workspace, ignore_errors=True)
+        prune_empty_parents(workspace, stop=self.workspaces_root)
+        if not workspace.exists():
+            removed.append(str(workspace))
+        environment = self.python_environments.environments_root / relative
+        shutil.rmtree(environment, ignore_errors=True)
+        prune_empty_parents(environment, stop=self.python_environments.environments_root)
+        if not environment.exists():
+            removed.append(str(environment))
+        return removed
 
     async def revoke_permission(self, identity: str, permission: str, actor: str) -> dict[str, Any]:
         async with self.lifecycle_lock(identity):

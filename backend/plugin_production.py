@@ -1113,10 +1113,84 @@ class ProductionPluginSubsystem:
     async def uninstall(self, identity: str, *, force: bool = False) -> bool:
         removed = await self.service.uninstall(identity, force=force)
         if removed:
+            await self._clear_ownership_for_identity(identity)
             self.channel_catalog.remove_plugin(identity)
         if removed and identity.startswith(f"{OFFICIAL_PUBLISHER_ID}/"):
             await self._remember_official_bootstrap(identity)
         return removed
+
+    async def _clear_ownership_for_identity(self, identity: str) -> list[str]:
+        """Drop the durable routing claims a removed Plugin still holds.
+
+        A Plugin that actively owns a scheme cannot be uninstalled -- the
+        ``destructive_guard`` refuses it until ownership is released -- so what
+        this catches is the released-but-still-named row, which is exactly the
+        tombstone this contract exists to remove.  Every affected scheme is then
+        re-projected so it reads as ``UNOWNED_MODE`` rather than a stale claim.
+        """
+        schemes = await db.delete_plugin_scheme_ownership_for_identity(identity)
+        for scheme in schemes:
+            try:
+                await self._reconcile_ownership_serialized(scheme)
+            except BaseException:
+                # The row is already gone; routing must not stay stale because
+                # the projection failed, so schedule a retry instead.
+                self._schedule_ownership_reconcile(scheme)
+        return schemes
+
+    async def purge_uninstalled(self, identity: str) -> dict[str, Any]:
+        """Remove every durable trace of an identity that is no longer installed.
+
+        ``uninstall`` leaves nothing behind once it has run, so this exists for
+        residue that predates that contract — an uninstall performed by an older
+        build, or a row left by a manual edit.  It refuses to run while the
+        identity is still installed, so it can never be used to skip the normal
+        lifecycle and its ownership guard.
+        """
+        publisher_id, separator, plugin_id = str(identity or "").partition("/")
+        if not separator or not publisher_id or not plugin_id:
+            raise PluginError("INVALID_PLUGIN_RESPONSE", "Invalid plugin identity", category="market")
+        if await db.get_plugin_installation(publisher_id, plugin_id) is not None:
+            raise PluginError(
+                "SCHEME_CONFLICT", "Plugin is still installed; uninstall it instead",
+                category="market", details={"plugin": identity},
+            )
+        schemes = await db.delete_plugin_scheme_ownership_for_identity(identity)
+        for scheme in schemes:
+            try:
+                await self._reconcile_ownership_serialized(scheme)
+            except BaseException:
+                self._schedule_ownership_reconcile(scheme)
+        approvals = await db.delete_plugin_permission_approvals(publisher_id, plugin_id)
+        directories = await asyncio.to_thread(
+            self.service.remove_identity_directories, publisher_id, plugin_id)
+        return {"plugin": identity, "schemes": schemes, "approvals": approvals,
+                "directories": directories}
+
+    async def clear_ownership(self, scheme: str) -> dict[str, Any]:
+        """Delete a scheme's ownership row so it projects as unowned.
+
+        Releasing a scheme used to mean writing ``mode='legacy'``, which left a
+        durable tombstone naming a Plugin that may be long gone.  This removes
+        the row instead: with no owner and no Core adapter to fall back to, the
+        scheme reads as ``UNOWNED_MODE`` and every resolve fails closed.
+        """
+        scheme = str(scheme or "").strip().lower()
+        if not scheme:
+            raise PluginError("INVALID_PLUGIN_RESPONSE", "Invalid provider scheme", category="routing")
+        async with self._scheme_lock(scheme):
+            self.provider_resolver.fail_closed(scheme)
+            try:
+                await db.delete_plugin_scheme_ownership(scheme)
+                durable = await self._reconcile_scheme_from_durable_state_locked(scheme)
+            except BaseException as error:
+                self._schedule_ownership_reconcile(scheme)
+                if isinstance(error, PluginError):
+                    raise
+                raise PluginError(
+                    "PLUGIN_UNAVAILABLE", "Plugin ownership clear failed", category="persistence",
+                ) from error
+            return self._public_ownership(durable)
 
     @staticmethod
     async def _remember_official_bootstrap(identity: str) -> None:
