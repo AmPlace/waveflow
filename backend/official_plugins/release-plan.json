@@ -564,12 +564,30 @@
       "display": {
         "subtitle": "Radio Provider Plugin",
         "summary": "为 WaveFlow 提供云听电台目录和播放地址解析。",
-        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
-        "badge": {"text": "WF", "tone": "violet"}
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
       },
-      "tags": ["Radio Provider", "Catalog", "yunting"],
-      "providers": ["Yunting"],
-      "categories": ["插件", "Radio"],
+      "tags": [
+        "Radio Provider",
+        "Catalog",
+        "yunting"
+      ],
+      "providers": [
+        "Yunting"
+      ],
+      "categories": [
+        "插件",
+        "Radio"
+      ],
       "publisher_name": "WaveFlow"
     },
     {
@@ -585,12 +603,30 @@
       "display": {
         "subtitle": "Radio Provider Plugin",
         "summary": "为 WaveFlow 提供 MyRadio 电台目录和播放地址解析。",
-        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
-        "badge": {"text": "WF", "tone": "violet"}
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
       },
-      "tags": ["Radio Provider", "Catalog", "myradio"],
-      "providers": ["MyRadio"],
-      "categories": ["插件", "Radio"],
+      "tags": [
+        "Radio Provider",
+        "Catalog",
+        "myradio"
+      ],
+      "providers": [
+        "MyRadio"
+      ],
+      "categories": [
+        "插件",
+        "Radio"
+      ],
       "publisher_name": "WaveFlow"
     },
     {
@@ -606,12 +642,30 @@
       "display": {
         "subtitle": "Radio Provider Plugin",
         "summary": "为 WaveFlow 提供 HitFM 电台目录和播放地址解析。",
-        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
-        "badge": {"text": "WF", "tone": "violet"}
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
       },
-      "tags": ["Radio Provider", "Catalog", "hitfm"],
-      "providers": ["HitFM"],
-      "categories": ["插件", "Radio"],
+      "tags": [
+        "Radio Provider",
+        "Catalog",
+        "hitfm"
+      ],
+      "providers": [
+        "HitFM"
+      ],
+      "categories": [
+        "插件",
+        "Radio"
+      ],
       "publisher_name": "WaveFlow"
     },
     {
@@ -627,13 +681,36 @@
       "display": {
         "subtitle": "Radio Provider Plugin",
         "summary": "为 WaveFlow 提供香港和新加坡电台目录及播放地址。",
-        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
-        "badge": {"text": "WF", "tone": "violet"}
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
       },
-      "tags": ["Radio Provider", "HK", "SG", "Static Catalog"],
-      "regions": ["HK", "SG"],
-      "providers": ["RTHK", "Singapore Radio"],
-      "categories": ["插件", "Radio"],
+      "tags": [
+        "Radio Provider",
+        "HK",
+        "SG",
+        "Static Catalog"
+      ],
+      "regions": [
+        "HK",
+        "SG"
+      ],
+      "providers": [
+        "RTHK",
+        "Singapore Radio"
+      ],
+      "categories": [
+        "插件",
+        "Radio"
+      ],
       "publisher_name": "WaveFlow"
     },
     {
@@ -649,17 +726,667 @@
       "display": {
         "subtitle": "Radio Directory Provider Plugin",
         "summary": "为 WaveFlow 提供 RadioBrowser 国家筛选、搜索和分页目录。",
-        "identity": {"brand": "waveflow", "icon": {"type": "builtin", "name": "waveflow"}},
-        "badge": {"text": "WF", "tone": "violet"}
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
       },
-      "tags": ["Radio Provider", "Directory", "RadioBrowser"],
-      "providers": ["RadioBrowser"],
-      "categories": ["插件", "Radio"],
+      "tags": [
+        "Radio Provider",
+        "Directory",
+        "RadioBrowser"
+      ],
+      "providers": [
+        "RadioBrowser"
+      ],
+      "categories": [
+        "插件",
+        "Radio"
+      ],
       "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 河北广播电视台 TV Provider.",
+      "name": "HBTV Provider Plugin",
+      "plugin_id": "hbtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "hbtv",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "河北卫视及各专业频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "hbtv"
+      ],
+      "providers": [
+        "HBTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 河南广播电视台 TV Provider.",
+      "name": "HNTV Provider Plugin",
+      "plugin_id": "hntv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "hntv",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "河南卫视及各专业频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "hntv"
+      ],
+      "providers": [
+        "HNTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 虎牙直播 TV Provider.",
+      "name": "Huya Provider Plugin",
+      "plugin_id": "huya",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "huya",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "虎牙直播间流地址与主播信息解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "Live",
+        "huya"
+      ],
+      "providers": [
+        "Huya"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow",
+      "dependency_sources": [
+        {
+          "filename": "PySocks-1.7.1-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/PySocks-1.7.1-py3-none-any.whl"
+        },
+        {
+          "filename": "attrs-26.1.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/attrs-26.1.0-py3-none-any.whl"
+        },
+        {
+          "filename": "certifi-2026.7.22-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/certifi-2026.7.22-py3-none-any.whl"
+        },
+        {
+          "filename": "charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl",
+          "source": "dependency_artifacts/youtube/charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/h11-0.16.0-py3-none-any.whl"
+        },
+        {
+          "filename": "idna-3.18-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/idna-3.18-py3-none-any.whl"
+        },
+        {
+          "filename": "isodate-0.7.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/isodate-0.7.2-py3-none-any.whl"
+        },
+        {
+          "filename": "lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl",
+          "source": "dependency_artifacts/youtube/lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "filename": "outcome-1.3.0.post0-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/outcome-1.3.0.post0-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "pycountry-26.2.16-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/pycountry-26.2.16-py3-none-any.whl"
+        },
+        {
+          "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/youtube/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/requests-2.34.2-py3-none-any.whl"
+        },
+        {
+          "filename": "sniffio-1.3.1-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/sniffio-1.3.1-py3-none-any.whl"
+        },
+        {
+          "filename": "sortedcontainers-2.4.0-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/sortedcontainers-2.4.0-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "streamlink-8.4.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/streamlink-8.4.0-py3-none-any.whl"
+        },
+        {
+          "filename": "trio-0.34.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/trio-0.34.0-py3-none-any.whl"
+        },
+        {
+          "filename": "trio_websocket-0.12.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/trio_websocket-0.12.2-py3-none-any.whl"
+        },
+        {
+          "filename": "urllib3-2.7.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/urllib3-2.7.0-py3-none-any.whl"
+        },
+        {
+          "filename": "websocket_client-1.9.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/websocket_client-1.9.0-py3-none-any.whl"
+        },
+        {
+          "filename": "wsproto-1.3.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/wsproto-1.3.2-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "description": "WaveFlow official 快手直播 TV Provider.",
+      "name": "Kuaishou Provider Plugin",
+      "plugin_id": "kuaishou",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "kuaishou",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "快手直播间流地址与主播信息解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "Live",
+        "kuaishou"
+      ],
+      "providers": [
+        "Kuaishou"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow",
+      "dependency_sources": [
+        {
+          "filename": "certifi-2026.5.20-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/certifi-2026.5.20-py3-none-any.whl"
+        },
+        {
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/ptbtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/ptbtv/curl_cffi-0.15.0-cp310-abi3-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "markdown_it_py-4.2.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/markdown_it_py-4.2.0-py3-none-any.whl"
+        },
+        {
+          "filename": "mdurl-0.1.2-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/mdurl-0.1.2-py3-none-any.whl"
+        },
+        {
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/pycparser-3.0-py3-none-any.whl"
+        },
+        {
+          "filename": "pygments-2.20.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/pygments-2.20.0-py3-none-any.whl"
+        },
+        {
+          "filename": "rich-15.0.0-py3-none-any.whl",
+          "source": "dependency_artifacts/ptbtv/rich-15.0.0-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "description": "WaveFlow official 咪咕视频 TV Provider.",
+      "name": "Migu Provider Plugin",
+      "plugin_id": "migu",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "migu",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "咪咕视频央视频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "migu"
+      ],
+      "providers": [
+        "Migu"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 趣看视频 TV Provider.",
+      "name": "Qukan Provider Plugin",
+      "plugin_id": "qukan",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "qukan",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "趣看平台地方频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "qukan"
+      ],
+      "providers": [
+        "Qukan"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 陕西广电 TV Provider.",
+      "name": "SXBC Provider Plugin",
+      "plugin_id": "sxbc",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "sxbc",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "陕西广电地方频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "sxbc"
+      ],
+      "providers": [
+        "SXBC"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow",
+      "dependency_sources": [
+        {
+          "filename": "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/sdtv/pycparser-3.0-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "description": "WaveFlow official 无线新闻 TV Provider.",
+      "name": "TVB Provider Plugin",
+      "plugin_id": "tvb",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "tvb",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "无线新闻台（TVB News）直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "tvb"
+      ],
+      "providers": [
+        "TVB"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow"
+    },
+    {
+      "description": "WaveFlow official 新疆电视台 TV Provider.",
+      "name": "XJTV Provider Plugin",
+      "plugin_id": "xjtv",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "xjtv",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "新疆电视台各语种频道直播地址解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "URL Resolver",
+        "xjtv"
+      ],
+      "providers": [
+        "XJTV"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow",
+      "dependency_sources": [
+        {
+          "filename": "cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl",
+          "source": "dependency_artifacts/sdtv/cffi-2.0.0-cp314-cp314-macosx_11_0_arm64.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "source": "dependency_artifacts/sdtv/cryptography-48.0.1-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+        },
+        {
+          "filename": "pycparser-3.0-py3-none-any.whl",
+          "source": "dependency_artifacts/sdtv/pycparser-3.0-py3-none-any.whl"
+        }
+      ]
+    },
+    {
+      "description": "WaveFlow official YouTube TV Provider.",
+      "name": "YouTube Provider Plugin",
+      "plugin_id": "youtube",
+      "rollout": {
+        "default_ownership": "plugin",
+        "deployment": "python_backed"
+      },
+      "source": "youtube",
+      "source_root": "external",
+      "display": {
+        "subtitle": "TV Provider Plugin",
+        "summary": "YouTube 直播间流地址与主播信息解析。",
+        "identity": {
+          "brand": "waveflow",
+          "icon": {
+            "type": "builtin",
+            "name": "waveflow"
+          }
+        },
+        "badge": {
+          "text": "WF",
+          "tone": "violet"
+        }
+      },
+      "tags": [
+        "TV Provider",
+        "Live",
+        "youtube"
+      ],
+      "providers": [
+        "YouTube"
+      ],
+      "categories": [
+        "插件",
+        "Provider"
+      ],
+      "publisher_name": "WaveFlow",
+      "dependency_sources": [
+        {
+          "filename": "PySocks-1.7.1-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/PySocks-1.7.1-py3-none-any.whl"
+        },
+        {
+          "filename": "attrs-26.1.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/attrs-26.1.0-py3-none-any.whl"
+        },
+        {
+          "filename": "certifi-2026.7.22-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/certifi-2026.7.22-py3-none-any.whl"
+        },
+        {
+          "filename": "charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl",
+          "source": "dependency_artifacts/youtube/charset_normalizer-3.5.0-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/h11-0.16.0-py3-none-any.whl"
+        },
+        {
+          "filename": "idna-3.18-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/idna-3.18-py3-none-any.whl"
+        },
+        {
+          "filename": "isodate-0.7.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/isodate-0.7.2-py3-none-any.whl"
+        },
+        {
+          "filename": "lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl",
+          "source": "dependency_artifacts/youtube/lxml-6.1.1-cp314-cp314-macosx_10_15_universal2.whl"
+        },
+        {
+          "filename": "outcome-1.3.0.post0-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/outcome-1.3.0.post0-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "pycountry-26.2.16-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/pycountry-26.2.16-py3-none-any.whl"
+        },
+        {
+          "filename": "pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl",
+          "source": "dependency_artifacts/youtube/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl"
+        },
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/requests-2.34.2-py3-none-any.whl"
+        },
+        {
+          "filename": "sniffio-1.3.1-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/sniffio-1.3.1-py3-none-any.whl"
+        },
+        {
+          "filename": "sortedcontainers-2.4.0-py2.py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/sortedcontainers-2.4.0-py2.py3-none-any.whl"
+        },
+        {
+          "filename": "streamlink-8.4.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/streamlink-8.4.0-py3-none-any.whl"
+        },
+        {
+          "filename": "trio-0.34.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/trio-0.34.0-py3-none-any.whl"
+        },
+        {
+          "filename": "trio_websocket-0.12.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/trio_websocket-0.12.2-py3-none-any.whl"
+        },
+        {
+          "filename": "urllib3-2.7.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/urllib3-2.7.0-py3-none-any.whl"
+        },
+        {
+          "filename": "websocket_client-1.9.0-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/websocket_client-1.9.0-py3-none-any.whl"
+        },
+        {
+          "filename": "wsproto-1.3.2-py3-none-any.whl",
+          "source": "dependency_artifacts/youtube/wsproto-1.3.2-py3-none-any.whl"
+        }
+      ]
     }
   ],
   "publisher_id": "org.waveflow",
-  "release_version": "1.8.0",
+  "release_version": "1.9.0",
   "schema_version": 1,
-  "updated_at": "2026-09-14T00:00:00Z"
+  "updated_at": "2026-09-17T00:00:00Z"
 }

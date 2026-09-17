@@ -47,10 +47,12 @@ BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
 # channel yet.  They are a publishing queue in the market repository; Core has
 # no provider adapter for them either, so their schemes stay unowned until a
 # Plugin is published for them.
-LEGACY_ONLY_PLUGINS = {
-    "hbtv", "hntv", "huya", "kuaishou", "migu", "qukan", "sdly", "sxbc",
-    "tvb", "woniu", "xjtv", "youtube",
-}
+#
+# Phase H promoted ten of the twelve once their manifest, implementation tests,
+# build and live upstream were verified.  These two stay because of facts, not
+# paperwork: ``sdly``'s upstream endpoint answers 404 while the host is up, and
+# ``woniu`` needs release-time credentials that Plugin SDK V1 cannot deliver.
+LEGACY_ONLY_PLUGINS = {"sdly", "woniu"}
 DEPENDENCIES = {
     "org.waveflow/nowtv": [],
     "org.waveflow/nmtv": [("xxtea", "5.0.0")],
@@ -414,7 +416,8 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             # artifact path checks from the external source root as well.
             self.assertEqual(
                 {path.name for path in (from_copy / "payloads" / "dependencies").iterdir()},
-                {"nmtv", "sdtv", "ptbtv", "streamget-providers"},
+                {"nmtv", "sdtv", "ptbtv", "streamget-providers",
+                 "youtube", "huya", "kuaishou", "sxbc", "xjtv"},
             )
 
     def test_external_source_root_cannot_escape_and_repository_containment_holds(self):
