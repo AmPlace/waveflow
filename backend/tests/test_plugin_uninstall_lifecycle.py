@@ -207,6 +207,25 @@ class UninstallResidueContractTest(_FixtureMixin, unittest.IsolatedAsyncioTestCa
             await self.service.install_from_packages([self.package()], IDENTITY)
         self.assertEqual(again.exception.code, "PERMISSION_APPROVAL_REQUIRED")
 
+    async def test_a_plugin_can_be_reinstalled_after_uninstall(self):
+        await self._install()
+        subsystem = self._subsystem()
+        self.assertTrue(await subsystem.uninstall(IDENTITY))
+
+        # Re-approving is all a reinstall needs: uninstall removed the durable
+        # claims but not the Plugin's ability to come back cleanly.
+        package = self.package("1.1.0")
+        await self.service.approve_permission(IDENTITY, [package], "network.direct", "test-admin")
+        reinstalled = await self.service.install_from_packages([package], IDENTITY)
+
+        self.assertEqual(reinstalled["lifecycle_state"], "active")
+        self.assertEqual(reinstalled["active_version"], "1.1.0")
+        self.assertIsNotNone(await self.db.get_plugin_installation("org.waveflow", "fixture-multi-provider"))
+        artifact = next(self.store.installed_root.glob("org.waveflow/fixture-multi-provider/**/artifact"))
+        self.assertTrue(artifact.is_file(), "the artifact namespace is recreated")
+        self.assertTrue(
+            self.service._working_directory(self.runtime.registry.route(SCHEME).manifest).is_dir())
+
 
 class PurgeResidueContractTest(_FixtureMixin, unittest.IsolatedAsyncioTestCase):
     """The operator path for residue that predates the uninstall contract."""
