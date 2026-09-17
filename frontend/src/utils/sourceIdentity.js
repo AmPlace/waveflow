@@ -7,7 +7,7 @@ export const ADAPTER_SCHEMES = Object.freeze([
   'baidu', 'weibo', 'kugou', 'twitch', 'huajiao', 'showroom', 'inke', 'acfun',
   'zhihu', 'chzzk', 'live17', 'langlive', 'changliao',
   'jd', 'faceit', 'lianjie', 'sixroom', 'huamao', 'shopee', 'laixiu', 'picarto',
-  'fjtv', 'ptbtv', 'nd0593tv', 'qukan', 'woniu',
+  'fjtv', 'ptbtv', 'nd0593tv', 'qukan',
   'adapter',
 ])
 

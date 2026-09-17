@@ -28,7 +28,7 @@ _STREAM_URL_PREFIXES = (
     'sixroom://', 'huamao://', 'shopee://', 'laixiu://',
     'picarto://', 'youtube://', 'adapter://',
     # 大陆电视台 provider（2026-06 新增；与 provider_reference.py 的已知 scheme 对齐）
-    'fjtv://', 'ptbtv://', 'nd0593tv://', 'qukan://', 'woniu://',
+    'fjtv://', 'ptbtv://', 'nd0593tv://', 'qukan://',
 )
 
 # 简单的逐行解析用
@@ -711,8 +711,6 @@ def adapter_provider(url: str) -> str:
         return 'nd0593tv'
     if scheme == 'qukan':
         return 'qukan'
-    if scheme == 'woniu':
-        return 'woniu'
     if scheme == 'youtube':
         return 'youtube'
     if scheme == 'adapter':

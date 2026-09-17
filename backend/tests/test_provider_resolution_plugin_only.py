@@ -19,7 +19,7 @@ from provider_resolver import ProviderResolver, UNOWNED_MODE
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
-PROVIDER_SCHEMES = ("jstv", "fjtv", "hbtv", "huya", "youtube", "woniu", "xjtv")
+PROVIDER_SCHEMES = ("jstv", "fjtv", "hbtv", "huya", "youtube", "xjtv")
 
 
 class _FakeManifest:

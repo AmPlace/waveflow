@@ -75,7 +75,7 @@ _AUTHORITY_FORM_SCHEMES = frozenset({
     'lianjie', 'live17', 'look', 'maoer', 'migu', 'nd0593tv', 'netease', 'nmtv',
     'nowtv', 'pandatv', 'picarto', 'popkontv', 'ptbtv', 'qukan', 'redbook', 'sdly',
     'sdtv', 'shopee', 'showroom', 'sixroom', 'soop', 'sxbc', 'tiktok', 'tvb',
-    'twitcasting', 'twitch', 'weibo', 'woniu', 'xjtv', 'yy', 'zhihu',
+    'twitcasting', 'twitch', 'weibo', 'xjtv', 'yy', 'zhihu',
 })
 
 
