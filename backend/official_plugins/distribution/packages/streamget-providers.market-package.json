@@ -1,10 +1,19 @@
 {
   "artifact_references": [
     {
-      "sha256": "2d41142d7676c7e74ee428e8eeba8326dba894e3d415e6e280f5db55777b3bd9",
-      "url": "payloads/streamget-providers-1.3.0.pyz"
+      "sha256": "6b5a748a916f5989decce8f28d61047bc68cd68a68369d46f5d70d79cbc22851",
+      "url": "payloads/streamget-providers-1.5.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [
     {
       "sha256": "08b310f9e24a9594186fd75b4f73f4a4152069e3853f1ed8bfbf58369f4ad708",
@@ -93,47 +102,51 @@
   ],
   "description": "WaveFlow official StreamGet multi-scheme Provider Bundle.",
   "display": {
-    "subtitle": "Multi-scheme Provider Plugin",
-    "summary": "为 WaveFlow 提供 StreamGet 多 scheme 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "Multi-scheme Provider Plugin",
+    "summary": "为 WaveFlow 提供 StreamGet 多 scheme 直播地址解析。"
   },
   "id": "official::streamget-providers-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "/vBj0VCmg23sGr4jHw0s2J4rcFCwAmsV5W1dhhIyKCKRXGATQ8iUTd6p2bn9W9zSUDYxJ/rMhQfwhk112f6DBQ=="
+    "value": "q4DRymVNfTUi1Jw5+pO8KJ0qYuoGZDtaSTFpHfDUlMkB5HW/Xj3l2g9nByk94r90Dk7viIf5g5bo7XBLnZ2NDA=="
   },
   "name": "StreamGet Provider Bundle",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
       {
         "arch": "arm64",
-        "entrypoint": "streamget-providers-1.3.0.pyz",
+        "entrypoint": "streamget-providers-1.5.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "2d41142d7676c7e74ee428e8eeba8326dba894e3d415e6e280f5db55777b3bd9",
+        "sha256": "6b5a748a916f5989decce8f28d61047bc68cd68a68369d46f5d70d79cbc22851",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "ERGF/9qa02qe1kx3nuAxKkiiCpRB+Sv6rMkfcQH7iuamLv0DsTYLY4BlZZPMVzs4KqosjlurOOlO4Nsl34ZmBQ=="
+          "value": "RgRHuDG+XxWCET1r+xP1AtKaJ+QMlySwfOL8dCiufaZ8KVMtbAYBhcG/is6an7tbDOkbXvVEgKfksu7dlmOCAw=="
         },
-        "size_bytes": 10003
+        "size_bytes": 17774
       }
     ],
     "capabilities": [
-      "tv.resolve_stream"
+      "tv.resolve_stream",
+      "tv.visual_metadata"
     ],
     "core_version_range": ">=0.1.0 <1.0.0",
     "dependencies": [],
@@ -279,6 +292,14 @@
       {
         "contract": "tv_provider",
         "scheme": "douyin"
+      },
+      {
+        "contract": "tv_provider",
+        "scheme": "redbook"
+      },
+      {
+        "contract": "tv_provider",
+        "scheme": "tiktok"
       }
     ],
     "permissions": {
@@ -321,7 +342,11 @@
           "playweb.douyucdn.cn",
           "wxapp.douyucdn.cn",
           "douyucdn2.cn",
-          "live.douyin.com"
+          "live.douyin.com",
+          "www.xiaohongshu.com",
+          "xhslink.com",
+          "live-source-play.xhscdn.com",
+          "www.tiktok.com"
         ],
         "direct": true
       }
@@ -334,6 +359,17 @@
         "contract_version": "1.0",
         "features": [
           "resolve_stream"
+        ]
+      },
+      {
+        "contract": "tv_visual_provider",
+        "contract_version": "1.0",
+        "features": [
+          "metadata"
+        ],
+        "schemes": [
+          "bilibili",
+          "douyu"
         ]
       }
     ],
@@ -575,49 +611,33 @@
         ],
         "lock_version": 1
       },
-      "entrypoint": "streamget-providers-1.3.0.pyz",
+      "entrypoint": "streamget-providers-1.5.0.pyz",
       "ipc": "stdio_framed_json_v1",
       "python_version_range": ">=3.14.0 <3.15.0",
       "type": "python"
     },
     "state_schema_version": 1,
-    "version": "1.3.0"
+    "version": "1.5.0"
   },
+  "providers": [
+    "StreamGet"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "schema_version": 1,
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.3.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "Multi-scheme"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "StreamGet"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.5.0"
 }

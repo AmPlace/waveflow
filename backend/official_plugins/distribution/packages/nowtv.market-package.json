@@ -1,35 +1,47 @@
 {
   "artifact_references": [
     {
-      "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+      "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
       "url": "payloads/nowtv-1.0.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [],
   "description": "WaveFlow official NOW TV Provider.",
   "display": {
-    "subtitle": "TV Provider Plugin",
-    "summary": "为 WaveFlow 提供 NOW TV 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 NOW TV 直播地址解析。"
   },
   "id": "official::nowtv-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "UZ+D3/Ra1zQsnGSOzo9rt+Jn3X07T4T2IFeUfg+zfMT3JJM1JitQFGBwcbxQGC5+Ap/pTZ8HQ7/nSeDBHg0CBg=="
+    "value": "CyncjBDzw1/RmOGFcXaIHeunq5F9cnlfHsuvoB6fYX0TmrX647uJGmFLNIqobmHFEg7uM9nLxNYM7pdFx2GBDg=="
   },
   "name": "NOW TV Provider Plugin",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
@@ -38,78 +50,78 @@
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       },
       {
         "arch": "arm64",
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       },
       {
         "arch": "x86_64",
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       },
       {
         "arch": "arm64",
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       },
       {
         "arch": "x86_64",
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "windows",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       },
       {
         "arch": "arm64",
         "entrypoint": "nowtv-1.0.0.pyz",
         "os": "windows",
         "runtime": "python",
-        "sha256": "efd90e08687e6119bbbb7bb23d811a5482ee5bc164750ecd9294af740d55e7f7",
+        "sha256": "2f3dc7fc75309dc48523b29c7088b2f3841c1f6961ea451a264b9ada4a59fac4",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "7c9vPJUOYCVg+RcKeQXPZg0pO0Yu6QNqo+OrTzWPdOeu0P68eWFyfBFVn+uhR8UxB2pqpE5N1P8utrbKuRd1DA=="
+          "value": "ewRHAdgcT83qM9RUBOogdCmwkk4hFGclRutvSkX+eDRRwNba4KX8+h3SjFi2VkGaxUhTFsng3HysD3/4dfdSBg=="
         },
-        "size_bytes": 7803
+        "size_bytes": 13120
       }
     ],
     "capabilities": [
@@ -158,6 +170,15 @@
     "state_schema_version": 1,
     "version": "1.0.0"
   },
+  "providers": [
+    "NOW TV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "rollout": {
     "default_ownership": "plugin",
@@ -174,36 +195,11 @@
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.0.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "nowtv"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "NOW TV"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
 }

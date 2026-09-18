@@ -586,7 +586,7 @@
       ],
       "categories": [
         "插件",
-        "Radio"
+        "广播"
       ],
       "publisher_name": "WaveFlow"
     },
@@ -625,7 +625,7 @@
       ],
       "categories": [
         "插件",
-        "Radio"
+        "广播"
       ],
       "publisher_name": "WaveFlow"
     },
@@ -664,7 +664,7 @@
       ],
       "categories": [
         "插件",
-        "Radio"
+        "广播"
       ],
       "publisher_name": "WaveFlow"
     },
@@ -700,8 +700,12 @@
         "Static Catalog"
       ],
       "regions": [
-        "HK",
-        "SG"
+        {
+          "country": "HK"
+        },
+        {
+          "country": "SG"
+        }
       ],
       "providers": [
         "RTHK",
@@ -709,7 +713,7 @@
       ],
       "categories": [
         "插件",
-        "Radio"
+        "广播"
       ],
       "publisher_name": "WaveFlow"
     },
@@ -748,7 +752,7 @@
       ],
       "categories": [
         "插件",
-        "Radio"
+        "广播"
       ],
       "publisher_name": "WaveFlow"
     },

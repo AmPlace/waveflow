@@ -1,10 +1,19 @@
 {
   "artifact_references": [
     {
-      "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+      "sha256": "7bfb14c87cd63bd4ae45dac9493fdea20dca1ec92439e734674c5b1eb7525a51",
       "url": "payloads/nmtv-1.1.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [
     {
       "sha256": "83212c868cd88decde39467579282464853942e36764031f9507ee81e803ac9a",
@@ -17,28 +26,31 @@
   ],
   "description": "WaveFlow official NMTV TV Provider.",
   "display": {
-    "subtitle": "TV Provider Plugin",
-    "summary": "为 WaveFlow 提供 NMTV 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 NMTV 直播地址解析。"
   },
   "id": "official::nmtv-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "XlhhY7/IBC/Aos2b04Qvr/CONUGtXk9XBfpuLbkiQiuirF7hy13mIq8VbJRamqYIxedb+19SvqgB84TFrCr2DA=="
+    "value": "JqoC2MDQQEOTjrpGrAwgNTCwwp2629QT70TwG8WbstijCA3gvrV9TDstiV9mjJIOB845aQK3VwSSTvOUUdTPBw=="
   },
   "name": "NMTV Provider Plugin",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
@@ -47,26 +59,26 @@
         "entrypoint": "nmtv-1.1.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+        "sha256": "7bfb14c87cd63bd4ae45dac9493fdea20dca1ec92439e734674c5b1eb7525a51",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "VGYBd62XEWLyBS5BFGacBUustqrMamU6APprnXHkzgococyP5Jf8HSqL7cYaghf9pku6NGHDqxias3C4LoefAQ=="
+          "value": "HTBYNiclB2/3rbVH07CRUcY5CFMdJqRw6qQTj19EqxqwDiLpIbuhR8H8FEi/r7GdZ0yd5WNovQ8+IKjAoMOzBg=="
         },
-        "size_bytes": 7789
+        "size_bytes": 13106
       },
       {
         "arch": "arm64",
         "entrypoint": "nmtv-1.1.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "cce981adc5ccf07837beae361547e30d2c58979a8517a49415f8973b0eb901c5",
+        "sha256": "7bfb14c87cd63bd4ae45dac9493fdea20dca1ec92439e734674c5b1eb7525a51",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "VGYBd62XEWLyBS5BFGacBUustqrMamU6APprnXHkzgococyP5Jf8HSqL7cYaghf9pku6NGHDqxias3C4LoefAQ=="
+          "value": "HTBYNiclB2/3rbVH07CRUcY5CFMdJqRw6qQTj19EqxqwDiLpIbuhR8H8FEi/r7GdZ0yd5WNovQ8+IKjAoMOzBg=="
         },
-        "size_bytes": 7789
+        "size_bytes": 13106
       }
     ],
     "capabilities": [
@@ -138,6 +150,15 @@
     "state_schema_version": 1,
     "version": "1.1.0"
   },
+  "providers": [
+    "NMTV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "rollout": {
     "default_ownership": "plugin",
@@ -154,36 +175,11 @@
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.1.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "nmtv"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "NMTV"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.1.0"
 }

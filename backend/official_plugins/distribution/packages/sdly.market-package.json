@@ -1,0 +1,133 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "247588138572ef00b7b08358e86b9b2bfd0cac12c05d6510b040d37d1f114d9f",
+      "url": "payloads/sdly-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official 山东广播电视台 TV Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "山东广电地方频道直播地址解析。"
+  },
+  "id": "official::sdly-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "Lx+CL+5QA3khI2C6ekQ1k8wGmoNo1R8ECjpDLSR2qqj2R2x9bImtVQ8cExvDD/6VfepPiNWCQhBrZzH7oS3eAg=="
+  },
+  "name": "SDLY Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "sdly-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "247588138572ef00b7b08358e86b9b2bfd0cac12c05d6510b040d37d1f114d9f",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "lH6F22bmbIU3WM0iyjBLv/5AY/VRWP6JAlzs02lB/Hn2Ie+46hkCt3g+/eCy20j0hBYsjCdrHnaaYLkXA/kGBQ=="
+        },
+        "size_bytes": 14744
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "SDLY Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "sdly"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "app.litenews.cn"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "sdly",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "sdly-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "SDLY"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "sdly"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

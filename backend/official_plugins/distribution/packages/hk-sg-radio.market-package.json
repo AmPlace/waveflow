@@ -1,0 +1,189 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+      "url": "payloads/hk-sg-radio-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "广播"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official HK/SG Radio Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "Radio Provider Plugin",
+    "summary": "为 WaveFlow 提供香港和新加坡电台目录及播放地址。"
+  },
+  "id": "official::hk-sg-radio-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "6FRn1UgVJxdI9bL6+Av7zr3g7sihBaeN2JOKYZvVgKkAkmbvUtwp/EqMue8L//yls6BF281B28O6EFL9i2VKBg=="
+  },
+  "name": "HK/SG Radio Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "hk-sg-radio-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Uq34ycaSXXkEwe72+uD6+CYOdBnBURw7Y8V9Bg/BfshnWTKGfsNzcCSp0wJy1FCAfZa1CQcUHaCOwLCLArkNAw=="
+        },
+        "size_bytes": 14681
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "hk-sg-radio-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Uq34ycaSXXkEwe72+uD6+CYOdBnBURw7Y8V9Bg/BfshnWTKGfsNzcCSp0wJy1FCAfZa1CQcUHaCOwLCLArkNAw=="
+        },
+        "size_bytes": 14681
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "hk-sg-radio-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Uq34ycaSXXkEwe72+uD6+CYOdBnBURw7Y8V9Bg/BfshnWTKGfsNzcCSp0wJy1FCAfZa1CQcUHaCOwLCLArkNAw=="
+        },
+        "size_bytes": 14681
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "hk-sg-radio-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Uq34ycaSXXkEwe72+uD6+CYOdBnBURw7Y8V9Bg/BfshnWTKGfsNzcCSp0wJy1FCAfZa1CQcUHaCOwLCLArkNAw=="
+        },
+        "size_bytes": 14681
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "hk-sg-radio-1.0.0.pyz",
+        "os": "windows",
+        "runtime": "python",
+        "sha256": "fe49d3281016c3f96471ffe78efe4d84cfc998e65c2529ff543762c6c745e4d1",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Uq34ycaSXXkEwe72+uD6+CYOdBnBURw7Y8V9Bg/BfshnWTKGfsNzcCSp0wJy1FCAfZa1CQcUHaCOwLCLArkNAw=="
+        },
+        "size_bytes": 14681
+      }
+    ],
+    "capabilities": [
+      "radio.catalog",
+      "radio.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "香港与新加坡电台",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "radio_provider",
+        "scheme": "hksgradio"
+      }
+    ],
+    "permissions": {},
+    "plugin_api_version": "1.0",
+    "plugin_id": "hk-sg-radio",
+    "provider_contracts": [
+      {
+        "contract": "radio_provider",
+        "contract_version": "1.0",
+        "features": [
+          "catalog",
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "hk-sg-radio-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "RTHK",
+    "Singapore Radio"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [
+    {
+      "country": "HK"
+    },
+    {
+      "country": "SG"
+    }
+  ],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "Radio Provider",
+    "HK",
+    "SG",
+    "Static Catalog"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

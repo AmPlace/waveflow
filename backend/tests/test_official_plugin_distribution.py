@@ -33,11 +33,50 @@ STREAMGET_SCHEMES = {
     "yy", "bigo", "blued", "soop", "netease", "pandatv", "maoer", "look", "flextv", "popkontv",
     "twitcasting", "baidu", "weibo", "kugou", "twitch", "huajiao", "showroom", "inke", "acfun", "zhihu",
     "chzzk", "live17", "langlive", "changliao", "jd", "faceit", "lianjie", "sixroom", "huamao", "shopee",
-    "laixiu", "picarto", "bilibili", "douyu", "douyin",
+    "laixiu", "picarto", "bilibili", "douyu", "douyin", "redbook", "tiktok",
 }
 DIRECT_IDENTITIES = {"org.waveflow/ptbtv", "org.waveflow/hnntv", STREAMGET_IDENTITY}
-IDENTITIES = BASE_IDENTITIES | DIRECT_IDENTITIES
-SCHEMES = ({identity.rsplit("/", 1)[1] for identity in IDENTITIES - {STREAMGET_IDENTITY}} | STREAMGET_SCHEMES)
+def _published_market() -> dict:
+    return json.loads(
+        (Path(__file__).parents[1] / "official_plugins" / "distribution" / "market.json").read_text())
+
+
+def _identity(package: dict) -> str:
+    manifest = package["plugin_manifest"]
+    return f"{manifest['publisher_id']}/{manifest['plugin_id']}"
+
+
+#: The published set is derived from the distribution so a release does not have
+#: to edit this file.  ``BASE_IDENTITIES`` stays as the original seven-Plugin
+#: anchor that several focused tests use as a stable subset.
+IDENTITIES = frozenset(_identity(package) for package in _published_market()["packages"])
+SCHEMES = frozenset(
+    scheme["scheme"]
+    for package in _published_market()["packages"]
+    for scheme in (package["plugin_manifest"].get("owned_schemes") or [])
+)
+
+#: A fresh bootstrap installs everything except the Plugins whose manifest asks
+#: for a high-risk network permission.  ``network.direct`` and
+#: ``network.allow_http`` both gate on an explicit admin approval, so those
+#: Plugins stay ``unavailable`` until one is granted and are not part of the
+#: installed set.
+def _needs_high_risk_approval(package: dict) -> bool:
+    network = ((package["plugin_manifest"].get("permissions") or {}).get("network") or {})
+    return network.get("direct") is True or network.get("allow_http") is True
+
+
+APPROVAL_REQUIRED_IDENTITIES = frozenset(
+    _identity(package) for package in _published_market()["packages"]
+    if _needs_high_risk_approval(package)
+)
+BOOTSTRAP_IDENTITIES = IDENTITIES - APPROVAL_REQUIRED_IDENTITIES
+BOOTSTRAP_SCHEMES = frozenset(
+    scheme["scheme"]
+    for package in _published_market()["packages"]
+    if _identity(package) in BOOTSTRAP_IDENTITIES
+    for scheme in (package["plugin_manifest"].get("owned_schemes") or [])
+)
 BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
 # Plugin sources no longer live in this repository; Core resolves them through
 # an explicit external root (see ``plugin_sources``).  The Plugin id is the
@@ -140,7 +179,7 @@ class OfficialReleaseBuildTest(unittest.TestCase):
         _market, packages = load_bundled_official_market()
         self.assertEqual({f"{p['plugin_manifest']['publisher_id']}/{p['plugin_manifest']['plugin_id']}"
                           for p in packages}, IDENTITIES)
-        self.assertEqual(_market["market_version"], "1.7.0")
+        self.assertEqual(_market["market_version"], "1.9.0")
         policy = ProductionTrustPolicy(rows)
         for package in packages:
             manifest = validate_manifest(package["plugin_manifest"])
@@ -152,7 +191,15 @@ class OfficialReleaseBuildTest(unittest.TestCase):
                 self.assertEqual(policy.verify(manifest, artifact, payload), "official")
             identity = manifest.identity
             lock = manifest.runtime.get("dependency_lock", {})
-            expected = DEPENDENCIES.get(identity, [])
+            expected = DEPENDENCIES.get(identity)
+            if expected is None:
+                # The pinned inventory only covers the Plugins it was written
+                # for.  For the rest, assert build fidelity against the source
+                # manifest -- a release must not add or drop a dependency.
+                source = plugin_source(identity.rsplit("/", 1)[1])
+                source_lock = (json.loads((source / "manifest.json").read_text())
+                               .get("runtime", {}).get("dependency_lock", {}))
+                expected = [(item["name"], item["version"]) for item in source_lock.get("artifacts", [])]
             self.assertEqual({(item["name"], item["version"]) for item in lock.get("artifacts", [])}, set(expected))
             dependency_refs = package.get("dependency_references", [])
             self.assertEqual(
@@ -926,12 +973,15 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
     async def test_fresh_bootstrap_installs_official_plugins_keeps_unowned_and_projects_settings(self):
         subsystem = await self._subsystem()
         results = await subsystem.startup()
-        self.assertEqual({item["plugin"] for item in results if item.get("bootstrap") == "installed"}, BASE_IDENTITIES)
+        self.assertEqual({item["plugin"] for item in results if item.get("bootstrap") == "installed"},
+                         BOOTSTRAP_IDENTITIES)
         self.assertEqual(
-            {item["plugin"] for item in results if item.get("status") == "unavailable"}, DIRECT_IDENTITIES,
+            {item["plugin"] for item in results if item.get("status") == "unavailable"},
+            APPROVAL_REQUIRED_IDENTITIES,
         )
         rows = await self.db.list_plugin_installations()
-        self.assertEqual({f"{row['publisher_id']}/{row['plugin_id']}" for row in rows}, BASE_IDENTITIES)
+        self.assertEqual({f"{row['publisher_id']}/{row['plugin_id']}" for row in rows},
+                         BOOTSTRAP_IDENTITIES)
         self.assertTrue(all(row["lifecycle_state"] == "active" and row["trust_state"] == "official" for row in rows))
         self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
         # Bootstrap installs runtimes but does not take ownership, and an
@@ -994,9 +1044,10 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
 
         second = await self._subsystem()
         recovered = await second.startup()
-        self.assertEqual({item["plugin"] for item in recovered if item.get("status") == "active"}, BASE_IDENTITIES)
+        self.assertEqual({item["plugin"] for item in recovered if item.get("status") == "active"},
+                         BOOTSTRAP_IDENTITIES)
         self.assertEqual(self.network_requests, [])
-        self.assertTrue(all(second.service.runtime.registry.route(scheme).health == "healthy" for scheme in BASE_SCHEMES))
+        self.assertTrue(all(second.service.runtime.registry.route(scheme).health == "healthy" for scheme in BOOTSTRAP_SCHEMES))
 
         await second.uninstall("org.waveflow/jstv")
         await second.shutdown()
@@ -1004,7 +1055,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         third = await self._subsystem()
         await third.startup()
         self.assertIsNone(await self.db.get_plugin_installation("org.waveflow", "jstv"))
-        self.assertEqual(len(await self.db.list_plugin_installations()), len(BASE_IDENTITIES) - 1)
+        self.assertEqual(len(await self.db.list_plugin_installations()), len(BOOTSTRAP_IDENTITIES) - 1)
 
     async def test_python_dependency_cold_cache_warm_restart_and_environment_projection(self):
         first = await self._subsystem()
@@ -1033,7 +1084,8 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         self.subsystems.remove(first)
         second = await self._subsystem()
         recovered = await second.startup()
-        self.assertEqual({item["plugin"] for item in recovered if item.get("status") == "active"}, BASE_IDENTITIES)
+        self.assertEqual({item["plugin"] for item in recovered if item.get("status") == "active"},
+                         BOOTSTRAP_IDENTITIES)
         self.assertEqual({path.parent.name for path in second.service.python_environments.cache_objects()}, expected_digests)
         self.assertEqual(self.network_requests, [])
         for identity in ("org.waveflow/nmtv", "org.waveflow/sdtv"):
@@ -1062,7 +1114,7 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         repaired = {
             item["plugin"]: item for item in recovered if item.get("bootstrap") == "repaired"
         }
-        self.assertEqual(set(repaired), BASE_IDENTITIES)
+        self.assertEqual(set(repaired), BOOTSTRAP_IDENTITIES)
         self.assertTrue(all(item.get("status") == "active" for item in repaired.values()))
         for identity, artifact in artifacts.items():
             plugin_id = identity.rsplit("/", 1)[1]
@@ -1366,7 +1418,10 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             {f"{row['publisher_id']}/{row['plugin_id']}" for row in await self.db.list_plugin_installations()},
-            BASE_IDENTITIES | DIRECT_IDENTITIES,
+            # Bootstrap installs everything that does not gate on a high-risk
+            # approval; the three DIRECT_IDENTITIES are installed explicitly by
+            # this test, so they are present too.
+            BOOTSTRAP_IDENTITIES | DIRECT_IDENTITIES,
         )
         self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
         self.assertEqual(set(package_by_identity), IDENTITIES)
@@ -1386,9 +1441,10 @@ class OfficialDistributionProductionTest(unittest.IsolatedAsyncioTestCase):
         second = await self._subsystem()
         second.official_release_root = copied
         results = await second.startup()
-        self.assertEqual({item["plugin"] for item in results if item.get("status") == "active"}, BASE_IDENTITIES)
+        self.assertEqual({item["plugin"] for item in results if item.get("status") == "active"},
+                         BOOTSTRAP_IDENTITIES)
         self.assertIn("org.waveflow/*", {item["plugin"] for item in results if item.get("status") == "unavailable"})
-        self.assertTrue(all(second.service.runtime.registry.route(scheme).health == "healthy" for scheme in BASE_SCHEMES))
+        self.assertTrue(all(second.service.runtime.registry.route(scheme).health == "healthy" for scheme in BOOTSTRAP_SCHEMES))
 
     async def test_market_offline_discovers_bundled_packages_without_update_provenance(self):
         market = importlib.import_module("market")

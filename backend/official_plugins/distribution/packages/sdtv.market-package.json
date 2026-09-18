@@ -1,10 +1,19 @@
 {
   "artifact_references": [
     {
-      "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+      "sha256": "363f6c5094e950c9a386ddae7afcd8e0924eabd1b3b852e245b56a002ba509bc",
       "url": "payloads/sdtv-1.1.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [
     {
       "sha256": "3e4a1a3232eef2e6c732827d5722db29a0cc8b27af2a4d865b094cf954be9ca1",
@@ -29,28 +38,31 @@
   ],
   "description": "WaveFlow official SDTV TV Provider.",
   "display": {
-    "subtitle": "TV Provider Plugin",
-    "summary": "为 WaveFlow 提供 SDTV 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 SDTV 直播地址解析。"
   },
   "id": "official::sdtv-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "N5CVGmFUnN9QgC1gxMDu+LkokPf81mViNHcaVLmaj7hVLX4ntfW1Jn7oxUoNpzJ5ImQjR68KaIQade9GNi7aDg=="
+    "value": "C3Mbyfx2ZUoGZT4vewOiMm/8a9vq7GkxXVgAmre93vXt8FUlncXSV114hjC1RLmyfZcE6TIPXjWQ8X4PgZ+TAQ=="
   },
   "name": "SDTV Provider Plugin",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
@@ -59,26 +71,26 @@
         "entrypoint": "sdtv-1.1.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+        "sha256": "363f6c5094e950c9a386ddae7afcd8e0924eabd1b3b852e245b56a002ba509bc",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "ytJHUsLht04qjDIOh7ebpzNEaCS8zDNtw6jtZnwzafEvYvZoS6DeRGMWi4Me59gzs84FWAGqMRd3fSB31q1tDA=="
+          "value": "H2EdL0WhIK/elAdPDAZv7WJoicBQUwpZz1dtgi6VAXvB4MJ0MnkVbrZiF1aU3smD5cECoEANm4M5Th6F8+KnAw=="
         },
-        "size_bytes": 9462
+        "size_bytes": 14779
       },
       {
         "arch": "arm64",
         "entrypoint": "sdtv-1.1.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "34441a88e5d8e248eda93cc3c9dfd71e9c3171373c6ea529dda5db2911c255b4",
+        "sha256": "363f6c5094e950c9a386ddae7afcd8e0924eabd1b3b852e245b56a002ba509bc",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "ytJHUsLht04qjDIOh7ebpzNEaCS8zDNtw6jtZnwzafEvYvZoS6DeRGMWi4Me59gzs84FWAGqMRd3fSB31q1tDA=="
+          "value": "H2EdL0WhIK/elAdPDAZv7WJoicBQUwpZz1dtgi6VAXvB4MJ0MnkVbrZiF1aU3smD5cECoEANm4M5Th6F8+KnAw=="
         },
-        "size_bytes": 9462
+        "size_bytes": 14779
       }
     ],
     "capabilities": [
@@ -184,6 +196,15 @@
     "state_schema_version": 1,
     "version": "1.1.0"
   },
+  "providers": [
+    "SDTV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "rollout": {
     "default_ownership": "plugin",
@@ -200,36 +221,11 @@
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.1.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "sdtv"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "SDTV"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.1.0"
 }

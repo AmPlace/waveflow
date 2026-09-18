@@ -1,0 +1,187 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+      "url": "payloads/radiobrowser-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "广播"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official RadioBrowser directory Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "Radio Directory Provider Plugin",
+    "summary": "为 WaveFlow 提供 RadioBrowser 国家筛选、搜索和分页目录。"
+  },
+  "id": "official::radiobrowser-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "g0D8Gl94PmFYG20EDwaZIYp6HMssOw5caoHU0+Cqg1OpDV7/rj95+26ROLFnM/62zCdfqVZN48+qUz2ygA3WAw=="
+  },
+  "name": "RadioBrowser Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "radiobrowser-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "kW+dNdP85MK7Bb2dGWiMSbnZau77m/yZ8ve/eiF8UReZjuvBeM5K/juyUibRCnCcw8F1jnbKVTGVhiFsxJpyAQ=="
+        },
+        "size_bytes": 13944
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "radiobrowser-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "kW+dNdP85MK7Bb2dGWiMSbnZau77m/yZ8ve/eiF8UReZjuvBeM5K/juyUibRCnCcw8F1jnbKVTGVhiFsxJpyAQ=="
+        },
+        "size_bytes": 13944
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "radiobrowser-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "kW+dNdP85MK7Bb2dGWiMSbnZau77m/yZ8ve/eiF8UReZjuvBeM5K/juyUibRCnCcw8F1jnbKVTGVhiFsxJpyAQ=="
+        },
+        "size_bytes": 13944
+      },
+      {
+        "arch": "arm64",
+        "entrypoint": "radiobrowser-1.0.0.pyz",
+        "os": "linux",
+        "runtime": "python",
+        "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "kW+dNdP85MK7Bb2dGWiMSbnZau77m/yZ8ve/eiF8UReZjuvBeM5K/juyUibRCnCcw8F1jnbKVTGVhiFsxJpyAQ=="
+        },
+        "size_bytes": 13944
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "radiobrowser-1.0.0.pyz",
+        "os": "windows",
+        "runtime": "python",
+        "sha256": "be64bb9700cd2499c1fd265d56b4a2694ac9234ec00bf2247c9d7777dc72b520",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "kW+dNdP85MK7Bb2dGWiMSbnZau77m/yZ8ve/eiF8UReZjuvBeM5K/juyUibRCnCcw8F1jnbKVTGVhiFsxJpyAQ=="
+        },
+        "size_bytes": 13944
+      }
+    ],
+    "capabilities": [
+      "radio.catalog",
+      "radio.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "RadioBrowser 电台目录",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "radio_provider",
+        "scheme": "radiobrowser"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "all.api.radio-browser.info"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "radiobrowser",
+    "provider_contracts": [
+      {
+        "contract": "radio_provider",
+        "contract_version": "1.0",
+        "features": [
+          "catalog",
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "radiobrowser-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "RadioBrowser"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "Radio Provider",
+    "Directory",
+    "RadioBrowser"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

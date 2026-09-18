@@ -1,0 +1,133 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "c0b4cb33f32d4f7f88c741f9144b8b33d453e82bed616ad94f5ea98596df6f06",
+      "url": "payloads/hntv-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official 河南广播电视台 TV Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "河南卫视及各专业频道直播地址解析。"
+  },
+  "id": "official::hntv-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "/JoUYJuoywfBiGbvWA1mVv63x/01bCA9a535CwipIanfxgCy91ikttAarR4feTzeiDPK/41N7bthZlHxc4XhAA=="
+  },
+  "name": "HNTV Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "hntv-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "c0b4cb33f32d4f7f88c741f9144b8b33d453e82bed616ad94f5ea98596df6f06",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "ruE1Bha35IjkzTZ+uecsh2ebF6VWFkvK1Zsox4/03zTd9IyE/QWXAbxV/6N8s0suKJqSQXWo6eVJdnl2emwXAg=="
+        },
+        "size_bytes": 13927
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "HNTV Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "hntv"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "pubmod.hntv.tv"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "hntv",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "hntv-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "HNTV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "hntv"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

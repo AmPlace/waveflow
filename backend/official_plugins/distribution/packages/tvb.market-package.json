@@ -1,0 +1,133 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "311737a173528fc66d1034c7171c8d4b5de1158dfff2054c0f3c70426fa9c9d5",
+      "url": "payloads/tvb-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official 无线新闻 TV Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "无线新闻台（TVB News）直播地址解析。"
+  },
+  "id": "official::tvb-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "FntNwTHa2BJj7WV7BeSNl+Da2AXL99DDDiCRApdqTpgOPtnnClVjbzc+ywu9xEo/gwC0vWBxFabDdy+/NdCABw=="
+  },
+  "name": "TVB Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "tvb-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "311737a173528fc66d1034c7171c8d4b5de1158dfff2054c0f3c70426fa9c9d5",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "8m15sC3kfLca+NBEHHmMOKUG189zSVRcHIiOO9YUugQPOwtkzM3403+NO40ZJ9sXbBokXEBf/mo1TAZEq6WFDA=="
+        },
+        "size_bytes": 13698
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "TVB Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "tvb"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "inews-api.tvb.com"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "tvb",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "tvb-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "TVB"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "tvb"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

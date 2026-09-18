@@ -1,35 +1,47 @@
 {
   "artifact_references": [
     {
-      "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+      "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
       "url": "payloads/nd0593tv-1.0.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [],
   "description": "WaveFlow official ND0593TV TV Provider.",
   "display": {
-    "subtitle": "TV Provider Plugin",
-    "summary": "为 WaveFlow 提供 ND0593TV 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 ND0593TV 直播地址解析。"
   },
   "id": "official::nd0593tv-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "VsMKggSC/Q2dOqnLMLIfPiAvOym3HiM70OjT0mLP/5W1Ga6c3Lwn/vWDcqy+iGswxTFt30l57EHYbizMM9PiDA=="
+    "value": "1kMx0QiR+IWMNk0aa1Ka50mG1CnRhjtc+yc0klLaKt2Of+3n5CuY1oAXK7EYfDYpInG2l1GFHq3l+qzT41ilCQ=="
   },
   "name": "ND0593TV Provider Plugin",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
@@ -38,65 +50,65 @@
         "entrypoint": "nd0593tv-1.0.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+        "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+          "value": "tT1QGac8oRw+6/kuA2+Q8xwLqUdtuum9vpxiXpG6rAR60gqx3lSejlzfWF7delnkfTOskjUSzRhgGCJehXDPBA=="
         },
-        "size_bytes": 8739
+        "size_bytes": 14056
       },
       {
         "arch": "arm64",
         "entrypoint": "nd0593tv-1.0.0.pyz",
         "os": "linux",
         "runtime": "python",
-        "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+        "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+          "value": "tT1QGac8oRw+6/kuA2+Q8xwLqUdtuum9vpxiXpG6rAR60gqx3lSejlzfWF7delnkfTOskjUSzRhgGCJehXDPBA=="
         },
-        "size_bytes": 8739
+        "size_bytes": 14056
       },
       {
         "arch": "x86_64",
         "entrypoint": "nd0593tv-1.0.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+        "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+          "value": "tT1QGac8oRw+6/kuA2+Q8xwLqUdtuum9vpxiXpG6rAR60gqx3lSejlzfWF7delnkfTOskjUSzRhgGCJehXDPBA=="
         },
-        "size_bytes": 8739
+        "size_bytes": 14056
       },
       {
         "arch": "arm64",
         "entrypoint": "nd0593tv-1.0.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+        "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+          "value": "tT1QGac8oRw+6/kuA2+Q8xwLqUdtuum9vpxiXpG6rAR60gqx3lSejlzfWF7delnkfTOskjUSzRhgGCJehXDPBA=="
         },
-        "size_bytes": 8739
+        "size_bytes": 14056
       },
       {
         "arch": "x86_64",
         "entrypoint": "nd0593tv-1.0.0.pyz",
         "os": "windows",
         "runtime": "python",
-        "sha256": "da093936d9a67743a5095be570ae0210779979cf3a05bb2647ac545a4c44cb73",
+        "sha256": "04bbc96fe59340bc0dfb0f0f8212ef4fdb5f6fd2199bf44a43a5af037cbe4882",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "fm0a2jI6fC/Ahjg452xD0+sEKx/GJOvMp5kAs7KNcjusb0nPu0hd55+wd2Sx25qv+AXS4Rhb/nIGCD7z6DxPCA=="
+          "value": "tT1QGac8oRw+6/kuA2+Q8xwLqUdtuum9vpxiXpG6rAR60gqx3lSejlzfWF7delnkfTOskjUSzRhgGCJehXDPBA=="
         },
-        "size_bytes": 8739
+        "size_bytes": 14056
       }
     ],
     "capabilities": [
@@ -139,6 +151,15 @@
     "state_schema_version": 1,
     "version": "1.0.0"
   },
+  "providers": [
+    "ND0593TV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "rollout": {
     "default_ownership": "plugin",
@@ -148,36 +169,11 @@
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.0.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "nd0593tv"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "ND0593TV"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
 }

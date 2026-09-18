@@ -1,0 +1,136 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "c1bf0f98fb9d5a51d9afb2680b33bc4483d61cb556c15b8a806f8388d620ea39",
+      "url": "payloads/hitfm-1.0.1.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "广播"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official HitFM Radio Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "Radio Provider Plugin",
+    "summary": "为 WaveFlow 提供 HitFM 电台目录和播放地址解析。"
+  },
+  "id": "official::hitfm-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "xFrg0XBAAoUJfPemZXWQNL8mH3B8XaRWh6t9cO5M5qr5IYeNYdEZdOuYu/8icXUrKqbhaEhRFF395qTEsd8iBA=="
+  },
+  "name": "HitFM Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "hitfm-1.0.1.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "c1bf0f98fb9d5a51d9afb2680b33bc4483d61cb556c15b8a806f8388d620ea39",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "1/dQB2FtfHp57lCufYQYue93iF1IjtGxdTkIAnQYo6JgFTEPdueswZszHN7Va8LxLji9JiqwULQpNMXR5zK7CQ=="
+        },
+        "size_bytes": 13496
+      }
+    ],
+    "capabilities": [
+      "radio.catalog",
+      "radio.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "Hit FM and POP Radio Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "radio_provider",
+        "scheme": "hitfm"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "www.hitoradio.com",
+          "www.pop917.com"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "hitfm",
+    "provider_contracts": [
+      {
+        "contract": "radio_provider",
+        "contract_version": "1.0",
+        "features": [
+          "catalog",
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "hitfm-1.0.1.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.1"
+  },
+  "providers": [
+    "HitFM"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "Radio Provider",
+    "Catalog",
+    "hitfm"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.1"
+}

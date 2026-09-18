@@ -1,0 +1,153 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "2d61f09866640558d75ee492b150e1b3e0a9d375890c96a054a77db3cf146eb6",
+      "url": "payloads/myradio-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "广播"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official MyRadio Radio Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "Radio Provider Plugin",
+    "summary": "为 WaveFlow 提供 MyRadio 电台目录和播放地址解析。"
+  },
+  "id": "official::myradio-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "K7GXl/av6tS0YTG+OnZF53RziKgILmMW3kNXcSxqjd/iFIphXMaGXQt2E7x78R/6H48TDawPJa/uT0MFCp34Bw=="
+  },
+  "name": "MyRadio Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "myradio-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "2d61f09866640558d75ee492b150e1b3e0a9d375890c96a054a77db3cf146eb6",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Xim9Fh00HELJ8JRaZ4HGvDVWennhmtP9ZlQpP4WIregr4DWnUAdYLbWrQEBz82pXiq4WPMpsnaMrSbNRh5wkAg=="
+        },
+        "size_bytes": 17859
+      },
+      {
+        "arch": "x86_64",
+        "entrypoint": "myradio-1.0.0.pyz",
+        "os": "windows",
+        "runtime": "python",
+        "sha256": "2d61f09866640558d75ee492b150e1b3e0a9d375890c96a054a77db3cf146eb6",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "Xim9Fh00HELJ8JRaZ4HGvDVWennhmtP9ZlQpP4WIregr4DWnUAdYLbWrQEBz82pXiq4WPMpsnaMrSbNRh5wkAg=="
+        },
+        "size_bytes": 17859
+      }
+    ],
+    "capabilities": [
+      "radio.catalog",
+      "radio.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "MyRadio.tw Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "radio_provider",
+        "scheme": "myradio"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "myradio-dev.zeabur.app",
+          "myradio.com.tw",
+          "pop.olis.com.tw",
+          "best.olis.com.tw",
+          "ipget.apple-line.com",
+          "hichannel.com.tw"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "myradio",
+    "provider_contracts": [
+      {
+        "contract": "radio_provider",
+        "contract_version": "1.0",
+        "features": [
+          "catalog",
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "myradio-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "MyRadio"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "Radio Provider",
+    "Catalog",
+    "myradio"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

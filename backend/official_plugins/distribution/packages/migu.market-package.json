@@ -1,0 +1,133 @@
+{
+  "artifact_references": [
+    {
+      "sha256": "7eaa2a6b8c7a20867c6efd9ee9e324c30a7f059e226521a7f0539f582b79727a",
+      "url": "payloads/migu-1.0.0.pyz"
+    }
+  ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
+  "dependency_references": [],
+  "description": "WaveFlow official 咪咕视频 TV Provider.",
+  "display": {
+    "badge": {
+      "text": "WF",
+      "tone": "violet"
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "咪咕视频央视频道直播地址解析。"
+  },
+  "id": "official::migu-plugin",
+  "kind": "plugin_package",
+  "languages": [],
+  "links": {},
+  "manifest_signature": {
+    "algorithm": "ed25519",
+    "key_id": "org.waveflow.release.2026-01",
+    "value": "la8JOB+DZ03dHtsCqpjYuY9/1NkJI9Nhi/4hku2Ol58KioOe/0O+oXfl7u6OjQSH3mFRYdA3GFovIxzP8W6EBw=="
+  },
+  "name": "Migu Provider Plugin",
+  "operators": [],
+  "package_type": "plugin_package",
+  "plugin_manifest": {
+    "artifacts": [
+      {
+        "arch": "arm64",
+        "entrypoint": "migu-1.0.0.pyz",
+        "os": "macos",
+        "runtime": "python",
+        "sha256": "7eaa2a6b8c7a20867c6efd9ee9e324c30a7f059e226521a7f0539f582b79727a",
+        "signature": {
+          "algorithm": "ed25519",
+          "key_id": "org.waveflow.release.2026-01",
+          "value": "07arKeGwxh3jHXyLB4l22Ypx5ATrQBKVS5Oi5gso16SRzSxn63ZAV2QeAnJaFu0phY89lT0EFUYw+n6HVz4TCQ=="
+        },
+        "size_bytes": 14178
+      }
+    ],
+    "capabilities": [
+      "tv.resolve_stream"
+    ],
+    "core_version_range": ">=0.1.0 <1.0.0",
+    "dependencies": [],
+    "display_name": "Migu Provider",
+    "manifest_version": 1,
+    "owned_schemes": [
+      {
+        "contract": "tv_provider",
+        "scheme": "migu"
+      }
+    ],
+    "permissions": {
+      "network": {
+        "allowed_hosts": [
+          "play.miguvideo.com"
+        ],
+        "managed": true
+      }
+    },
+    "plugin_api_version": "1.0",
+    "plugin_id": "migu",
+    "provider_contracts": [
+      {
+        "contract": "tv_provider",
+        "contract_version": "1.0",
+        "features": [
+          "resolve_stream"
+        ]
+      }
+    ],
+    "publisher_id": "org.waveflow",
+    "runtime": {
+      "dependency_lock": {
+        "artifacts": [],
+        "lock_version": 1
+      },
+      "entrypoint": "migu-1.0.0.pyz",
+      "ipc": "stdio_framed_json_v1",
+      "python_version_range": ">=3.14.0 <3.15.0",
+      "type": "python"
+    },
+    "state_schema_version": 1,
+    "version": "1.0.0"
+  },
+  "providers": [
+    "Migu"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
+  "risk_level": "official_signed_not_sandboxed",
+  "rollout": {
+    "default_ownership": "plugin",
+    "deployment": "python_backed"
+  },
+  "schema_version": 1,
+  "source_origin": "official",
+  "source_policy": "signed_release",
+  "status": "active",
+  "tags": [
+    "TV Provider",
+    "URL Resolver",
+    "migu"
+  ],
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
+}

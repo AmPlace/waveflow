@@ -1,10 +1,19 @@
 {
   "artifact_references": [
     {
-      "sha256": "12a8a47f9c7fb631cffdb7977713e59edbdc00d913df5cd5b94d8e32dd7e3ba1",
+      "sha256": "cd072971b8f1245045a380570d7b421414d450aae4c551e6bd555ccc4b16566a",
       "url": "payloads/ptbtv-1.0.0.pyz"
     }
   ],
+  "catalog": {
+    "featured": false,
+    "sort_weight": 0
+  },
+  "categories": [
+    "插件",
+    "Provider"
+  ],
+  "compatibility": {},
   "dependency_references": [
     {
       "sha256": "a25620d9bf989c9c029a7d1642999c4c265abb0bad811deb2f77b0b5b2b12e5b",
@@ -41,28 +50,31 @@
   ],
   "description": "WaveFlow official PTBTV TV Provider.",
   "display": {
-    "subtitle": "TV Provider Plugin",
-    "summary": "为 WaveFlow 提供 PTBTV 直播地址解析。",
-    "identity": {
-      "brand": "waveflow",
-      "icon": {
-        "type": "builtin",
-        "name": "waveflow"
-      }
-    },
     "badge": {
       "text": "WF",
       "tone": "violet"
-    }
+    },
+    "identity": {
+      "brand": "waveflow",
+      "icon": {
+        "name": "waveflow",
+        "type": "builtin"
+      }
+    },
+    "subtitle": "TV Provider Plugin",
+    "summary": "为 WaveFlow 提供 PTBTV 直播地址解析。"
   },
   "id": "official::ptbtv-plugin",
   "kind": "plugin_package",
+  "languages": [],
+  "links": {},
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "R39TV1wrRfHDXK2Do9YLC870418hzyIDsAKnR2GUYkXZbglP2OnfcXxuOFU/96H3/XX1Cyf6L+cx0Yh9I8ZdBg=="
+    "value": "qnbr8MmoNxCIh1QvGTpf2bzriw2KpQUH7g2e+HTXPMHaohuQWNezmA/6RHL2XFTl6vi2G/MpLhgpUZgbRvqXBw=="
   },
   "name": "PTBTV Provider Plugin",
+  "operators": [],
   "package_type": "plugin_package",
   "plugin_manifest": {
     "artifacts": [
@@ -71,13 +83,13 @@
         "entrypoint": "ptbtv-1.0.0.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "12a8a47f9c7fb631cffdb7977713e59edbdc00d913df5cd5b94d8e32dd7e3ba1",
+        "sha256": "cd072971b8f1245045a380570d7b421414d450aae4c551e6bd555ccc4b16566a",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "8U+BCAW24G+72tuchxm862J9ky7Ik43O1VrZfnTt3LxQW+G+b2wa3Ae83yk2qtIbWeXGur+dtFOwSX+JqmfLBQ=="
+          "value": "2MKfkAZgjqmILBC418/Jv10wr5iPHvDRP6Dd9n2wlCceapF5l18Scn8Lps0aSUxLkILFHHCS9a6X/kCrgBlbAQ=="
         },
-        "size_bytes": 8404
+        "size_bytes": 13721
       }
     ],
     "capabilities": [
@@ -216,41 +228,25 @@
     "state_schema_version": 1,
     "version": "1.0.0"
   },
+  "providers": [
+    "PTBTV"
+  ],
+  "published_at": "2026-09-17T00:00:00Z",
+  "publisher": {
+    "id": "org.waveflow",
+    "name": "WaveFlow"
+  },
+  "regions": [],
   "risk_level": "official_signed_not_sandboxed",
   "schema_version": 1,
   "source_origin": "official",
   "source_policy": "signed_release",
   "status": "active",
-  "updated_at": "2026-08-12T00:00:00Z",
-  "version": "1.0.0",
   "tags": [
     "TV Provider",
     "URL Resolver",
     "ptbtv"
   ],
-  "regions": [],
-  "operators": [],
-  "providers": [
-    "PTBTV"
-  ],
-  "languages": [],
-  "categories": [
-    "插件",
-    "Provider"
-  ],
-  "publisher": {
-    "id": "org.waveflow",
-    "name": "WaveFlow"
-  },
-  "published_at": "2026-08-12T00:00:00Z",
-  "compatibility": {
-    "min_waveflow_version": "0.1.0"
-  },
-  "links": {
-    "source": "https://github.com/AmPlace/wavebypass"
-  },
-  "catalog": {
-    "sort_weight": 0,
-    "featured": false
-  }
+  "updated_at": "2026-09-17T00:00:00Z",
+  "version": "1.0.0"
 }
