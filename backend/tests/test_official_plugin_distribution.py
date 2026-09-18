@@ -357,7 +357,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             market, packages = load_bundled_official_market(external_output)
             self.assertEqual({item["plugin_manifest"]["plugin_id"] for item in packages}, {"yunting"})
             self.assertEqual(market["market_version"], "1.8.0")
-            self.assertTrue((external_output / "payloads" / "yunting-1.0.0.pyz").is_file())
+            self.assertTrue((external_output / "payloads" / "yunting-1.0.2.pyz").is_file())
 
             # The same source built straight from the real checkout produces
             # identical bytes, so the configured root is not part of the release.
@@ -615,6 +615,45 @@ class OfficialPluginInventoryTest(unittest.TestCase):
                 self.assertTrue(item.get("name"), "release plan entry has no name")
                 self.assertTrue(item.get("description"), "release plan entry has no description")
 
+    def test_no_source_version_precedes_its_distributed_version(self):
+        """A published version must never go backwards.
+
+        The committed distribution is what installed machines already hold, so a
+        source manifest naming a lower version would be refused as a downgrade --
+        or, worse, ship different content under a version already in the field.
+        This is repo-local state, so it is the half of the drift check that can
+        be guarded here; a source that trails a *locally installed* artifact is
+        a machine-state problem and cannot be asserted in CI.
+        """
+        from plugin_runtime import validate_manifest
+
+        distribution = json.loads(
+            (Path(__file__).parents[1] / "official_plugins" / "distribution" / "market.json").read_text())
+        published = {
+            (item.get("plugin_manifest") or {}).get("plugin_id"): str(item.get("version") or "")
+            for item in distribution["packages"]
+        }
+
+        def version_key(value: str) -> tuple[int, ...]:
+            parts = []
+            for chunk in str(value).split("."):
+                digits = "".join(ch for ch in chunk if ch.isdigit())
+                parts.append(int(digits) if digits else 0)
+            return tuple(parts)
+
+        for item in self._plan()["plugins"]:
+            plugin_id = item["plugin_id"]
+            version = published.get(plugin_id)
+            if not version:
+                continue
+            with self.subTest(plugin=plugin_id):
+                manifest = validate_manifest(
+                    json.loads((plugin_source(item["source"]) / "manifest.json").read_text()))
+                self.assertGreaterEqual(
+                    version_key(manifest.version), version_key(version),
+                    f"{plugin_id} source {manifest.version} precedes the distributed {version}",
+                )
+
     def test_every_plugin_source_is_either_official_or_legacy_only(self):
         from provider_reference import parse_provider_reference
         from plugin_runtime import validate_manifest
@@ -776,9 +815,9 @@ class ExternalPluginSourceRootInstallTest(unittest.IsolatedAsyncioTestCase):
                 ("official", "official", "active", 1),
             )
             instance = self.subsystem.service.runtime.registry.route("yunting")
-            self.assertEqual((instance.health, instance.manifest.version), ("healthy", "1.0.0"))
+            self.assertEqual((instance.health, instance.manifest.version), ("healthy", "1.0.2"))
             row = await self.db.get_plugin_installation("org.waveflow", "yunting")
-            self.assertEqual((row["active_version"], row["trust_state"]), ("1.0.0", "official"))
+            self.assertEqual((row["active_version"], row["trust_state"]), ("1.0.2", "official"))
         finally:
             for path in temporary_paths:
                 path.unlink(missing_ok=True)
