@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
+import database as db
 import epg_match_shadow
 import iptv_logical_gc
 import iptv_channels
@@ -46,6 +47,7 @@ async def run_epg_binding_maintenance(
         'status': 'success',
         'started_at': started_at,
         'finished_at': '',
+        'logical_identity_repair': None,
         'logical_sync': None,
         'logical_gc': None,
         'shadow_run': None,
@@ -55,6 +57,12 @@ async def run_epg_binding_maintenance(
     async with _maintenance_lock:
         try:
             if sync_logical:
+                # Repair first: the sync below rebuilds canonical keys with the
+                # fixed rules, so leaving the damaged "foo()" rows in place would
+                # let it mint a fresh "foo" alongside them and keep the split.
+                result['logical_identity_repair'] = (
+                    await db.migrate_empty_bracket_logical_channels()
+                )
                 result['logical_sync'] = await iptv_channels.sync_iptv_logical_channels()
             result['logical_gc'] = await iptv_logical_gc.garbage_collect_iptv_logical_channels()
             result['shadow_run'] = await epg_match_shadow.run_epg_match_shadow()
