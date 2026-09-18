@@ -2766,6 +2766,242 @@ async def get_aggregated_channels(group: str = '', search: str = '') -> list[dic
     return await asyncio.to_thread(_get)
 
 
+
+# An empty qualifier container ("()", "[]", "{}", …) used to survive qualifier
+# stripping, so one real channel could be stored under two canonical keys:
+# "foo" and "foo()".  m3u8_parser no longer produces those, but installs synced
+# before the fix still carry them.
+_EMPTY_CONTAINER_SUFFIXES = ("()", "[]", "{}", "（）", "【】", "〖〗", "〔〕")
+
+
+def _strip_empty_container_suffixes(key: str) -> str:
+    """Remove trailing empty/whitespace-only containers from a canonical key."""
+    value = str(key or "")
+    changed = True
+    while changed:
+        changed = False
+        stripped = value.rstrip()
+        for suffix in _EMPTY_CONTAINER_SUFFIXES:
+            if stripped.endswith(suffix):
+                value = stripped[: -len(suffix)]
+                changed = True
+                break
+    return value.rstrip()
+
+
+async def migrate_empty_bracket_logical_channels() -> dict:
+    """Repair logical channel identities damaged by empty qualifier containers.
+
+    Every affected logical channel is folded onto the clean spelling of the same
+    canonical key.  Membership, EPG bindings, logo bindings, policies, source
+    preference and the shadow reference rows follow the row they belonged to, and
+    a clean row already holding the same value always wins -- so nothing is
+    dropped and the merge order is deterministic.
+
+    Idempotent: a second run finds no empty-container key left and does nothing.
+    Atomic: everything happens in one transaction, so a failure leaves the
+    previous state untouched.
+    """
+    result = {
+        "scanned_logical_count": 0,
+        "renamed_in_place_count": 0,
+        "merged_count": 0,
+        "members_moved_count": 0,
+        "members_deduplicated_count": 0,
+        "epg_bindings_moved_count": 0,
+        "epg_bindings_dropped_count": 0,
+        "logo_bindings_moved_count": 0,
+        "logo_bindings_dropped_count": 0,
+        "policies_moved_count": 0,
+        "preferences_moved_count": 0,
+        "shadow_rows_repointed_count": 0,
+        "logical_rows_removed_count": 0,
+        "repaired": [],
+    }
+
+    def _migrate():
+        conn = _connect()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            rows = conn.execute(
+                "SELECT * FROM iptv_logical_channels ORDER BY created_at, id"
+            ).fetchall()
+            result["scanned_logical_count"] = len(rows)
+
+            damaged = []
+            for row in rows:
+                key = str(row["canonical_key"] or "")
+                target = _strip_empty_container_suffixes(key)
+                if target and target != key:
+                    damaged.append((dict(row), target))
+
+            for row, target_key in damaged:
+                source_id = str(row["id"])
+                target_row = conn.execute(
+                    "SELECT * FROM iptv_logical_channels WHERE canonical_key = ?",
+                    (target_key,),
+                ).fetchone()
+
+                if target_row is None:
+                    # Case B: no clean row exists -- repair the identity in place
+                    # so every existing reference keeps working.
+                    conn.execute(
+                        "UPDATE iptv_logical_channels SET canonical_key = ? WHERE id = ?",
+                        (target_key, source_id),
+                    )
+                    result["renamed_in_place_count"] += 1
+                    result["repaired"].append(
+                        {"from": str(row["canonical_key"]), "to": target_key, "action": "renamed"}
+                    )
+                    continue
+
+                # Case A: fold the damaged row onto the clean one.
+                target_id = str(target_row["id"])
+                if target_id == source_id:
+                    continue
+
+                # Membership: move, then drop rows the target already owns.
+                moved = conn.execute(
+                    "UPDATE iptv_logical_channel_members SET logical_channel_id = ? "
+                    "WHERE logical_channel_id = ?",
+                    (target_id, source_id),
+                ).rowcount
+                deduped = conn.execute(
+                    """
+                    DELETE FROM iptv_logical_channel_members
+                    WHERE logical_channel_id = ?
+                      AND channel_id IN (
+                        SELECT channel_id FROM iptv_logical_channel_members
+                        WHERE logical_channel_id = ?
+                      )
+                      AND rowid NOT IN (
+                        SELECT MIN(rowid) FROM iptv_logical_channel_members
+                        WHERE logical_channel_id = ?
+                        GROUP BY channel_id
+                      )
+                    """,
+                    (target_id, target_id, target_id),
+                ).rowcount
+                result["members_moved_count"] += moved
+                result["members_deduplicated_count"] += deduped
+
+                # EPG binding: keep a locked binding, otherwise keep the clean row's.
+                source_epg = conn.execute(
+                    "SELECT * FROM iptv_logical_channel_epg_bindings WHERE logical_channel_id = ?",
+                    (source_id,),
+                ).fetchone()
+                if source_epg is not None:
+                    target_epg = conn.execute(
+                        "SELECT * FROM iptv_logical_channel_epg_bindings WHERE logical_channel_id = ?",
+                        (target_id,),
+                    ).fetchone()
+                    keep_source = target_epg is None or (
+                        int(source_epg["locked"] or 0) == 1
+                        and int(target_epg["locked"] or 0) == 0
+                    )
+                    if keep_source:
+                        # The binding is unique per logical channel, so the row
+                        # being replaced has to go first -- moving the kept row
+                        # in before deleting would transiently own two bindings.
+                        if target_epg is not None:
+                            conn.execute(
+                                "DELETE FROM iptv_logical_channel_epg_bindings WHERE id = ?",
+                                (target_epg["id"],),
+                            )
+                        conn.execute(
+                            "UPDATE iptv_logical_channel_epg_bindings SET logical_channel_id = ? "
+                            "WHERE id = ?",
+                            (target_id, source_epg["id"]),
+                        )
+                        result["epg_bindings_moved_count"] += 1
+                    else:
+                        conn.execute(
+                            "DELETE FROM iptv_logical_channel_epg_bindings WHERE id = ?",
+                            (source_epg["id"],),
+                        )
+                        result["epg_bindings_dropped_count"] += 1
+
+                # Logo bindings and policies: move only when the target has none.
+                for table, counter in (
+                    ("logical_channel_logo_bindings", "logo_bindings_moved_count"),
+                    ("iptv_logical_channel_epg_policies", "policies_moved_count"),
+                ):
+                    source_rows = conn.execute(
+                        f"SELECT * FROM {table} WHERE logical_channel_id = ?", (source_id,)
+                    ).fetchall()
+                    if not source_rows:
+                        continue
+                    target_count = conn.execute(
+                        f"SELECT COUNT(*) AS n FROM {table} WHERE logical_channel_id = ?",
+                        (target_id,),
+                    ).fetchone()["n"]
+                    if target_count:
+                        conn.execute(
+                            f"DELETE FROM {table} WHERE logical_channel_id = ?", (source_id,)
+                        )
+                        result[counter.replace("_moved_", "_dropped_")] += len(source_rows)
+                        continue
+                    conn.execute(
+                        f"UPDATE {table} SET logical_channel_id = ? WHERE logical_channel_id = ?",
+                        (target_id, source_id),
+                    )
+                    result[counter] += len(source_rows)
+
+                # Source preference evidence: move only when the target has none.
+                source_pref = conn.execute(
+                    "SELECT * FROM epg_source_preference_evidence WHERE logical_channel_id = ?",
+                    (source_id,),
+                ).fetchall()
+                if source_pref:
+                    target_pref = conn.execute(
+                        "SELECT COUNT(*) AS n FROM epg_source_preference_evidence "
+                        "WHERE logical_channel_id = ?",
+                        (target_id,),
+                    ).fetchone()["n"]
+                    if target_pref:
+                        conn.execute(
+                            "DELETE FROM epg_source_preference_evidence WHERE logical_channel_id = ?",
+                            (source_id,),
+                        )
+                    else:
+                        conn.execute(
+                            "UPDATE epg_source_preference_evidence SET logical_channel_id = ? "
+                            "WHERE logical_channel_id = ?",
+                            (target_id, source_id),
+                        )
+                        result["preferences_moved_count"] += len(source_pref)
+
+                # Shadow tables hold historical match evidence and have no FK.
+                # Re-point so the runs stay readable instead of dangling.
+                for table in ("epg_match_shadow_candidates", "epg_match_shadow_decisions"):
+                    repointed = conn.execute(
+                        f"UPDATE {table} SET logical_channel_id = ? WHERE logical_channel_id = ?",
+                        (target_id, source_id),
+                    ).rowcount
+                    result["shadow_rows_repointed_count"] += repointed
+
+                conn.execute(
+                    "DELETE FROM iptv_logical_channels WHERE id = ?", (source_id,)
+                )
+                result["merged_count"] += 1
+                result["logical_rows_removed_count"] += 1
+                result["repaired"].append(
+                    {"from": str(row["canonical_key"]), "to": target_key, "action": "merged"}
+                )
+
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+        return result
+
+    import asyncio
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _migrate)
+
+
 async def get_iptv_logical_channel_projection() -> list[dict]:
     """Return the persisted logical-channel read projection with raw members.
 

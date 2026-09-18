@@ -230,6 +230,16 @@ _SOURCE_SUFFIX_RE = re.compile(
     re.IGNORECASE,
 )
 
+# A qualifier is sometimes removed without its container.  "(1080p)" loses
+# "1080p" to the quality rule and leaves "()" behind, while "(360p)" -- not a
+# known quality -- is removed whole by _STRIP_RE.  Two spellings of one channel
+# would then produce two canonical identities, so drop containers that are empty
+# or whitespace-only.  Containers holding real content ("(News)", "（少儿）")
+# carry meaning and are left untouched.
+_EMPTY_CONTAINER_RE = re.compile(
+    r'\(\s*\)|\[\s*\]|\{\s*\}|（\s*）|【\s*】|〖\s*〗|〔\s*〕',
+)
+
 
 def clean_channel_display_name(name: str) -> str:
     s = _SOURCE_SUFFIX_RE.sub('', name.strip()).strip()
@@ -238,10 +248,14 @@ def clean_channel_display_name(name: str) -> str:
 
 def normalize_channel_name(name: str) -> str:
     """清洗频道名，用于去重比较。优先用别名表匹配主名。"""
+    # Drop empty containers before the alias lookup: a qualifier already removed
+    # upstream leaves "TVB Jade []", which would otherwise miss the alias table
+    # that the clean spelling "TVB Jade" hits.
+    cleaned = _EMPTY_CONTAINER_RE.sub('', str(name or '')).strip()
     # 先去源后缀再匹配 alias
-    stripped = clean_channel_display_name(name)
+    stripped = clean_channel_display_name(cleaned)
     # 多种尝试：原名 → 去后缀 → format_name
-    for candidate in [name, stripped, format_name(stripped), format_name(name)]:
+    for candidate in [cleaned, stripped, format_name(stripped), format_name(cleaned)]:
         primary = _channel_alias.get_primary(candidate)
         known_alias = _channel_alias.alias_to_primary.get(candidate) == primary
         if primary and (primary != candidate or known_alias):
@@ -251,6 +265,7 @@ def normalize_channel_name(name: str) -> str:
     s = _SOURCE_TAG_RE.sub('', s)
     s = _STRIP_RE.sub('', s)
     s = _PROVIDER_RE.sub('', s)
+    s = _EMPTY_CONTAINER_RE.sub('', s)
     s = s.lower().strip()
     return s
 
