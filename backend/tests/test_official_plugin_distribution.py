@@ -21,6 +21,13 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from packaging import tags
 
 from provider_resolver import UNOWNED_MODE
+from tests.official_distribution_expectations import (
+    APPROVAL_REQUIRED_IDENTITIES,
+    BOOTSTRAP_IDENTITIES,
+    BOOTSTRAP_SCHEMES,
+    PUBLISHED_IDENTITIES as IDENTITIES,
+    PUBLISHED_SCHEMES as SCHEMES,
+)
 from tests.plugin_sources import legacy_root, plugin_source, plugins_root
 
 
@@ -36,52 +43,8 @@ STREAMGET_SCHEMES = {
     "laixiu", "picarto", "bilibili", "douyu", "douyin", "redbook", "tiktok",
 }
 DIRECT_IDENTITIES = {"org.waveflow/ptbtv", "org.waveflow/hnntv", STREAMGET_IDENTITY}
-def _published_market() -> dict:
-    return json.loads(
-        (Path(__file__).parents[1] / "official_plugins" / "distribution" / "market.json").read_text())
 
-
-def _identity(package: dict) -> str:
-    manifest = package["plugin_manifest"]
-    return f"{manifest['publisher_id']}/{manifest['plugin_id']}"
-
-
-#: The published set is derived from the distribution so a release does not have
-#: to edit this file.  ``BASE_IDENTITIES`` stays as the original seven-Plugin
-#: anchor that several focused tests use as a stable subset.
-IDENTITIES = frozenset(_identity(package) for package in _published_market()["packages"])
-SCHEMES = frozenset(
-    scheme["scheme"]
-    for package in _published_market()["packages"]
-    for scheme in (package["plugin_manifest"].get("owned_schemes") or [])
-)
-
-#: A fresh bootstrap installs everything except the Plugins whose manifest asks
-#: for a high-risk network permission.  ``network.direct`` and
-#: ``network.allow_http`` both gate on an explicit admin approval, so those
-#: Plugins stay ``unavailable`` until one is granted and are not part of the
-#: installed set.
-def _needs_high_risk_approval(package: dict) -> bool:
-    network = ((package["plugin_manifest"].get("permissions") or {}).get("network") or {})
-    return network.get("direct") is True or network.get("allow_http") is True
-
-
-APPROVAL_REQUIRED_IDENTITIES = frozenset(
-    _identity(package) for package in _published_market()["packages"]
-    if _needs_high_risk_approval(package)
-)
-BOOTSTRAP_IDENTITIES = IDENTITIES - APPROVAL_REQUIRED_IDENTITIES
-BOOTSTRAP_SCHEMES = frozenset(
-    scheme["scheme"]
-    for package in _published_market()["packages"]
-    if _identity(package) in BOOTSTRAP_IDENTITIES
-    for scheme in (package["plugin_manifest"].get("owned_schemes") or [])
-)
 BASE_SCHEMES = {identity.rsplit("/", 1)[1] for identity in BASE_IDENTITIES}
-# Plugin sources no longer live in this repository; Core resolves them through
-# an explicit external root (see ``plugin_sources``).  The Plugin id is the
-# source directory name, so a plan ``source`` is just the id.
-#
 # Plugin ids that are implemented against the SDK but have no official release
 # channel yet.  They are a publishing queue in the market repository; Core has
 # no provider adapter for them either, so their schemes stay unowned until a
@@ -306,6 +269,68 @@ class OfficialReleaseBuildTest(unittest.TestCase):
                 select_dependency_artifacts(lock, supported_tags=linux_arm64_cp311)
             self.assertEqual(unsupported.exception.code, "DEPENDENCY_PLATFORM_UNSUPPORTED")
 
+    def test_release_builder_refuses_a_catalog_the_runtime_market_would_reject(self):
+        """A release must not build a catalog the app then refuses to load.
+
+        The distribution-level check the builder used to rely on is weaker than
+        the loader the app runs, so one package with metadata the runtime
+        rejects used to build cleanly and then make the *whole* bundled market
+        unavailable.  The builder now validates with the runtime's own rules.
+        """
+        from build_official_plugins import build_release
+        # ``_clear_modules`` drops ``market`` from sys.modules, so a module-level
+        # import would hold a stale ``MarketError`` class and never match the
+        # exception the freshly imported builder raises.
+        from market import MarketError
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key = Ed25519PrivateKey.generate()
+            key_path = root / "fixture-release-key.pem"
+            key_path.write_bytes(key.private_bytes(
+                serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption(),
+            ))
+            public = base64.b64encode(key.public_key().public_bytes(
+                serialization.Encoding.Raw, serialization.PublicFormat.Raw,
+            )).decode()
+            trust = root / "fixture-trust.json"
+            trust.write_text(json.dumps({
+                "schema_version": 1,
+                "publishers": [{"publisher_id": "org.waveflow", "keys": [{
+                    "key_id": "fixture-release-key", "public_key": public, "enabled": True,
+                }]}],
+            }))
+            plan = root / "release-plan.json"
+            plan.write_text(json.dumps({
+                "schema_version": 1, "publisher_id": "org.waveflow",
+                "release_version": "1.9.0", "updated_at": "2026-09-15T00:00:00Z",
+                "plugins": [{
+                    "plugin_id": "yunting",
+                    "name": "Yunting Radio Provider Plugin",
+                    "description": "WaveFlow official Yunting Radio Provider.",
+                    "source": "yunting",
+                    "source_root": "external",
+                    "tags": ["Radio Provider", "yunting"],
+                    "providers": ["Yunting"],
+                    # "Radio" is not in market.CATEGORY_TAXONOMY, and one bad
+                    # entry is enough for the runtime to refuse the document.
+                    "categories": ["插件", "Radio"],
+                    "publisher_name": "WaveFlow",
+                    "display": {"subtitle": "Radio Provider Plugin", "summary": "云听电台目录。"},
+                }],
+            }))
+            output = root / "release"
+            with self.assertRaises(MarketError) as rejected:
+                build_release(signing_key=key_path, key_id="fixture-release-key", output=output,
+                              trust_path=trust, plugin_source_root=plugins_root(), plan_path=plan)
+            self.assertIn("taxonomy", str(rejected.exception))
+            # The build writes into <output>.staging and only swaps it in after
+            # validating, so a refused catalog leaves the previous distribution
+            # untouched.  The staging tree is deliberately left for the next run
+            # to clear, which is why it is asserted rather than forbidden.
+            self.assertFalse(output.exists())
+            self.assertTrue((root / "release.staging").exists())
+
     def test_release_builder_is_deterministic_with_a_test_only_key(self):
         from build_official_plugins import build_release
 
@@ -369,7 +394,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             "source": source,
             "tags": ["Radio Provider", "Catalog", "yunting"],
             "providers": ["Yunting"],
-            "categories": ["插件", "Radio"],
+            "categories": ["插件", "广播"],
             "publisher_name": "WaveFlow",
             "display": {"subtitle": "Radio Provider Plugin", "summary": "云听电台目录与播放地址。"},
         }
@@ -829,7 +854,7 @@ class ExternalPluginSourceRootInstallTest(unittest.IsolatedAsyncioTestCase):
                 "description": "External source root smoke", "source": "yunting",
                 "source_root": "external",
                 "tags": ["Radio Provider"], "providers": ["Yunting"],
-                "categories": ["插件", "Radio"], "publisher_name": "WaveFlow",
+                "categories": ["插件", "广播"], "publisher_name": "WaveFlow",
                 "display": {"subtitle": "Radio Provider Plugin", "summary": "外部源根构建冒烟。"},
             }],
         }))

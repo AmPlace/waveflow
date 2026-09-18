@@ -12,6 +12,10 @@ from unittest import mock
 import httpx
 
 from provider_resolver import UNOWNED_MODE
+from tests.official_distribution_expectations import (
+    BOOTSTRAP_IDENTITIES, BOOTSTRAP_SCHEMES, PUBLISHED_IDENTITIES, ROLLED_OUT_IDENTITIES,
+    ROLLOUT_IDENTITIES as PLAN_ROLLOUT_IDENTITIES,
+)
 
 
 TARGETS = (
@@ -26,11 +30,14 @@ ROLLOUT2_IDENTITIES = {
     "org.waveflow/nowtv", "org.waveflow/nmtv", "org.waveflow/sdtv",
 }
 ROLLOUT2_SCHEMES = {identity.rsplit("/", 1)[1] for identity in ROLLOUT2_IDENTITIES}
-ROLLOUT_IDENTITIES = TARGET_IDENTITIES | ROLLOUT2_IDENTITIES
-ROLLOUT_SCHEMES = TARGET_SCHEMES | ROLLOUT2_SCHEMES
-OFFICIAL_IDENTITIES = TARGET_IDENTITIES | {
-    "org.waveflow/nowtv", "org.waveflow/nmtv", "org.waveflow/sdtv",
-}
+ROLLOUT_IDENTITIES = PLAN_ROLLOUT_IDENTITIES
+# After the rollout, ownership covers exactly the Plugins a fresh bootstrap
+# activated, so the expected scheme set comes from the distribution.
+ROLLOUT_SCHEMES = BOOTSTRAP_SCHEMES
+# A fresh bootstrap installs every published Plugin except those gating on a
+# high-risk network approval, so these come from the distribution itself.
+OFFICIAL_IDENTITIES = BOOTSTRAP_IDENTITIES
+ROLLOUT_TARGET_IDENTITIES = PUBLISHED_IDENTITIES
 STREAMS = {
     "fjtv": "https://media.example/fjtv/live.m3u8",
     "nd0593tv": "https://media.example/nd0593tv/live.m3u8",
@@ -197,7 +204,7 @@ class ProductionRolloutTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             {item["plugin"] for item in startup if item.get("rollout") == "plugin"},
-            ROLLOUT_IDENTITIES,
+            ROLLED_OUT_IDENTITIES,
         )
         installations = await self.db.list_plugin_installations()
         self.assertEqual(

@@ -1530,6 +1530,23 @@ async def refresh_market(
     return _with_refresh_results(market_summary(), source_results)
 
 
+def validate_market_document(document: dict) -> None:
+    """Validate a market document with the rules the runtime loader applies.
+
+    ``official_plugin_distribution.load_bundled_official_market`` is a
+    distribution-level check and is deliberately weaker than what the app runs,
+    so a release could build cleanly and then make the *whole* bundled market
+    unavailable because one package carried metadata this loader rejects.  The
+    release builder calls this before swapping a new distribution into place.
+    """
+    if not isinstance(document, dict) or not isinstance(document.get("packages"), list):
+        raise MarketError("market 文档缺少 packages", 400)
+    for raw in document["packages"]:
+        if not isinstance(raw, dict):
+            raise MarketError("package 必须是 JSON object", 400)
+        _normalize_package(deepcopy(raw))
+
+
 def market_summary() -> dict:
     market = _market_cache.get("market") or {"schema_version": SCHEMA_VERSION, "packages": []}
     sources = _market_cache.get("sources") or []

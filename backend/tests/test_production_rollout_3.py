@@ -12,6 +12,7 @@ from unittest import mock
 import httpx
 
 from provider_resolver import ROUTABLE_MODES
+from tests.official_distribution_expectations import APPROVAL_REQUIRED_IDENTITIES
 
 
 TARGETS = (
@@ -234,8 +235,7 @@ class ProductionRollout3Test(unittest.IsolatedAsyncioTestCase):
         startup = await subsystem.startup()
         self.assertEqual(
             {item["plugin"] for item in startup if item.get("status") == "unavailable"},
-            {identity for _scheme, identity, _reference in TARGETS}
-            | {"org.waveflow/streamget-providers"},
+            APPROVAL_REQUIRED_IDENTITIES,
         )
         self.assertEqual(await self.db.list_plugin_scheme_ownership(), [])
 

@@ -27,7 +27,7 @@ SCHEME_SET = set(SCHEMES)
 BILIBILI_SCHEME = "bilibili"
 DOUYU_SCHEME = "douyu"
 DOUYIN_SCHEME = "douyin"
-BUNDLE_SCHEME_SET = SCHEME_SET | {BILIBILI_SCHEME, DOUYU_SCHEME, DOUYIN_SCHEME}
+BUNDLE_SCHEME_SET = SCHEME_SET | {BILIBILI_SCHEME, DOUYU_SCHEME, DOUYIN_SCHEME, "redbook", "tiktok"}
 BATCHES = (
     ("yy", "bigo", "blued", "soop", "netease", "pandatv", "maoer", "look"),
     ("flextv", "popkontv", "twitcasting", "baidu", "weibo", "kugou", "twitch", "huajiao"),
@@ -144,8 +144,8 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         manifest = validate_manifest(package["plugin_manifest"])
         self.assertEqual(manifest.identity, IDENTITY)
         self.assertEqual({scheme for scheme, _contract in manifest.owned_schemes}, BUNDLE_SCHEME_SET)
-        self.assertEqual(len(manifest.owned_schemes), 35)
-        self.assertEqual(package["version"], "1.3.0")
+        self.assertEqual(len(manifest.owned_schemes), len(BUNDLE_SCHEME_SET))
+        self.assertEqual(package["version"], "1.5.0")
         return package
 
     async def _install_official(self, subsystem, package: dict) -> None:
@@ -161,7 +161,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             (installed["trust_state"], installed["source_key"], installed["active_version"],
              installed["lifecycle_state"], installed["enabled"]),
-            ("official", "official", "1.3.0", "active", 1),
+            ("official", "official", "1.5.0", "active", 1),
         )
         row = await self.db.get_plugin_installation("org.waveflow", "streamget-providers")
         self.assertEqual(row["source_package_id"], "official::streamget-providers-plugin")
@@ -337,7 +337,7 @@ class StreamGetPluginRolloutTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PluginError):
             await subsystem.install(IDENTITY, [bad_candidate])
         row = await self.db.get_plugin_installation("org.waveflow", "streamget-providers")
-        self.assertEqual(row["active_version"], "1.3.0")
+        self.assertEqual(row["active_version"], "1.5.0")
         await self._assert_plugin_modes(subsystem, SCHEME_SET)
 
         # With 31 schemes rolled back and one still Plugin-owned, all

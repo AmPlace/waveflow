@@ -13,6 +13,7 @@ from typing import Any
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+from market import validate_market_document
 from official_plugin_distribution import (
     OFFICIAL_DISTRIBUTION_ROOT, OFFICIAL_PUBLISHER_ID, load_bundled_official_market,
     load_official_trust_rows, validate_rollout_policy,
@@ -294,7 +295,12 @@ def build_release(
         "packages": sorted(packages, key=lambda item: item["id"]),
     }
     _write_json(staging / "market.json", market)
-    load_bundled_official_market(staging)
+    bundled, _packages = load_bundled_official_market(staging)
+    # The distribution-level check above is weaker than the loader the app runs,
+    # so validate with the runtime's own rules too.  Without this a plan whose
+    # package metadata the runtime rejects builds cleanly and then makes the
+    # whole bundled market unavailable -- zero packages, not one bad entry.
+    validate_market_document(bundled)
     if output.exists():
         shutil.rmtree(output)
     staging.replace(output)

@@ -172,9 +172,12 @@ class MarketPackageProjectionTest(unittest.TestCase):
     def test_official_distribution_packages_are_valid_v1_packages(self):
         from market import _normalize_package
 
+        from tests.official_distribution_expectations import PUBLISHED_PACKAGES
+
         package_root = Path(__file__).parents[1] / "official_plugins" / "distribution" / "packages"
         paths = sorted(package_root.glob("*.json"))
-        self.assertEqual(len(paths), 10)
+        # Derived from the distribution so a release does not have to edit this.
+        self.assertEqual(len(paths), len(PUBLISHED_PACKAGES))
         for path in paths:
             with self.subTest(package=path.name):
                 raw = json.loads(path.read_text())
