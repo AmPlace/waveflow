@@ -11,7 +11,7 @@ export const appRoutes = [
   },
   {
     path: '/',
-    redirect: '/radio',
+    redirect: '/tv',
     meta: { compatibilityRoute: true },
   },
   {

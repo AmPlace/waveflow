@@ -48,7 +48,7 @@ async function submit() {
   loading.value = true
   try {
     await auth.login({ username: username.value, password: password.value })
-    router.replace(String(route.query.redirect || '/radio'))
+    router.replace(String(route.query.redirect || '/tv'))
   } catch (err) {
     error.value = err?.message || '登录失败'
   } finally {

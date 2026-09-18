@@ -19,7 +19,7 @@
               <path d="M5 12a7 7 0 0 1 14 0M2.5 12a9.5 9.5 0 0 1 19 0M9 12a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
           </span>
-          <h1 class="hidden truncate text-lg font-semibold leading-none text-[var(--text-primary)] lg:block">正在直播</h1>
+          <h1 class="hidden truncate text-lg font-semibold leading-none text-[var(--text-primary)] lg:block">电视直播</h1>
           <span class="shrink-0 text-sm font-medium text-[var(--text-secondary)]">
             共 {{ filteredChannels.length }} 个频道
           </span>
@@ -307,8 +307,7 @@ const channelSortMode = computed(() => playerStore.iptvChannelSortMode)
 const categoryTabs = computed(() => ['全部', ...allGroups.value])
 const hasActiveFilter = computed(() => Boolean(selectedGroup.value || searchQuery.value.trim()))
 const catalogNotice = computed(() => {
-  if (loading.value && allChannels.value.length > 0) return '正在更新频道目录，当前频道仍可使用'
-  if (catalogState.value === 'stale') return '频道目录更新失败，已保留上次频道'
+    if (catalogState.value === 'stale') return '频道目录更新失败，已保留上次频道'
   if (catalogState.value === 'error' && allChannels.value.length > 0) return '频道目录暂时无法更新，已保留现有频道'
   return ''
 })

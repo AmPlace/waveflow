@@ -294,8 +294,7 @@ watch(types, (availableTypes) => {
 const filteredStations = ref([])
 
 const radioCatalogNotice = computed(() => {
-  if (radioLoading.value && allStations.value.length > 0) return '正在更新电台目录，当前频道仍可使用'
-  if (radioCatalogState.value === 'stale') return '电台目录更新失败，已保留上次频道'
+    if (radioCatalogState.value === 'stale') return '电台目录更新失败，已保留上次频道'
   if (radioCatalogState.value === 'degraded') return '部分电台目录暂时不可用，已保留可用频道'
   if (radioCatalogState.value === 'error' && allStations.value.length > 0) return '电台目录暂时无法更新，已保留现有频道'
   return ''

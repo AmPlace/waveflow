@@ -27,7 +27,7 @@ router.beforeEach(async (to) => {
   }
 
   if (!auth.requiresSetup && to.path === '/setup') {
-    return { path: '/radio' }
+    return { path: '/tv' }
   }
 
   if (!to.meta.authPage && !auth.setup.anonymousBrowse && !auth.isAuthenticated) {
@@ -43,7 +43,7 @@ router.beforeEach(async (to) => {
   }
 
   if (to.path === '/login' && auth.isAuthenticated) {
-    return { path: String(to.query.redirect || '/radio') }
+    return { path: String(to.query.redirect || '/tv') }
   }
 
   return true
