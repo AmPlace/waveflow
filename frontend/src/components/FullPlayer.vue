@@ -2016,8 +2016,8 @@ const iptvSourceOptions = computed(() => {
     const speed = Number(entry.speed_mbps) > 0 ? `${Number(entry.speed_mbps).toFixed(1)}M/s` : ''
     const quality = [entry.resolution, entry.video_codec, speed].filter(Boolean).join(' ')
     // Lamp and text come from one derivation, so they can never contradict.
-    // The text names which measurement it came from: 临时测速 (this session) or
-    // 原测速 (the channel's stored speed test).
+    // The text names which measurement it came from: this session's playback
+    // attempt, or the channel's stored speed test (原测速).
     const { lamp, text: statusText } = iptvSourceStatus(runtimeStatus, probeStatus, working)
     const meta = [statusText, quality, latency, ua, transcode].filter(Boolean).join(' · ')
 

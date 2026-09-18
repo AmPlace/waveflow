@@ -29,14 +29,17 @@ export function lampClass(lamp) {
   return LAMP_CLASS[lamp] || LAMP_CLASS[SOURCE_LAMP.UNKNOWN]
 }
 
-// The two pieces of evidence are named apart, because they are different
-// measurements: ``临时测速`` is what this session just did, ``原测速`` is the
-// channel's stored speed-test result (channels.probe_status / is_working).
-// The lamp and the text are produced together so they can never disagree.
+// The two pieces of evidence are named apart because they are different
+// measurements: this session's playback attempt, and the channel's stored
+// speed-test result (channels.probe_status / is_working).  Only the latter is a
+// real speed test, so only it says 测速.  The lamp and the text are produced
+// together so they can never disagree.
 const TEXT = {
-  SESSION_PLAYING: '临时测速可用',
-  SESSION_TRYING: '正在临时测速',
-  SESSION_FAILED: '临时测速失败',
+  // This session is a playback attempt, not a speed test: no probe request is
+  // issued.  Only the stored channel result (原测速) comes from an actual test.
+  SESSION_PLAYING: '本次可播',
+  SESSION_TRYING: '正在尝试',
+  SESSION_FAILED: '本次失败',
   STORED_GOOD: '原测速可用',
   STORED_BAD: '原测速失败',
   STORED_NOT_LIVE: '原测速未开播',

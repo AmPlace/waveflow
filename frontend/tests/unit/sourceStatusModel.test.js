@@ -44,11 +44,11 @@ test('Radio：使用与 IPTV 相同的语义，不再默认绿灯', () => {
   assert.equal(radioSourceLamp(undefined), SOURCE_LAMP.UNKNOWN)
 })
 
-test('文案区分两种测速：临时测速（本次）与原测速（频道存储）', () => {
+test('文案区分两种测速：本次播放尝试与原测速（频道存储）', () => {
   // 本次会话得出的结论
-  assert.equal(iptvSourceStatus('playing', '', undefined).text, '临时测速可用')
-  assert.equal(iptvSourceStatus('trying', '', undefined).text, '正在临时测速')
-  assert.equal(iptvSourceStatus('failed', '', undefined).text, '临时测速失败')
+  assert.equal(iptvSourceStatus('playing', '', undefined).text, '本次可播')
+  assert.equal(iptvSourceStatus('trying', '', undefined).text, '正在尝试')
+  assert.equal(iptvSourceStatus('failed', '', undefined).text, '本次失败')
   // 频道自带（存储）的测速结论
   assert.equal(iptvSourceStatus('idle', 'online', 1).text, '原测速可用')
   assert.equal(iptvSourceStatus('idle', 'offline', 0).text, '原测速失败')
