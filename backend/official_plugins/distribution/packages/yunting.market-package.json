@@ -1,8 +1,8 @@
 {
   "artifact_references": [
     {
-      "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
-      "url": "payloads/yunting-1.0.2.pyz"
+      "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
+      "url": "payloads/yunting-1.0.4.pyz"
     }
   ],
   "catalog": {
@@ -38,7 +38,7 @@
   "manifest_signature": {
     "algorithm": "ed25519",
     "key_id": "org.waveflow.release.2026-01",
-    "value": "4GE9l8rJrHv994SQiN2zoR1v808xIVCBVMW0cSI4EFqPo+g8bdzSWdtlHcQok3LvD0/vaEDzaH59++tcBtfFCw=="
+    "value": "aQAPsuPwoGf2uAL5SaoJpTa+hdXch4bGJTkVbiuT1qpRSyALYuA9xz/tlipfVyC92OISP++bUBs/9nnggmS+AA=="
   },
   "name": "Yunting Radio Provider Plugin",
   "operators": [],
@@ -47,29 +47,29 @@
     "artifacts": [
       {
         "arch": "arm64",
-        "entrypoint": "yunting-1.0.2.pyz",
+        "entrypoint": "yunting-1.0.4.pyz",
         "os": "macos",
         "runtime": "python",
-        "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
+        "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "h36or5oxUTybbTGNxXE+TLL5L3MKe4E9phdZpsVVnu/WSH44Hqjck5hXA0wkmvDElg43Q0KFHO+005Od4jUwBw=="
+          "value": "Qx4P6ZEYaQq27/b1HB3tyuRXTQLKoyVblKXGe6uKXemgrX5CrYlvGnbTbivgAXte8QHSKbFtaVkuSihQ++9lBQ=="
         },
-        "size_bytes": 15467
+        "size_bytes": 16154
       },
       {
         "arch": "x86_64",
-        "entrypoint": "yunting-1.0.2.pyz",
+        "entrypoint": "yunting-1.0.4.pyz",
         "os": "windows",
         "runtime": "python",
-        "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
+        "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
         "signature": {
           "algorithm": "ed25519",
           "key_id": "org.waveflow.release.2026-01",
-          "value": "h36or5oxUTybbTGNxXE+TLL5L3MKe4E9phdZpsVVnu/WSH44Hqjck5hXA0wkmvDElg43Q0KFHO+005Od4jUwBw=="
+          "value": "Qx4P6ZEYaQq27/b1HB3tyuRXTQLKoyVblKXGe6uKXemgrX5CrYlvGnbTbivgAXte8QHSKbFtaVkuSihQ++9lBQ=="
         },
-        "size_bytes": 15467
+        "size_bytes": 16154
       }
     ],
     "capabilities": [
@@ -114,18 +114,18 @@
         "artifacts": [],
         "lock_version": 1
       },
-      "entrypoint": "yunting-1.0.2.pyz",
+      "entrypoint": "yunting-1.0.4.pyz",
       "ipc": "stdio_framed_json_v1",
       "python_version_range": ">=3.14.0 <3.15.0",
       "type": "python"
     },
     "state_schema_version": 1,
-    "version": "1.0.2"
+    "version": "1.0.4"
   },
   "providers": [
     "Yunting"
   ],
-  "published_at": "2026-09-17T00:00:00Z",
+  "published_at": "2026-09-18T00:00:00Z",
   "publisher": {
     "id": "org.waveflow",
     "name": "WaveFlow"
@@ -145,6 +145,6 @@
     "Catalog",
     "yunting"
   ],
-  "updated_at": "2026-09-17T00:00:00Z",
-  "version": "1.0.2"
+  "updated_at": "2026-09-18T00:00:00Z",
+  "version": "1.0.4"
 }

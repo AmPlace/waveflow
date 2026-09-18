@@ -156,7 +156,7 @@
     "RTHK",
     "Singapore Radio"
   ],
-  "published_at": "2026-09-17T00:00:00Z",
+  "published_at": "2026-09-18T00:00:00Z",
   "publisher": {
     "id": "org.waveflow",
     "name": "WaveFlow"
@@ -184,6 +184,6 @@
     "SG",
     "Static Catalog"
   ],
-  "updated_at": "2026-09-17T00:00:00Z",
+  "updated_at": "2026-09-18T00:00:00Z",
   "version": "1.0.0"
 }

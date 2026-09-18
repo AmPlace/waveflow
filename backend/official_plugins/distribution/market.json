@@ -1,5 +1,5 @@
 {
-  "market_version": "1.9.0",
+  "market_version": "1.9.1",
   "packages": [
     {
       "artifact_references": [
@@ -161,7 +161,7 @@
       "providers": [
         "FJTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -181,7 +181,7 @@
         "URL Resolver",
         "fjtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -340,7 +340,7 @@
       "providers": [
         "GZSTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -360,7 +360,7 @@
         "URL Resolver",
         "gzstv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -473,7 +473,7 @@
       "providers": [
         "HBTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -493,7 +493,7 @@
         "URL Resolver",
         "hbtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -609,7 +609,7 @@
       "providers": [
         "HitFM"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -629,7 +629,7 @@
         "Catalog",
         "hitfm"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.1"
     },
     {
@@ -790,7 +790,7 @@
         "RTHK",
         "Singapore Radio"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -818,7 +818,7 @@
         "SG",
         "Static Catalog"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -940,7 +940,7 @@
       "providers": [
         "HNNTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -956,7 +956,7 @@
         "URL Resolver",
         "hnntv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -1069,7 +1069,7 @@
       "providers": [
         "HNTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -1089,7 +1089,7 @@
         "URL Resolver",
         "hntv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -1517,7 +1517,7 @@
       "providers": [
         "Huya"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -1537,7 +1537,7 @@
         "Live",
         "huya"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.2"
     },
     {
@@ -1689,7 +1689,7 @@
       "providers": [
         "JSTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -1709,7 +1709,7 @@
         "URL Resolver",
         "jstv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -1955,7 +1955,7 @@
       "providers": [
         "Kuaishou"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -1975,7 +1975,7 @@
         "Live",
         "kuaishou"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.1"
     },
     {
@@ -2088,7 +2088,7 @@
       "providers": [
         "Migu"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -2108,7 +2108,7 @@
         "URL Resolver",
         "migu"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -2241,7 +2241,7 @@
       "providers": [
         "MyRadio"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -2261,7 +2261,7 @@
         "Catalog",
         "myradio"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -2420,7 +2420,7 @@
       "providers": [
         "ND0593TV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -2440,7 +2440,7 @@
         "URL Resolver",
         "nd0593tv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -2598,7 +2598,7 @@
       "providers": [
         "NMTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -2625,7 +2625,7 @@
         "URL Resolver",
         "nmtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.1.0"
     },
     {
@@ -2803,7 +2803,7 @@
       "providers": [
         "NOW TV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -2830,7 +2830,7 @@
         "URL Resolver",
         "nowtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -3066,7 +3066,7 @@
       "providers": [
         "PTBTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -3082,7 +3082,7 @@
         "URL Resolver",
         "ptbtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -3195,7 +3195,7 @@
       "providers": [
         "Qukan"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -3215,7 +3215,7 @@
         "URL Resolver",
         "qukan"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -3382,7 +3382,7 @@
       "providers": [
         "RadioBrowser"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -3402,7 +3402,7 @@
         "Directory",
         "RadioBrowser"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -3515,7 +3515,7 @@
       "providers": [
         "SDLY"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -3535,7 +3535,7 @@
         "URL Resolver",
         "sdly"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -3739,7 +3739,7 @@
       "providers": [
         "SDTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -3766,7 +3766,7 @@
         "URL Resolver",
         "sdtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.1.0"
     },
     {
@@ -4393,7 +4393,7 @@
       "providers": [
         "StreamGet"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -4409,7 +4409,7 @@
         "URL Resolver",
         "Multi-scheme"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.5.0"
     },
     {
@@ -4600,7 +4600,7 @@
       "providers": [
         "SXBC"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -4620,7 +4620,7 @@
         "URL Resolver",
         "sxbc"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.1"
     },
     {
@@ -4733,7 +4733,7 @@
       "providers": [
         "TVB"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -4753,7 +4753,7 @@
         "URL Resolver",
         "tvb"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -4944,7 +4944,7 @@
       "providers": [
         "XJTV"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -4964,7 +4964,7 @@
         "URL Resolver",
         "xjtv"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
@@ -5396,7 +5396,7 @@
       "providers": [
         "YouTube"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -5416,14 +5416,14 @@
         "Live",
         "youtube"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
+      "updated_at": "2026-09-18T00:00:00Z",
       "version": "1.0.0"
     },
     {
       "artifact_references": [
         {
-          "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
-          "url": "payloads/yunting-1.0.2.pyz"
+          "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
+          "url": "payloads/yunting-1.0.4.pyz"
         }
       ],
       "catalog": {
@@ -5459,7 +5459,7 @@
       "manifest_signature": {
         "algorithm": "ed25519",
         "key_id": "org.waveflow.release.2026-01",
-        "value": "4GE9l8rJrHv994SQiN2zoR1v808xIVCBVMW0cSI4EFqPo+g8bdzSWdtlHcQok3LvD0/vaEDzaH59++tcBtfFCw=="
+        "value": "aQAPsuPwoGf2uAL5SaoJpTa+hdXch4bGJTkVbiuT1qpRSyALYuA9xz/tlipfVyC92OISP++bUBs/9nnggmS+AA=="
       },
       "name": "Yunting Radio Provider Plugin",
       "operators": [],
@@ -5468,29 +5468,29 @@
         "artifacts": [
           {
             "arch": "arm64",
-            "entrypoint": "yunting-1.0.2.pyz",
+            "entrypoint": "yunting-1.0.4.pyz",
             "os": "macos",
             "runtime": "python",
-            "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
+            "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
             "signature": {
               "algorithm": "ed25519",
               "key_id": "org.waveflow.release.2026-01",
-              "value": "h36or5oxUTybbTGNxXE+TLL5L3MKe4E9phdZpsVVnu/WSH44Hqjck5hXA0wkmvDElg43Q0KFHO+005Od4jUwBw=="
+              "value": "Qx4P6ZEYaQq27/b1HB3tyuRXTQLKoyVblKXGe6uKXemgrX5CrYlvGnbTbivgAXte8QHSKbFtaVkuSihQ++9lBQ=="
             },
-            "size_bytes": 15467
+            "size_bytes": 16154
           },
           {
             "arch": "x86_64",
-            "entrypoint": "yunting-1.0.2.pyz",
+            "entrypoint": "yunting-1.0.4.pyz",
             "os": "windows",
             "runtime": "python",
-            "sha256": "eed2ea0b91ba495dc7bed2e1f4294dfb6b5a9fd26c74fed08bca641c37660810",
+            "sha256": "e1e40b586fbe109af97c63beb2e9d877a61d38b374210de35cf28eae86bd0e7f",
             "signature": {
               "algorithm": "ed25519",
               "key_id": "org.waveflow.release.2026-01",
-              "value": "h36or5oxUTybbTGNxXE+TLL5L3MKe4E9phdZpsVVnu/WSH44Hqjck5hXA0wkmvDElg43Q0KFHO+005Od4jUwBw=="
+              "value": "Qx4P6ZEYaQq27/b1HB3tyuRXTQLKoyVblKXGe6uKXemgrX5CrYlvGnbTbivgAXte8QHSKbFtaVkuSihQ++9lBQ=="
             },
-            "size_bytes": 15467
+            "size_bytes": 16154
           }
         ],
         "capabilities": [
@@ -5535,18 +5535,18 @@
             "artifacts": [],
             "lock_version": 1
           },
-          "entrypoint": "yunting-1.0.2.pyz",
+          "entrypoint": "yunting-1.0.4.pyz",
           "ipc": "stdio_framed_json_v1",
           "python_version_range": ">=3.14.0 <3.15.0",
           "type": "python"
         },
         "state_schema_version": 1,
-        "version": "1.0.2"
+        "version": "1.0.4"
       },
       "providers": [
         "Yunting"
       ],
-      "published_at": "2026-09-17T00:00:00Z",
+      "published_at": "2026-09-18T00:00:00Z",
       "publisher": {
         "id": "org.waveflow",
         "name": "WaveFlow"
@@ -5566,10 +5566,10 @@
         "Catalog",
         "yunting"
       ],
-      "updated_at": "2026-09-17T00:00:00Z",
-      "version": "1.0.2"
+      "updated_at": "2026-09-18T00:00:00Z",
+      "version": "1.0.4"
     }
   ],
   "schema_version": 1,
-  "updated_at": "2026-09-17T00:00:00Z"
+  "updated_at": "2026-09-18T00:00:00Z"
 }

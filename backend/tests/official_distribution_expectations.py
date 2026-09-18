@@ -57,6 +57,8 @@ BOOTSTRAP_SCHEMES = frozenset(
     for scheme in (package["plugin_manifest"].get("owned_schemes") or [])
 )
 
+from tests.plugin_sources import plugin_source  # noqa: E402
+
 PLAN = json.loads(PLAN_PATH.read_text(encoding="utf-8"))
 PLAN_IDENTITIES = frozenset(f"org.waveflow/{item['plugin_id']}" for item in PLAN["plugins"])
 #: Plan entries that opt into the staged ownership rollout.  The three Plugins
@@ -70,3 +72,12 @@ ROLLOUT_IDENTITIES = frozenset(
 #: not rolled out either.
 ROLLED_OUT_IDENTITIES = ROLLOUT_IDENTITIES & BOOTSTRAP_IDENTITIES
 MARKET_VERSION = published_market()["market_version"]
+
+#: The version each Plugin source declares, so a test that builds from source
+#: asserts against the source instead of a literal that goes stale on a bump.
+SOURCE_VERSIONS = {
+    item["plugin_id"]: json.loads(
+        (plugin_source(item["source"]) / "manifest.json").read_text(encoding="utf-8")
+    )["version"]
+    for item in PLAN["plugins"]
+}

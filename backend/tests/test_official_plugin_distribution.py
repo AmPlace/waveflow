@@ -23,6 +23,8 @@ from packaging import tags
 from provider_resolver import UNOWNED_MODE
 from tests.official_distribution_expectations import (
     APPROVAL_REQUIRED_IDENTITIES,
+    MARKET_VERSION,
+    SOURCE_VERSIONS,
     BOOTSTRAP_IDENTITIES,
     BOOTSTRAP_SCHEMES,
     PUBLISHED_IDENTITIES as IDENTITIES,
@@ -142,7 +144,8 @@ class OfficialReleaseBuildTest(unittest.TestCase):
         _market, packages = load_bundled_official_market()
         self.assertEqual({f"{p['plugin_manifest']['publisher_id']}/{p['plugin_manifest']['plugin_id']}"
                           for p in packages}, IDENTITIES)
-        self.assertEqual(_market["market_version"], "1.9.0")
+        # Derived from the release plan so a release does not have to edit this.
+        self.assertEqual(_market["market_version"], MARKET_VERSION)
         policy = ProductionTrustPolicy(rows)
         for package in packages:
             manifest = validate_manifest(package["plugin_manifest"])
@@ -429,7 +432,7 @@ class ExternalPluginSourceRootTest(unittest.TestCase):
             market, packages = load_bundled_official_market(external_output)
             self.assertEqual({item["plugin_manifest"]["plugin_id"] for item in packages}, {"yunting"})
             self.assertEqual(market["market_version"], "1.8.0")
-            self.assertTrue((external_output / "payloads" / "yunting-1.0.2.pyz").is_file())
+            self.assertTrue((external_output / "payloads" / f"yunting-{SOURCE_VERSIONS['yunting']}.pyz").is_file())
 
             # The same source built straight from the real checkout produces
             # identical bytes, so the configured root is not part of the release.
@@ -887,9 +890,9 @@ class ExternalPluginSourceRootInstallTest(unittest.IsolatedAsyncioTestCase):
                 ("official", "official", "active", 1),
             )
             instance = self.subsystem.service.runtime.registry.route("yunting")
-            self.assertEqual((instance.health, instance.manifest.version), ("healthy", "1.0.2"))
+            self.assertEqual((instance.health, instance.manifest.version), ("healthy", SOURCE_VERSIONS["yunting"]))
             row = await self.db.get_plugin_installation("org.waveflow", "yunting")
-            self.assertEqual((row["active_version"], row["trust_state"]), ("1.0.2", "official"))
+            self.assertEqual((row["active_version"], row["trust_state"]), (SOURCE_VERSIONS["yunting"], "official"))
         finally:
             for path in temporary_paths:
                 path.unlink(missing_ok=True)
