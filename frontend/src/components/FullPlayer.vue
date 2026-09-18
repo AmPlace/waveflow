@@ -752,7 +752,7 @@ import {
   startupRaceCandidateKind,
 } from '../utils/sourceIdentity.js'
 import { PLAYBACK_ERROR } from '../utils/playbackError.js'
-import { iptvSourceLamp, lampClass, lampLabel, radioSourceLamp } from '../utils/sourceStatus.js'
+import { iptvSourceStatus, lampClass, radioSourceLamp, radioSourceText } from '../utils/sourceStatus.js'
 import { useToastStore } from '../stores/toast'
 import { IPTV_CHANNEL_SORT_MODES, sortIptvChannels } from '../utils/iptvChannelList'
 
@@ -2015,13 +2015,10 @@ const iptvSourceOptions = computed(() => {
     const transcode = entry.rtsp_compat ? '转码' : ''
     const speed = Number(entry.speed_mbps) > 0 ? `${Number(entry.speed_mbps).toFixed(1)}M/s` : ''
     const quality = [entry.resolution, entry.video_codec, speed].filter(Boolean).join(' ')
-    const lamp = iptvSourceLamp(runtimeStatus, probeStatus, working)
-    // The lamp is the single source of truth, so the status phrase is derived
-    // from it too.  Printing the session verdict and the probe verdict side by
-    // side is what produced rows reading "当前可播 · 检测不可用".
-    const statusText = probeStatus === 'not_live' && runtimeStatus !== 'playing'
-      ? '未开播'
-      : lampLabel(lamp)
+    // Lamp and text come from one derivation, so they can never contradict.
+    // The text names which measurement it came from: 临时测速 (this session) or
+    // 原测速 (the channel's stored speed test).
+    const { lamp, text: statusText } = iptvSourceStatus(runtimeStatus, probeStatus, working)
     const meta = [statusText, quality, latency, ua, transcode].filter(Boolean).join(' · ')
 
     return {
@@ -2052,7 +2049,7 @@ const currentRadioSourceOptions = computed(() => {
       source_id: source.source_id,
       active: source.source_id === station.radioSourceId,
       title: `${source.provider_key || 'radio'} · ${source.provider_station_id || source.source_id}`,
-      meta: [source.health_status, source.lifecycle_state].filter(Boolean).join(' · ') || '未检测',
+      meta: [radioSourceText(source.health_status), source.lifecycle_state].filter(Boolean).join(' · '),
       lamp,
       statusClass: lampClass(lamp),
     }

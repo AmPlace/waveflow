@@ -7,32 +7,32 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import {
-  SOURCE_LAMP, iptvSourceLamp, lampClass, lampLabel, radioSourceLamp,
+  SOURCE_LAMP, iptvSourceStatus, lampClass, radioSourceLamp, radioSourceText,
 } from '../../src/utils/sourceStatus.js'
 
 test('IPTV：本次会话的状态优先于探测结论', () => {
-  assert.equal(iptvSourceLamp('trying', '', undefined), SOURCE_LAMP.TRYING)
-  assert.equal(iptvSourceLamp('playing', '', undefined), SOURCE_LAMP.GOOD)
-  assert.equal(iptvSourceLamp('failed', '', undefined), SOURCE_LAMP.BAD)
+  assert.equal(iptvSourceStatus('trying', '', undefined).lamp, SOURCE_LAMP.TRYING)
+  assert.equal(iptvSourceStatus('playing', '', undefined).lamp, SOURCE_LAMP.GOOD)
+  assert.equal(iptvSourceStatus('failed', '', undefined).lamp, SOURCE_LAMP.BAD)
   // 探测说可用，但本次会话刚失败 -> 仍然报失败
-  assert.equal(iptvSourceLamp('failed', '', 1), SOURCE_LAMP.BAD)
+  assert.equal(iptvSourceStatus('failed', '', 1).lamp, SOURCE_LAMP.BAD)
   // 探测说不可用，但本次会话正在播 -> 以正在播为准
-  assert.equal(iptvSourceLamp('playing', '', 0), SOURCE_LAMP.GOOD)
+  assert.equal(iptvSourceStatus('playing', '', 0).lamp, SOURCE_LAMP.GOOD)
 })
 
 test('IPTV：没有会话状态时回落到探测结论', () => {
-  assert.equal(iptvSourceLamp('idle', '', 1), SOURCE_LAMP.GOOD)
-  assert.equal(iptvSourceLamp('idle', '', 0), SOURCE_LAMP.BAD)
-  assert.equal(iptvSourceLamp('idle', 'not_live', undefined), SOURCE_LAMP.BAD)
-  assert.equal(iptvSourceLamp('idle', 'untested', undefined), SOURCE_LAMP.UNKNOWN)
-  assert.equal(iptvSourceLamp('idle', '', undefined), SOURCE_LAMP.UNKNOWN)
+  assert.equal(iptvSourceStatus('idle', '', 1).lamp, SOURCE_LAMP.GOOD)
+  assert.equal(iptvSourceStatus('idle', '', 0).lamp, SOURCE_LAMP.BAD)
+  assert.equal(iptvSourceStatus('idle', 'not_live', undefined).lamp, SOURCE_LAMP.BAD)
+  assert.equal(iptvSourceStatus('idle', 'untested', undefined).lamp, SOURCE_LAMP.UNKNOWN)
+  assert.equal(iptvSourceStatus('idle', '', undefined).lamp, SOURCE_LAMP.UNKNOWN)
 })
 
 test('IPTV：切走的源("stopped")不再被当成未知', () => {
   // 旧实现里 stopped 和 idle 都是灰灯，于是"刚播过的源"看起来和"从没测过"一样。
-  assert.equal(iptvSourceLamp('stopped', '', 1), SOURCE_LAMP.GOOD)
-  assert.equal(iptvSourceLamp('stopped', '', 0), SOURCE_LAMP.BAD)
-  assert.equal(iptvSourceLamp('stopped', '', undefined), SOURCE_LAMP.UNKNOWN)
+  assert.equal(iptvSourceStatus('stopped', '', 1).lamp, SOURCE_LAMP.GOOD)
+  assert.equal(iptvSourceStatus('stopped', '', 0).lamp, SOURCE_LAMP.BAD)
+  assert.equal(iptvSourceStatus('stopped', '', undefined).lamp, SOURCE_LAMP.UNKNOWN)
 })
 
 test('Radio：使用与 IPTV 相同的语义，不再默认绿灯', () => {
@@ -44,14 +44,28 @@ test('Radio：使用与 IPTV 相同的语义，不再默认绿灯', () => {
   assert.equal(radioSourceLamp(undefined), SOURCE_LAMP.UNKNOWN)
 })
 
+test('文案区分两种测速：临时测速（本次）与原测速（频道存储）', () => {
+  // 本次会话得出的结论
+  assert.equal(iptvSourceStatus('playing', '', undefined).text, '临时测速可用')
+  assert.equal(iptvSourceStatus('trying', '', undefined).text, '正在临时测速')
+  assert.equal(iptvSourceStatus('failed', '', undefined).text, '临时测速失败')
+  // 频道自带（存储）的测速结论
+  assert.equal(iptvSourceStatus('idle', 'online', 1).text, '原测速可用')
+  assert.equal(iptvSourceStatus('idle', 'offline', 0).text, '原测速失败')
+  assert.equal(iptvSourceStatus('idle', 'not_live', 0).text, '原测速未开播')
+  assert.equal(iptvSourceStatus('idle', 'untested', undefined).text, '未测速')
+  assert.equal(iptvSourceStatus('stopped', '', 1).text, '原测速可用')
+  // Radio 用同一套词汇
+  assert.equal(radioSourceText('healthy'), '原测速可用')
+  assert.equal(radioSourceText('unknown'), '未测速')
+})
+
 test('灯的颜色与文案映射稳定', () => {
   assert.equal(lampClass(SOURCE_LAMP.GOOD), 'bg-emerald-500')
   assert.equal(lampClass(SOURCE_LAMP.TRYING), 'bg-amber-400')
   assert.equal(lampClass(SOURCE_LAMP.BAD), 'bg-red-500')
   assert.equal(lampClass(SOURCE_LAMP.UNKNOWN), 'bg-neutral-300 dark:bg-neutral-600')
   assert.equal(lampClass('nonsense'), lampClass(SOURCE_LAMP.UNKNOWN))
-  assert.equal(lampLabel(SOURCE_LAMP.GOOD), '可播')
-  assert.equal(lampLabel('nonsense'), '未检测')
 })
 
 test('Radio 源菜单不再硬编码绿灯，IPTV 与 Radio 共用 statusClass', () => {
