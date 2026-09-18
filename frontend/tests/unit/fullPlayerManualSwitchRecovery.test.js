@@ -36,6 +36,7 @@ function createSwitchHarness() {
     ${switchSource}
     return {
       switchIptvSource,
+      playerStore,
       snapshot: () => ({ _playAttemptId, _recoverySeq, _recoveryInFlight }),
     }
   `)
@@ -51,6 +52,9 @@ function createSwitchHarness() {
     setPlaybackError() {},
     clearPlaybackError() {},
     setLoading() {},
+    // 手动选源必须开启新的 fallback cycle，否则环形尝试无法回到当前源之前。
+    iptvFallbackVisited: ['old:direct'],
+    resetIptvFallbackCycle() { this.iptvFallbackVisited = [] },
   }
   const harness = factory({
     playAttemptId: 10,
@@ -93,6 +97,10 @@ test('手动切源使旧 recovery 立即失效', async () => {
   assert.equal(state._recoverySeq, 8, '手动切源必须使正在运行的 recovery seq 失效')
   assert.equal(state._recoveryInFlight, false)
   assert.equal(stallTimerClearCount(), 1)
+  assert.deepEqual(
+    harness.playerStore?.iptvFallbackVisited ?? [],
+    [],
+  )
   assert.equal(statuses.get(0), 'stopped')
   assert.equal(statuses.get(1), 'trying')
 })

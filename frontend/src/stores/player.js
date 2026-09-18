@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { API_BASE } from '../apiBase.js'
 import { adapterNameFromUrl, buildChannelProxyUrl, channelIdentity, isAdapterSchemeUrl, isSourceExplicitlyDisabled, sourceRaceKey } from '../utils/sourceIdentity.js'
+import { PLAYBACK_ERROR, playbackErrorText } from '../utils/playbackError.js'
 import { normalizeIptvChannelSortMode } from '../utils/iptvChannelList.js'
 import { currentRadioProgramme } from '../utils/radioProgramme.js'
 
@@ -52,6 +53,8 @@ export const usePlayerStore = defineStore('player', {
     radioPlaybackIntent: 'passive',
     volume: 1,
     playbackError: '',
+    // Stable code for the playback state, so no flow branches on the wording.
+    playbackErrorCode: '',
     stationList: [],
     stationMap: {},
     isPlayerExpanded: false,
@@ -61,6 +64,9 @@ export const usePlayerStore = defineStore('player', {
     pendingIptvChannel: null,  // 正在异步构建播放队列的频道，用于立即反馈选中态
     iptvUrls: [],              // 当前频道的所有可用链接
     iptvUrlIndex: 0,           // 当前尝试的链接索引
+    // Source keys already attempted in the current fallback cycle.  Keys rather
+    // than indexes so a queue rebuild mid-attempt cannot re-arm a tried source.
+    iptvFallbackVisited: [],
     iptvSelectionToken: 0,      // 防止异步解析旧频道覆盖新频道
     iptvVideoEl: null,         // FullPlayer 中的 video 元素引用（iOS 同步播放用）
     currentEpgProgram: null,   // EPG: { title, start, stop, progress, remaining_minutes }
@@ -79,6 +85,7 @@ export const usePlayerStore = defineStore('player', {
       this.pendingIptvChannel = null
       this.iptvUrls = []
       this.iptvUrlIndex = 0
+      this.iptvFallbackVisited = []
       this.iptvVideoEl = null
       this.currentEpgProgram = null
       this.iptvChannelContext = null
@@ -104,6 +111,7 @@ export const usePlayerStore = defineStore('player', {
       this.pendingIptvChannel = null
       this.iptvUrls = []
       this.iptvUrlIndex = 0
+      this.iptvFallbackVisited = []
       this.currentStation = stationId
       this.radioPlaybackIntent = 'station_click'
 
@@ -159,8 +167,9 @@ export const usePlayerStore = defineStore('player', {
       this.volume = Math.min(1, Math.max(0, nextVolume))
     },
 
-    setPlaybackError(message) {
+    setPlaybackError(message, code = '') {
       this.playbackError = message ? String(message) : ''
+      this.playbackErrorCode = this.playbackError ? String(code || '') : ''
 
       if (this.playbackError) {
         this.isLoading = false
@@ -169,6 +178,25 @@ export const usePlayerStore = defineStore('player', {
 
     clearPlaybackError() {
       this.playbackError = ''
+      this.playbackErrorCode = ''
+    },
+
+    // The queue resolved to nothing playable at all.
+    markNoPlayableSource() {
+      this.setPlaybackError(playbackErrorText(PLAYBACK_ERROR.NO_PLAYABLE_SOURCE),
+                            PLAYBACK_ERROR.NO_PLAYABLE_SOURCE)
+    },
+
+    // Every source in the queue was attempted this cycle and none played.
+    markAllSourcesUnavailable() {
+      this.setPlaybackError(playbackErrorText(PLAYBACK_ERROR.ALL_SOURCES_UNAVAILABLE),
+                            PLAYBACK_ERROR.ALL_SOURCES_UNAVAILABLE)
+      this.isPlaying = false
+      this.isLoading = false
+    },
+
+    resetIptvFallbackCycle() {
+      this.iptvFallbackVisited = []
     },
 
     addRadioStations(stations) {
@@ -760,7 +788,7 @@ export const usePlayerStore = defineStore('player', {
               if (selectionToken !== this.iptvSelectionToken) return
               setProgressiveQueue(buildQueue(), { final: true })
               if (!this.iptvUrls.length) {
-                this.playbackError = '没有可播放的源'
+                this.markNoPlayableSource()
                 this.isLoading = false
               }
             })
@@ -771,7 +799,8 @@ export const usePlayerStore = defineStore('player', {
             })
         } else if (!this.iptvUrls.length) {
           setProgressiveQueue(buildQueue(), { final: true })
-          this.playbackError = this.iptvUrls.length ? '' : '没有可播放的源'
+          if (this.iptvUrls.length) this.clearPlaybackError()
+          else this.markNoPlayableSource()
           this.isLoading = Boolean(this.iptvUrls.length)
         }
         return
@@ -874,7 +903,9 @@ export const usePlayerStore = defineStore('player', {
       this.pendingIptvChannel = null
       this.iptvUrls = list
       this.iptvUrlIndex = 0
-      this.playbackError = list.length ? '' : '没有可播放的源'
+      this.iptvFallbackVisited = []
+      if (list.length) this.clearPlaybackError()
+      else this.markNoPlayableSource()
       this.isLoading = Boolean(list.length)
       this.isPlaying = false
       // isPlaying 由实际播放事件设置，不提前设
@@ -885,16 +916,35 @@ export const usePlayerStore = defineStore('player', {
       }
     },
 
+    // Walk the queue as a ring starting from the current source, so a source the
+    // user picked late still reaches the ones before it (3 -> 4 -> 5 -> 0 -> 1 -> 2).
+    // Each source is attempted at most once per cycle; only when the whole ring
+    // has been tried is the queue reported unplayable.  The cycle resets on a
+    // manual pick, a channel switch or a new selection token.
     iptvFallbackNext() {
-      if (this.iptvUrlIndex < this.iptvUrls.length - 1) {
-        this.iptvUrlIndex++
-        this.playbackError = `源不可用，正在切换备用源 (${this.iptvUrlIndex + 1}/${this.iptvUrls.length})`
+      const total = this.iptvUrls.length
+      if (!total) {
+        this.markNoPlayableSource()
+        return false
+      }
+      const identityOf = (entry, index) => sourceRaceKey(entry) || `index:${index}`
+      const visited = [...this.iptvFallbackVisited]
+      const currentKey = identityOf(this.iptvUrls[this.iptvUrlIndex], this.iptvUrlIndex)
+      if (currentKey && !visited.includes(currentKey)) visited.push(currentKey)
+
+      for (let step = 1; step <= total; step++) {
+        const candidate = (this.iptvUrlIndex + step) % total
+        const candidateKey = identityOf(this.iptvUrls[candidate], candidate)
+        if (visited.includes(candidateKey)) continue
+        this.iptvFallbackVisited = [...visited, candidateKey]
+        this.iptvUrlIndex = candidate
+        this.playbackError = `源不可用，正在切换备用源 (${this.iptvFallbackVisited.length}/${total})`
+        this.playbackErrorCode = ''
         this.isLoading = true
         return true
       }
-      this.playbackError = '所有播放源均不可用'
-      this.isPlaying = false
-      this.isLoading = false
+      this.iptvFallbackVisited = visited
+      this.markAllSourcesUnavailable()
       return false
     },
 

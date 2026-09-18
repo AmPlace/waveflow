@@ -680,7 +680,7 @@
             type="button"
             class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/70"
             :class="{
-              'bg-neutral-100 dark:bg-neutral-700/70': source.active,
+              'bg-neutral-100 ring-1 ring-inset ring-neutral-300 dark:bg-neutral-700/70 dark:ring-neutral-500': source.active,
               'cursor-not-allowed opacity-45 hover:bg-transparent dark:hover:bg-transparent': source.disabled,
             }"
             :disabled="source.disabled"
@@ -712,10 +712,10 @@
             :key="source.source_id"
             type="button"
             class="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700/70"
-            :class="{ 'bg-neutral-100 dark:bg-neutral-700/70': source.active }"
+            :class="{ 'bg-neutral-100 ring-1 ring-inset ring-neutral-300 dark:bg-neutral-700/70 dark:ring-neutral-500': source.active }"
             @click="switchRadioSource(source.source_id)"
           >
-            <span class="size-2.5 shrink-0 rounded-full bg-emerald-500"></span>
+            <span class="size-2.5 shrink-0 rounded-full" :class="source.statusClass"></span>
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">{{ source.title }}</p>
               <p class="mt-0.5 truncate text-xs text-neutral-400 dark:text-neutral-500">{{ source.meta }}</p>
@@ -750,7 +750,9 @@ import {
   sourceRaceKey,
   sourceTransport,
   startupRaceCandidateKind,
-} from '../utils/sourceIdentity'
+} from '../utils/sourceIdentity.js'
+import { PLAYBACK_ERROR } from '../utils/playbackError.js'
+import { iptvSourceLamp, lampClass, lampLabel, radioSourceLamp } from '../utils/sourceStatus.js'
 import { useToastStore } from '../stores/toast'
 import { IPTV_CHANNEL_SORT_MODES, sortIptvChannels } from '../utils/iptvChannelList'
 
@@ -1909,21 +1911,6 @@ function sourceHost(url) {
   }
 }
 
-function sourceStatusClass(status) {
-  if (status === 'playing') return 'bg-emerald-500'
-  if (status === 'trying') return 'bg-amber-400'
-  if (status === 'failed') return 'bg-red-500'
-  return 'bg-neutral-300 dark:bg-neutral-600'
-}
-
-function sourceStatusLabel(status) {
-  if (status === 'playing') return '当前可播'
-  if (status === 'trying') return '正在尝试'
-  if (status === 'failed') return '本次失败'
-  if (status === 'stopped') return '已停止'
-  return '未尝试'
-}
-
 function syncIptvMediaSession(playbackState = isPlaying.value ? 'playing' : 'paused') {
   if (!isIptvMode.value || !('mediaSession' in navigator)) return
   try {
@@ -2024,21 +2011,18 @@ const iptvSourceOptions = computed(() => {
     const runtimeStatus = iptvSourceRuntimeStatus.value[runtimeKey] || 'idle'
     const probeStatus = entry.probe_status || ''
     const disabled = isSourceExplicitlyDisabled(entry) || st === 'unsupported_youtube_url'
-    const health = probeStatus === 'not_live'
-      ? '未开播'
-      : probeStatus === 'untested'
-        ? '未检测'
-        : working === 1
-          ? '检测可用'
-          : working === 0
-            ? '检测不可用'
-            : '未检测'
-    const healthLabel = runtimeStatus === 'idle' || health !== '未检测' ? health : ''
     const ua = entry.custom_ua ? 'UA' : ''
     const transcode = entry.rtsp_compat ? '转码' : ''
     const speed = Number(entry.speed_mbps) > 0 ? `${Number(entry.speed_mbps).toFixed(1)}M/s` : ''
     const quality = [entry.resolution, entry.video_codec, speed].filter(Boolean).join(' ')
-    const meta = [sourceStatusLabel(runtimeStatus), healthLabel, quality, latency, ua, transcode].filter(Boolean).join(' · ')
+    const lamp = iptvSourceLamp(runtimeStatus, probeStatus, working)
+    // The lamp is the single source of truth, so the status phrase is derived
+    // from it too.  Printing the session verdict and the probe verdict side by
+    // side is what produced rows reading "当前可播 · 检测不可用".
+    const statusText = probeStatus === 'not_live' && runtimeStatus !== 'playing'
+      ? '未开播'
+      : lampLabel(lamp)
+    const meta = [statusText, quality, latency, ua, transcode].filter(Boolean).join(' · ')
 
     return {
       index,
@@ -2051,7 +2035,8 @@ const iptvSourceOptions = computed(() => {
       title: recommendedLabel || host || `线路 ${index + 1}`,
       meta,
       status: runtimeStatus,
-      statusClass: sourceStatusClass(runtimeStatus),
+      lamp,
+      statusClass: lampClass(lamp),
       active: selectedKey ? runtimeKey === selectedKey : index === playerStore.iptvUrlIndex,
       disabled,
     }
@@ -2061,12 +2046,17 @@ const iptvSourceOptions = computed(() => {
 const currentRadioSourceOptions = computed(() => {
   if (isIptvMode.value) return []
   const station = currentStationData.value
-  return (station?.radioSources || []).map((source) => ({
-    source_id: source.source_id,
-    active: source.source_id === station.radioSourceId,
-    title: `${source.provider_key || 'radio'} · ${source.provider_station_id || source.source_id}`,
-    meta: [source.health_status, source.lifecycle_state].filter(Boolean).join(' · ') || '可用',
-  }))
+  return (station?.radioSources || []).map((source) => {
+    const lamp = radioSourceLamp(source.health_status)
+    return {
+      source_id: source.source_id,
+      active: source.source_id === station.radioSourceId,
+      title: `${source.provider_key || 'radio'} · ${source.provider_station_id || source.source_id}`,
+      meta: [source.health_status, source.lifecycle_state].filter(Boolean).join(' · ') || '未检测',
+      lamp,
+      statusClass: lampClass(lamp),
+    }
+  })
 })
 
 const currentIptvSourceLabel = computed(() => {
@@ -3044,9 +3034,7 @@ function cancelCurrentStartup() {
 
 function markAllIptvSourcesUnavailable(attemptId) {
   if (!isAttemptActive(attemptId)) return
-  playerStore.setPlaybackError('所有播放源均不可用')
-  playerStore.isPlaying = false
-  playerStore.isLoading = false
+  playerStore.markAllSourcesUnavailable()
 }
 
 function recordMpegtsReconnect(sourceUrl) {
@@ -3262,6 +3250,9 @@ async function switchIptvSource(sourceKey) {
     isSourceSwitching.value = false
     return
   }
+  // A manual pick starts a fresh cycle: the ring must be able to reach the
+  // sources before the one the user chose.
+  playerStore.resetIptvFallbackCycle()
   setSourceRuntimeStatus(index, 'trying')
 
   if (isProxyLikeEntry(entry)) {
@@ -4963,7 +4954,7 @@ watch(() => playerStore.iptvUrls.length, async (length, previousLength) => {
     || !isIptvMode.value
     || isPlaying.value
     || isLoading.value
-    || playerStore.playbackError !== '所有播放源均不可用'
+    || playerStore.playbackErrorCode !== PLAYBACK_ERROR.ALL_SOURCES_UNAVAILABLE
     || _hardIptvSwitchTeardown
   ) return
   const selectionToken = playerStore.iptvSelectionToken
@@ -4973,7 +4964,7 @@ watch(() => playerStore.iptvUrls.length, async (length, previousLength) => {
     || !isIptvMode.value
     || isPlaying.value
     || isLoading.value
-    || playerStore.playbackError !== '所有播放源均不可用'
+    || playerStore.playbackErrorCode !== PLAYBACK_ERROR.ALL_SOURCES_UNAVAILABLE
     || !iptvVideoRef.value
   ) return
   _playSelectionToken = selectionToken
