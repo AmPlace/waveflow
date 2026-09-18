@@ -12,17 +12,17 @@
 
     <aside
       v-if="showAppShell"
-      class="app-sidebar fixed bottom-0 left-0 top-0 z-40 hidden border-r border-[var(--border)] bg-[var(--sidebar-bg)] px-3 py-6 backdrop-blur-[10px] backdrop-saturate-110 lg:flex lg:flex-col"
+      class="app-sidebar fixed bottom-0 left-0 top-0 z-40 hidden bg-[var(--sidebar-bg)] px-3 py-6 backdrop-blur-[10px] backdrop-saturate-110 lg:flex lg:flex-col"
     >
       <div class="sidebar-header relative mb-8 h-10">
         <button
           type="button"
-          class="sidebar-brand absolute left-3 top-0 flex h-10 min-w-0 items-center gap-4 text-left"
+          class="sidebar-brand absolute left-0 top-0 flex h-10 min-w-0 items-center gap-4 text-left"
           :tabindex="sidebarCollapsed ? -1 : 0"
           aria-label="WaveFlow 首页"
-          @click="router.push('/radio')"
+          @click="router.push('/tv')"
         >
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]">
+          <span class="flex size-6 shrink-0 items-center justify-center text-[var(--text-primary)]">
             <svg class="size-6" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Zm8 9-8 4.5L4 12m16 4.5L12 21l-8-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
           <span class="truncate text-base font-semibold tracking-normal">WaveFlow</span>
@@ -31,7 +31,7 @@
 
       <button
         type="button"
-        class="sidebar-toggle flex size-10 shrink-0 items-center justify-center rounded-2xl border border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
+        class="sidebar-toggle flex size-10 shrink-0 items-center justify-center border border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
         :title="sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
         :aria-label="sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
         @click="toggleSidebar"
@@ -52,9 +52,10 @@
           v-for="item in primaryNavItems"
           :key="item.label"
           type="button"
-          class="nav-item flex h-14 items-center gap-4 rounded-2xl border px-3 text-base font-medium transition-all duration-300 ease-out"
+          class="nav-item flex items-center gap-4 border text-base font-medium"
           :class="[navItemClass(item), justActivatedLabel === item.label ? 'nav-item-just-activated' : '']"
           :title="sidebarCollapsed ? item.label : undefined"
+          :aria-label="item.label"
           :aria-current="item.active ? 'page' : undefined"
           @click="activateNavItem(item)"
         >
@@ -71,9 +72,10 @@
           v-for="item in secondaryNavItems"
           :key="item.label"
           type="button"
-          class="nav-item flex h-14 items-center gap-4 rounded-2xl border px-3 text-base font-medium transition-all duration-300 ease-out"
+          class="nav-item flex items-center gap-4 border text-base font-medium"
           :class="[navItemClass(item), justActivatedLabel === item.label ? 'nav-item-just-activated' : '']"
           :title="sidebarCollapsed ? item.label : undefined"
+          :aria-label="item.label"
           :aria-current="item.active ? 'page' : undefined"
           @click="activateNavItem(item)"
         >
@@ -94,7 +96,7 @@
             type="button"
             class="flex h-9 items-center rounded-full px-3 transition-all sm:px-4"
             :class="activeMode === 'radio' ? 'bg-neutral-950 text-white dark:bg-white dark:text-black' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
-            @click="router.push('/radio')"
+            @click="router.push('/tv')"
           >
             Radio
           </button>
@@ -108,7 +110,7 @@
           </button>
         </div>
         <div class="flex items-center gap-2">
-          <div v-if="showGlobalSearch" class="mobile-search-shell relative flex items-center rounded-full backdrop-blur-xl transition-all duration-300 ease-out" :class="searchExpanded ? 'mobile-search-expanded' : 'mobile-search-collapsed'">
+          <div ref="mobileSearchShellRef" v-if="showGlobalSearch" class="mobile-search-shell relative flex items-center rounded-full backdrop-blur-xl transition-all duration-300 ease-out" :class="searchExpanded ? 'mobile-search-expanded' : 'mobile-search-collapsed'">
             <button type="button" class="mobile-search-trigger flex shrink-0 items-center justify-center text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]" aria-label="搜索" @click="toggleSearch">
               <svg class="size-[19px] toolbar-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7" /><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
             </button>
@@ -147,6 +149,7 @@
 
     <div v-if="showGlobalSearch" class="desktop-top-actions fixed top-6 z-30 hidden items-center gap-3 lg:flex">
       <div
+        ref="desktopSearchShellRef"
         class="flex h-11 items-center overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] backdrop-blur-[12px] backdrop-saturate-110 transition-all duration-300 ease-out"
         :class="searchExpanded ? 'w-[260px] px-1' : 'w-11 px-0'"
       >
@@ -191,6 +194,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, provide, ref, nextTick, watch } from 'vue'
+import { useClickOutside } from './composables/useClickOutside.js'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from './stores/player'
@@ -230,7 +234,7 @@ const primaryNavItems = computed(() => [
   { label: '电台', icon: 'radio', route: '/radio', active: route.path === '/radio' },
 ])
 const secondaryNavItems = computed(() => [
-  { label: 'Market', icon: 'layers', route: '/market', active: route.path === '/market' },
+  { label: '市场', icon: 'layers', route: '/market', active: route.path === '/market' },
   { label: '设置', icon: 'settings', route: '/settings/sources', active: route.path.startsWith('/settings') },
   { label: 'GitHub', icon: 'github', external: 'https://github.com/amplace/waveflow', active: false },
 ])
@@ -333,12 +337,27 @@ provide('searchQuery', searchQuery)
 const searchExpanded = ref(false)
 const searchInputRef = ref(null)
 const desktopSearchInputRef = ref(null)
+const mobileSearchShellRef = ref(null)
+const desktopSearchShellRef = ref(null)
+
+// Collapsing on an outside click must never throw away a query the user typed,
+// so it only applies while the field is empty.
+function collapseSearchOnOutside() {
+  searchExpanded.value = false
+}
+const keepSearchOpen = () => Boolean(String(searchQuery.value || '').trim())
+useClickOutside(mobileSearchShellRef, collapseSearchOnOutside, {
+  enabled: searchExpanded, shouldClose: () => !keepSearchOpen(),
+})
+useClickOutside(desktopSearchShellRef, collapseSearchOnOutside, {
+  enabled: searchExpanded, shouldClose: () => !keepSearchOpen(),
+})
 
 const mobileNavigationItems = computed(() => [
   ...(!['/radio', '/tv'].includes(route.path)
     ? [{ label: '返回内容', route: activeMode.value === 'radio' ? '/radio' : '/tv', active: false }]
     : []),
-  { label: 'Market', route: '/market', active: route.path === '/market' },
+  { label: '市场', route: '/market', active: route.path === '/market' },
   { label: '设置', route: '/settings/sources', active: route.path.startsWith('/settings') },
 ])
 

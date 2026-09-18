@@ -753,6 +753,7 @@ import {
 } from '../utils/sourceIdentity.js'
 import { PLAYBACK_ERROR } from '../utils/playbackError.js'
 import { iptvSourceStatus, lampClass, radioSourceLamp, radioSourceText } from '../utils/sourceStatus.js'
+import { currentRadioProgramme } from '../utils/radioProgramme.js'
 import { useToastStore } from '../stores/toast'
 import { IPTV_CHANNEL_SORT_MODES, sortIptvChannels } from '../utils/iptvChannelList'
 
@@ -1545,8 +1546,22 @@ const currentChannelSubtitle = computed(() => {
   return statusText.value
 })
 
+// Radio programmes come from the provider-neutral snapshot the Plugin fills in.
+// The frontend never inspects a provider key here: an empty snapshot means
+// "no programme", which must render as an empty schedule rather than as the
+// station name.
+const radioProgramme = computed(() => (
+  isIptvMode.value
+    ? null
+    : currentRadioProgramme(currentStationData.value?.radioProgrammes || [], epgNow.value)
+))
+
 const currentProgram = computed(() => {
   const epg = playerStore.currentEpgProgram
+  if (!epg && radioProgramme.value) {
+    const title = String(radioProgramme.value.title || radioProgramme.value.subtitle || '').trim()
+    if (title) return { title, start: '', end: '', remaining: 0, progress: 0 }
+  }
   if (epg) {
     const startD = new Date(epg.start)
     const stopD = new Date(epg.stop)
@@ -1749,12 +1764,12 @@ const displaySchedule = computed(() => {
       }
     })
   }
-  // Radio 的节目面板仍保留电台名 fallback；IPTV 没有节目数据时保持空面板，
-  // 不用占位文案伪造节目单。
+  // No schedule data: keep the panel empty.  Falling back to the station name
+  // made the schedule look like it had a programme when it did not.
   if (isIptvMode.value) return []
-  return currentProgram.value.title
-    ? [{ time: '', title: currentProgram.value.title, current: false }]
-    : []
+  const radio = radioProgramme.value
+  const title = String(radio?.title || radio?.subtitle || '').trim()
+  return title ? [{ time: '', title, current: true }] : []
 })
 
 const hasScheduleData = computed(() => (

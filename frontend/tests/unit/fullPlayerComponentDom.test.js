@@ -1770,13 +1770,19 @@ test('IPTV Mobile 无 EPG 时 schedule shell 不保留空白，Radio 保留既�
   assert.equal(domElements('.mobile-panel-header').length, 0)
 })
 
-test('FullPlayer 非 IPTV 节目单继续保留电台名 fallback', async () => {
+// The station name used to be shown here when no programme existed, which made
+// an empty schedule look like it had one.  The panel now renders the provider's
+// programme, or stays empty.
+test('FullPlayer 非 IPTV 节目单展示真实节目而非电台名', async () => {
   setActivePinia(createPinia())
   const store = usePlayerStore()
   store.activeMode = 'radio'
   store.currentStation = 'radio-a'
   store.stationMap = {
-    'radio-a': { id: 'radio-a', name: '测试电台', subtitle: '音乐' },
+    'radio-a': {
+      id: 'radio-a', name: '测试电台', subtitle: '音乐',
+      radioProgrammes: [{ title: '早更大叔的碎碎念', subtitle: '早更大叔的碎碎念' }],
+    },
   }
   store.isPlayerExpanded = true
   const wrapper = mount(FullPlayer, { attachTo: document.body })
@@ -1784,9 +1790,29 @@ test('FullPlayer 非 IPTV 节目单继续保留电台名 fallback', async () => 
   await flushPromises()
   await wrapper.vm.$nextTick()
 
-  assert.equal(domElements('.now-program-title').length, 0)
   await clickDom('.mobile-panel .panel-tabs button', 1)
-  assert.ok(domElements('.timeline-title').some((item) => item.textContent.trim() === '测试电台'))
+  const titles = domElements('.timeline-title').map((item) => item.textContent.trim())
+  assert.ok(titles.includes('早更大叔的碎碎念'), `期望节目名，实际: ${titles.join('|')}`)
+  assert.ok(!titles.includes('测试电台'), '不得再用电台名冒充节目')
+})
+
+test('FullPlayer 无节目数据的电台保持空节目单', async () => {
+  setActivePinia(createPinia())
+  const store = usePlayerStore()
+  store.activeMode = 'radio'
+  store.currentStation = 'radio-b'
+  store.stationMap = {
+    'radio-b': { id: 'radio-b', name: '无节目电台', subtitle: '', radioProgrammes: [] },
+  }
+  store.isPlayerExpanded = true
+  const wrapper = mount(FullPlayer, { attachTo: document.body })
+  mountedWrappers.push(wrapper)
+  await flushPromises()
+  await wrapper.vm.$nextTick()
+
+  await clickDom('.mobile-panel .panel-tabs button', 1)
+  const titles = domElements('.timeline-title').map((item) => item.textContent.trim())
+  assert.equal(titles.length, 0, `无节目时应为空，实际: ${titles.join('|')}`)
 })
 
 test('FullPlayer 无 EPG 时隐藏节目元数据且不阻塞直播', async () => {

@@ -40,7 +40,7 @@ test('More菜单只保留低频入口，不伪造About或重复内容域切换',
   const items = app.slice(itemsStart, itemsEnd)
 
   assert.match(header, /role="menu" aria-label="更多导航"/)
-  assert.match(app, /label: 'Market', route: '\/market'/)
+  assert.match(app, /label: '市场', route: '\/market'/)
   assert.match(app, /label: '设置', route: '\/settings\/sources'/)
   assert.doesNotMatch(items, /label: 'Radio'|label: 'TV'/)
   assert.doesNotMatch(items, /label: '关于'|disabled: true/)
@@ -75,7 +75,7 @@ test('Desktop sidebar与Desktop header仍保留原有入口，不被More替代',
   assert.doesNotMatch(app, /label: '回看'/)
   assert.match(app, /label: '电视', icon: 'tv', route: '\/tv'/)
   assert.match(app, /label: '电台', icon: 'radio', route: '\/radio'/)
-  assert.match(app, /label: 'Market', icon: 'layers', route: '\/market'/)
+  assert.match(app, /label: '市场', icon: 'layers', route: '\/market'/)
   assert.match(app, /label: '设置', icon: 'settings', route: '\/settings\/sources'/)
   assert.match(app, /class="desktop-top-actions fixed top-6 z-30 hidden items-center gap-3 lg:flex"/)
   assert.match(source('src/style.css'), /\.desktop-top-actions \{\s*right: 56px;/)

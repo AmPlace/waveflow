@@ -21,7 +21,7 @@ test('IPTV 首页节目卡只显示当前节目名，不显示结束时间', () 
   assert.doesNotMatch(home, /channelProgrammeSubtitle\(/)
 })
 
-test('正在直播图标保持为非交互的无背景装饰', () => {
+test('电视直播图标保持为非交互的无背景装饰', () => {
   const home = fs.readFileSync(path.join(frontendRoot, 'src/views/IptvHome.vue'), 'utf8')
   assert.match(home, /class="iptv-live-section-icon inline-flex size-6[^>]*text-\[var\(--text-secondary\)\]"/)
   assert.match(home, /<span class="iptv-live-section-icon inline-flex size-6[\s\S]*?<svg class="size-4"/)
@@ -29,9 +29,9 @@ test('正在直播图标保持为非交互的无背景装饰', () => {
   assert.doesNotMatch(home, /iptv-live-section-icon[^>]*bg-\[var\(--surface\)\]/)
 })
 
-test('IPTV 移动端隐藏正在直播标题，桌面端保留标题', () => {
+test('IPTV 移动端隐藏电视直播标题，桌面端保留标题', () => {
   const home = fs.readFileSync(path.join(frontendRoot, 'src/views/IptvHome.vue'), 'utf8')
-  assert.match(home, /<h1 class="hidden truncate text-lg font-semibold leading-none text-\[var\(--text-primary\)\] lg:block">正在直播<\/h1>/)
+  assert.match(home, /<h1 class="hidden truncate text-lg font-semibold leading-none text-\[var\(--text-primary\)\] lg:block">电视直播<\/h1>/)
 })
 
 test('IPTV 频道计数与默认排序使用一致的文字比例', () => {

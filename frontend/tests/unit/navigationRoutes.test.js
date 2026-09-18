@@ -8,6 +8,7 @@ test('内容入口使用规范化的 /tv 与 /radio 路由', () => {
 
   assert.equal(radio?.path, '/radio')
   assert.equal(tv?.path, '/tv')
-  assert.equal(appRoutes.find((route) => route.path === '/')?.redirect, '/radio')
+  // TV is the default landing page; /radio stays reachable by explicit route.
+  assert.equal(appRoutes.find((route) => route.path === '/')?.redirect, '/tv')
   assert.equal(appRoutes.find((route) => route.path === '/iptv')?.redirect, '/tv')
 })

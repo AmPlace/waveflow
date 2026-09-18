@@ -216,7 +216,7 @@ test('App 移除旧节目单一级入口，电视、电台、Market 和设置导
   assert.match(primaryNavigation, /label: '电台'[\s\S]*route: '\/radio'/)
   assert.doesNotMatch(primaryNavigation, /label: '节目单'|route: '\/admin\/epg'/)
   assert.match(app, /label: '设置'[\s\S]*route: '\/settings\/sources'/)
-  assert.match(app, /label: 'Market'[\s\S]*route: '\/market'/)
+  assert.match(app, /label: '市场'[\s\S]*route: '\/market'/)
   assert.match(app, /route\.path\.startsWith\('\/settings'\)/)
 })
 
