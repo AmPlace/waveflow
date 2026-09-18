@@ -3002,6 +3002,126 @@ async def migrate_empty_bracket_logical_channels() -> dict:
     return await loop.run_in_executor(None, _migrate)
 
 
+
+async def split_logical_channels_by_canonical() -> dict:
+    """Split a logical channel whose members now resolve to different keys.
+
+    Correcting an alias can move members of one wrongly merged logical channel
+    onto several correct canonical keys.  The normal sync refuses to do this --
+    it records a split_conflict and leaves the row alone -- so an alias fix would
+    otherwise never take effect on an install that already synced.
+
+    The row that keeps the original canonical key keeps its logical-level data
+    (EPG binding, policy, logo binding, source preference): that data was chosen
+    for that channel.  Newly created rows start with none of it so they are
+    matched on their own merits instead of inheriting another channel's
+    metadata.  Member rows simply follow their channel.
+
+    Idempotent: afterwards every member sits on a row matching its own canonical
+    key, so a second run finds nothing to split.  Atomic: one transaction.
+    """
+    from m3u8_parser import channel_name_semantics
+
+    result = {
+        "scanned_logical_count": 0,
+        "split_logical_count": 0,
+        "created_logical_count": 0,
+        "moved_member_count": 0,
+        "inherited_binding_count": 0,
+        "repaired": [],
+    }
+
+    def _split():
+        conn = _connect()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            now = _utc_now()
+            rows = conn.execute(
+                """
+                SELECT lc.id AS logical_id, lc.canonical_key AS stored_key,
+                       m.channel_id AS channel_id, c.name AS raw_name
+                FROM iptv_logical_channels AS lc
+                JOIN iptv_logical_channel_members AS m ON m.logical_channel_id = lc.id
+                JOIN channels AS c ON c.id = m.channel_id
+                WHERE lc.orphaned_at IS NULL
+                """
+            ).fetchall()
+
+            buckets: dict[str, dict] = {}
+            for row in rows:
+                info = buckets.setdefault(
+                    str(row["logical_id"]),
+                    {"stored": str(row["stored_key"] or ""), "targets": {}},
+                )
+                target = str(
+                    channel_name_semantics(str(row["raw_name"] or "")).get("canonical_candidate") or ""
+                ).strip()
+                if not target:
+                    target = info["stored"]
+                info["targets"].setdefault(target, []).append(int(row["channel_id"]))
+
+            result["scanned_logical_count"] = len(buckets)
+
+            for logical_id, info in buckets.items():
+                targets = info["targets"]
+                if len(targets) <= 1:
+                    continue
+                # The row that keeps the stored key is the original channel; only
+                # if no member still resolves to it does the largest group take
+                # over the row.
+                if info["stored"] in targets:
+                    keeper_key = info["stored"]
+                else:
+                    keeper_key = max(targets, key=lambda key: len(targets[key]))
+                    conn.execute(
+                        "UPDATE iptv_logical_channels SET canonical_key = ?, updated_at = ? "
+                        "WHERE id = ?",
+                        (keeper_key, now, logical_id),
+                    )
+                result["split_logical_count"] += 1
+
+                for target_key, channel_ids in targets.items():
+                    if target_key == keeper_key:
+                        continue
+                    existing = conn.execute(
+                        "SELECT id FROM iptv_logical_channels WHERE canonical_key = ?",
+                        (target_key,),
+                    ).fetchone()
+                    if existing:
+                        target_id = str(existing["id"])
+                    else:
+                        target_id = _new_iptv_logical_channel_id()
+                        conn.execute(
+                            "INSERT INTO iptv_logical_channels "
+                            "(id, canonical_key, display_name, status, created_at, updated_at) "
+                            "VALUES (?,?,?,?,?,?)",
+                            (target_id, target_key, target_key, "active", now, now),
+                        )
+                        result["created_logical_count"] += 1
+                    for channel_id in channel_ids:
+                        moved = conn.execute(
+                            "UPDATE iptv_logical_channel_members SET logical_channel_id = ? "
+                            "WHERE logical_channel_id = ? AND channel_id = ?",
+                            (target_id, logical_id, channel_id),
+                        ).rowcount
+                        result["moved_member_count"] += moved
+                    result["repaired"].append(
+                        {"from": info["stored"], "to": target_key,
+                         "channel_ids": sorted(channel_ids)}
+                    )
+
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+        return result
+
+    import asyncio
+    return await asyncio.get_event_loop().run_in_executor(None, _split)
+
+
 async def get_iptv_logical_channel_projection() -> list[dict]:
     """Return the persisted logical-channel read projection with raw members.
 

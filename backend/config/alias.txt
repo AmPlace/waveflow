@@ -283,7 +283,9 @@ CGTN纪录,CGTN外语纪录,CGTN记录
 
 # ── logo 对齐：让频道归一到 logos.json 已有的主名 ──────────
 BloombergTV,Bloomberg TV Asia,bloombergtvasia
-CGTN,CGTN西班牙语,CGTN西语,cgtn西班牙语,CGTN西班牙,cgtn阿拉伯语,CGTN阿拉伯语,CGTN阿语
+CGTN,CGTN
+CGTN西班牙语,CGTN西语,cgtn西班牙语,CGTN西班牙
+CGTN阿拉伯语,CGTN阿语,cgtn阿拉伯语
 EBCYoYoTV,YoYoTV,yoyotv
 三佳购物,河北三佳购物
 东方影视,上视东方影视

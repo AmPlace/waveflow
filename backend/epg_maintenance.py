@@ -48,6 +48,7 @@ async def run_epg_binding_maintenance(
         'started_at': started_at,
         'finished_at': '',
         'logical_identity_repair': None,
+        'logical_identity_split': None,
         'logical_sync': None,
         'logical_gc': None,
         'shadow_run': None,
@@ -62,6 +63,12 @@ async def run_epg_binding_maintenance(
                 # let it mint a fresh "foo" alongside them and keep the split.
                 result['logical_identity_repair'] = (
                     await db.migrate_empty_bracket_logical_channels()
+                )
+                # Split before the sync: an alias correction can move members of
+                # one wrongly merged channel onto several correct keys, and the
+                # sync refuses to split (it only records a split_conflict).
+                result['logical_identity_split'] = (
+                    await db.split_logical_channels_by_canonical()
                 )
                 result['logical_sync'] = await iptv_channels.sync_iptv_logical_channels()
             result['logical_gc'] = await iptv_logical_gc.garbage_collect_iptv_logical_channels()
