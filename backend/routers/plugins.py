@@ -385,6 +385,20 @@ async def recover_plugin(publisher_id: str, plugin_id: str, request: Request) ->
         raise _error(exc) from exc
 
 
+@router.delete("/ownership/{scheme}")
+async def clear_ownership(scheme: str, request: Request) -> dict[str, Any]:
+    """Release a scheme by deleting its ownership row.
+
+    ``PUT`` with ``mode=legacy`` releases routing but leaves a durable row. This
+    removes the row so the scheme projects as unowned instead of keeping a
+    tombstone for a Plugin that may no longer be installed.
+    """
+    try:
+        return await _subsystem(request).clear_ownership(scheme)
+    except PluginError as exc:
+        raise _error(exc) from exc
+
+
 @router.delete("/{publisher_id}/{plugin_id}")
 async def uninstall_plugin(
     publisher_id: str, plugin_id: str, request: Request, force: bool = False
@@ -417,19 +431,5 @@ async def purge_uninstalled_plugin(publisher_id: str, plugin_id: str, request: R
     """
     try:
         return await _subsystem(request).purge_uninstalled(f"{publisher_id}/{plugin_id}")
-    except PluginError as exc:
-        raise _error(exc) from exc
-
-
-@router.delete("/ownership/{scheme}")
-async def clear_ownership(scheme: str, request: Request) -> dict[str, Any]:
-    """Release a scheme by deleting its ownership row.
-
-    ``PUT`` with ``mode=legacy`` releases routing but leaves a durable row. This
-    removes the row so the scheme projects as unowned instead of keeping a
-    tombstone for a Plugin that may no longer be installed.
-    """
-    try:
-        return await _subsystem(request).clear_ownership(scheme)
     except PluginError as exc:
         raise _error(exc) from exc

@@ -1415,8 +1415,8 @@ async def add_subscription(request: Request):
     await _run_epg_preference_maintenance(sub_id, document.epg_url_hints)
     await _run_channel_binding_maintenance('subscription_add')
     # 频道数据变更后失效 Cover 缓存
-    from core.cover_cache import invalidate_all_covers
-    invalidate_all_covers()
+    from core.visual_metadata import get_visual_metadata_cache
+    get_visual_metadata_cache().invalidate_all()
 
     return {"id": sub_id, "title": title, "url": url, "channel_count": len(channels)}
 
@@ -1442,8 +1442,8 @@ async def delete_subscription(sub_id: int):
     await db.delete_subscription(sub_id)
     await _run_channel_binding_maintenance('subscription_delete')
     # 频道数据变更后失效 Cover 缓存
-    from core.cover_cache import invalidate_all_covers
-    invalidate_all_covers()
+    from core.visual_metadata import get_visual_metadata_cache
+    get_visual_metadata_cache().invalidate_all()
     return {"ok": True}
 
 
@@ -1529,8 +1529,8 @@ async def _refresh_regular_subscription(sub: dict) -> dict:
     await _run_epg_preference_maintenance(sub['id'], document.epg_url_hints)
     await _run_channel_binding_maintenance('subscription_refresh')
     # 频道数据变更后失效 Cover 缓存
-    from core.cover_cache import invalidate_all_covers
-    invalidate_all_covers()
+    from core.visual_metadata import get_visual_metadata_cache
+    get_visual_metadata_cache().invalidate_all()
 
     return {"status": "success", "channel_count": len(channels)}
 
@@ -1544,8 +1544,8 @@ async def _refresh_market_subscription(sub: dict) -> dict:
     except Exception as exc:
         _market_http_error(exc)
     # 频道数据变更后失效 Cover 缓存
-    from core.cover_cache import invalidate_all_covers
-    invalidate_all_covers()
+    from core.visual_metadata import get_visual_metadata_cache
+    get_visual_metadata_cache().invalidate_all()
     return result
 
 
@@ -1605,8 +1605,8 @@ async def refresh_all_subscriptions():
     failed = len(results) - updated
     # 批量刷新后统一失效一次
     if updated > 0:
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
     status = "success" if failed == 0 else ("partial" if updated else "failed")
     return {
         "ok": True,
@@ -1841,8 +1841,8 @@ def _market_automation_run_response(result):
 
 def _invalidate_market_covers_after_update(result) -> None:
     if isinstance(result, AutomationRunResult) and result.updated_count > 0:
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
 
 def _market_http_error(exc: Exception):
     from plugin_runtime import PluginError
@@ -2045,8 +2045,8 @@ async def refresh_market(request: Request):
             allow_private=_truthy_query((body or {}).get("allow_private", False)),
             source_id=int(source_id) if source_id else None,
         )
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
         return result
     except Exception as exc:
         _market_http_error(exc)
@@ -2162,8 +2162,8 @@ async def import_market_package(package_id: str, request: Request):
             prefer_cached_preview=_truthy_query((body or {}).get("prefer_cached_preview", True)),
             reinstall=_truthy_query((body or {}).get("reinstall", False)),
         )
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
         return {**result, "installed_plugins": dependencies}
     except Exception as exc:
         _market_http_error(exc)
@@ -2190,8 +2190,8 @@ async def update_market_package(package_id: str, request: Request):
         # assuming the previously installed dependencies still hold.
         dependencies = await _ensure_content_plugin_dependencies(request, package)
         result = await _market.update_installed_package(package_id)
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
         return {**result, "installed_plugins": dependencies}
     except Exception as exc:
         _market_http_error(exc)
@@ -2246,8 +2246,8 @@ async def uninstall_market_package(package_id: str, request: Request):
                 await reconcile_plugin_update_task(automation, subsystem)
             return {"ok": True, "package_type": "plugin_package", "uninstalled": removed}
         result = await _market.uninstall_package(package_id)
-        from core.cover_cache import invalidate_all_covers
-        invalidate_all_covers()
+        from core.visual_metadata import get_visual_metadata_cache
+        get_visual_metadata_cache().invalidate_all()
         return result
     except Exception as exc:
         _market_http_error(exc)
@@ -3000,193 +3000,6 @@ async def _thin_playlist_fetch(
 # ProxyContext 注入 → signed handle → 重写。前端不再传 adapter URL。
 
 
-# ── adapter 直播间封面/头像 ─────────────────────────────────────────────
-# 哪些 adapter 支持 cover，由 adapter 模块自己声明 ADAPTER_CAPABILITIES = {"cover": True}，
-# 这里只做"中央实现"：轻量 metadata 抓取 + URL 缓存。失败/未声明一律返回 200 + 空字符串，
-# 让前端继续走 logo_url 兜底，避免把这条非关键路径变成报错弹窗源。
-
-_ADAPTER_COVER_SUCCESS_TTL_SECONDS = 6 * 3600  # cover URL 都是平台 CDN 长期 URL，6h 足够
-_ADAPTER_COVER_FAILURE_TTL_SECONDS = 5 * 60    # 失败/未开播短缓存，避免反复打风控接口
-_ADAPTER_COVER_HTTP_TIMEOUT = 6.0
-
-_adapter_cover_cache: dict[str, dict] = {}
-_adapter_cover_locks: dict[str, asyncio.Lock] = {}
-
-
-def _adapter_cover_empty(adapter_name: str = '') -> dict:
-    return {
-        "ok": True,
-        "adapter": adapter_name,
-        "cover_url": "",
-        "avatar_url": "",
-        "title": "",
-        "anchor_name": "",
-        "is_live": False,
-    }
-
-
-def _adapter_cover_cache_get(cache_key: str) -> dict | None:
-    item = _adapter_cover_cache.get(cache_key)
-    if not item:
-        return None
-    if float(item.get("expires_at", 0)) <= time.time():
-        _adapter_cover_cache.pop(cache_key, None)
-        return None
-    return dict(item.get("payload") or {})
-
-
-def _adapter_cover_cache_set(cache_key: str, payload: dict, ttl: int) -> None:
-    if ttl <= 0:
-        _adapter_cover_cache.pop(cache_key, None)
-        return
-    _adapter_cover_cache[cache_key] = {
-        "expires_at": time.time() + ttl,
-        "payload": dict(payload),
-    }
-
-
-async def _fetch_bilibili_cover(room_id: str) -> dict:
-    api = (
-        "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom"
-        f"?room_id={quote(room_id, safe='')}"
-    )
-    resp = await http_client.get(
-        api,
-        timeout=_ADAPTER_COVER_HTTP_TIMEOUT,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Referer": f"https://live.bilibili.com/{room_id}",
-        },
-    )
-    resp.raise_for_status()
-    data = (resp.json() or {}).get("data") or {}
-    room_info = data.get("room_info") or {}
-    base_info = ((data.get("anchor_info") or {}).get("base_info")) or {}
-    cover = str(room_info.get("cover") or room_info.get("keyframe") or "").strip()
-    avatar = str(base_info.get("face") or "").strip()
-    return {
-        "ok": True,
-        "adapter": "bilibili",
-        "cover_url": cover,
-        "avatar_url": avatar,
-        "title": str(room_info.get("title") or "").strip(),
-        "anchor_name": str(base_info.get("uname") or "").strip(),
-        "is_live": int(room_info.get("live_status") or 0) == 1,
-    }
-
-
-async def _fetch_douyu_cover(room_id: str) -> dict:
-    api = f"https://www.douyu.com/betard/{quote(room_id, safe='')}"
-    resp = await http_client.get(
-        api,
-        timeout=_ADAPTER_COVER_HTTP_TIMEOUT,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.douyu.com/",
-        },
-    )
-    resp.raise_for_status()
-    room = (resp.json() or {}).get("room") or {}
-    avatar_field = room.get("avatar")
-    if isinstance(avatar_field, dict):
-        avatar = str(avatar_field.get("big") or avatar_field.get("middle") or "").strip()
-    else:
-        avatar = str(avatar_field or room.get("avatar_mid") or "").strip()
-    return {
-        "ok": True,
-        "adapter": "douyu",
-        "cover_url": str(room.get("room_pic") or "").strip(),
-        "avatar_url": avatar,
-        "title": str(room.get("room_name") or "").strip(),
-        "anchor_name": str(room.get("owner_name") or "").strip(),
-        "is_live": int(room.get("show_status") or 0) == 1 and int(room.get("videoLoop") or 0) == 0,
-    }
-
-
-async def _fetch_huya_cover(room_id: str) -> dict:
-    api = (
-        "https://mp.huya.com/cache.php?m=Live&do=profileRoom&showSecret=1"
-        f"&roomid={quote(room_id, safe='')}"
-    )
-    resp = await http_client.get(
-        api,
-        timeout=_ADAPTER_COVER_HTTP_TIMEOUT,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.huya.com/",
-        },
-    )
-    resp.raise_for_status()
-    data = (resp.json() or {}).get("data") or {}
-    live_data = data.get("liveData") or {}
-    profile = data.get("profileInfo") or {}
-    avatar = str(live_data.get("avatar180") or profile.get("avatar180") or "").strip()
-    live_status = live_data.get("liveStatus")
-    is_live = (str(live_status).upper() == "ON") if live_status is not None else bool(live_data.get("screenshot"))
-    return {
-        "ok": True,
-        "adapter": "huya",
-        "cover_url": str(live_data.get("screenshot") or "").strip(),
-        "avatar_url": avatar,
-        "title": str(live_data.get("introduction") or "").strip(),
-        "anchor_name": str(live_data.get("nick") or profile.get("nick") or "").strip(),
-        "is_live": is_live,
-    }
-
-
-async def _fetch_kuaishou_cover(room_id: str) -> dict:
-    # 复用 kuaishou.py 同款 __INITIAL_STATE__ 解析，但只读 poster/avatar，不取 playUrls。
-    from curl_cffi.requests import AsyncSession
-
-    url = f"https://live.kuaishou.com/u/{quote(room_id, safe='')}"
-    async with AsyncSession(impersonate="chrome", timeout=_ADAPTER_COVER_HTTP_TIMEOUT) as session:
-        resp = await session.get(url)
-    if resp.status_code != 200:
-        raise RuntimeError(f"kuaishou http {resp.status_code}")
-    html = resp.text or ''
-    match = re.search(r'<script>window\.__INITIAL_STATE__=(.*?);\(function\(\)\{var s;', html)
-    if not match:
-        return _adapter_cover_empty("kuaishou")
-    raw = match.group(1)
-    blocks = re.findall(r'(\{"liveStream".*?),"gameInfo', raw)
-    if not blocks:
-        return _adapter_cover_empty("kuaishou")
-    obj = json.loads(blocks[0] + "}")
-    live_stream = obj.get("liveStream") or {}
-    author = obj.get("author") or {}
-    poster = str(live_stream.get("poster") or live_stream.get("coverUrl") or "").strip()
-    return {
-        "ok": True,
-        "adapter": "kuaishou",
-        "cover_url": poster,
-        "avatar_url": str(author.get("avatar") or author.get("headurl") or "").strip(),
-        "title": str(live_stream.get("caption") or "").strip(),
-        "anchor_name": str(author.get("name") or "").strip(),
-        "is_live": bool(live_stream),
-    }
-
-
-_ADAPTER_COVER_FETCHERS = {
-    "bilibili": _fetch_bilibili_cover,
-    "douyu": _fetch_douyu_cover,
-    "huya": _fetch_huya_cover,
-    "kuaishou": _fetch_kuaishou_cover,
-}
-
-# Provider-specific leftover, deliberately out of scope for the Plugin-only
-# resolve migration: cover art is not a provider resolve path, and these four
-# entries only say which cover fetchers exist.  It used to live in the deleted
-# ``adapters`` package; it is kept verbatim rather than redesigned.
-_ADAPTER_CAPABILITIES: dict[str, dict[str, bool]] = {
-    name: {"cover": True} for name in _ADAPTER_COVER_FETCHERS
-}
-
-
-def adapter_supports(adapter_name: str, capability: str) -> bool:
-    """Whether a Core cover fetcher still exists for this provider and capability."""
-    return bool(_ADAPTER_CAPABILITIES.get(str(adapter_name or "").lower(), {}).get(capability))
-
-
 # ── 封面图片代理（绕过 CDN Referer 防盗链）──────────────────────────────
 # 白名单：仅允许代理这些域名下的图片，防止被当作公共代理滥用。
 # 格式: {域名后缀: 需要伪造的 Referer}
@@ -3212,50 +3025,6 @@ def _cover_img_proxy_url(raw_url: str) -> str:
     from security.proxy_handles import issue_cached_handle as _issue
     handle = _issue(kind="image", url=raw_url, src="adapter:cover")
     return f"/api/media/proxy/image/{handle}"
-
-
-async def fetch_adapter_cover_payload(adapter_url: str) -> dict:
-    """供 /api/media/channel/{key}/cover 调用。返回封面 payload。"""
-    try:
-        request = parse_provider_reference(adapter_url)
-    except ProviderReferenceError:
-        return _adapter_cover_empty()
-
-    if not adapter_supports(request.scheme, "cover"):
-        return _adapter_cover_empty(request.scheme)
-
-    cache_key = request.raw_url
-    cached = _adapter_cover_cache_get(cache_key)
-    if cached is not None:
-        return cached
-
-    lock = _adapter_cover_locks.setdefault(cache_key, asyncio.Lock())
-    async with lock:
-        cached = _adapter_cover_cache_get(cache_key)
-        if cached is not None:
-            return cached
-
-        fetcher = _ADAPTER_COVER_FETCHERS.get(request.scheme)
-        if not fetcher:
-            payload = _adapter_cover_empty(request.scheme)
-            _adapter_cover_cache_set(cache_key, payload, _ADAPTER_COVER_FAILURE_TTL_SECONDS)
-            return payload
-        try:
-            payload = await fetcher(request.resource_id.strip("/"))
-            has_image = bool(str(payload.get("cover_url") or "").strip()) or bool(str(payload.get("avatar_url") or "").strip())
-            ttl = _ADAPTER_COVER_SUCCESS_TTL_SECONDS if has_image else _ADAPTER_COVER_FAILURE_TTL_SECONDS
-            for field in ("cover_url", "avatar_url"):
-                raw = str(payload.get(field) or "").strip()
-                if raw:
-                    payload[field] = _cover_img_proxy_url(raw)
-            _adapter_cover_cache_set(cache_key, payload, ttl)
-            return payload
-        except Exception as exc:
-            logger.info("adapter cover fetch failed adapter=%s room=%s err=%s",
-                        request.scheme, request.resource_id, exc)
-            payload = _adapter_cover_empty(request.scheme)
-            _adapter_cover_cache_set(cache_key, payload, _ADAPTER_COVER_FAILURE_TTL_SECONDS)
-            return payload
 
 
 # 旧 /api/iptv/adapter/cover / cover-img 入口已删除：

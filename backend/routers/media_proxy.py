@@ -940,15 +940,6 @@ async def _select_visual_source(_m, channel: dict, resolver, requested_source_id
             continue
         if resolver is not None and resolver.supports_visual_metadata(str(source.get("url") or "")):
             return source
-    # Narrow compatibility only for legacy installations which have not yet
-    # received a visual-capable Plugin artifact.  It is never used when a
-    # Plugin has declared the generic feature.
-    for source in sources:
-        adapter = str(source.get("adapter") or "").strip().lower()
-        if not adapter:
-            continue
-        if getattr(_m, "adapter_supports", lambda *_args: False)(adapter, "cover"):
-            return source
     return None
 
 
@@ -992,14 +983,13 @@ async def media_channel_visual(
 
     async def fetch() -> dict:
         try:
-            if resolver is not None and resolver.supports_visual_metadata(source_url):
-                payload = await resolver.visual_metadata(
-                    source_url, source_id=source_ref, source_revision=source_revision,
-                )
-            else:
-                # Compatibility bridge for legacy ownership only.  New Plugin
-                # visual implementations never enter this branch.
-                payload = await _m.fetch_adapter_cover_payload(source_url)
+            if resolver is None or not resolver.supports_visual_metadata(source_url):
+                # No Plugin owns this source's visual metadata.  Core keeps no
+                # provider-specific fallback, so the stable logo is the answer.
+                return dict(fallback)
+            payload = await resolver.visual_metadata(
+                source_url, source_id=source_ref, source_revision=source_revision,
+            )
             return _normalize_visual_payload(
                 payload, source_id=source_ref, source_revision=source_revision, fallback=fallback,
             )
@@ -1011,39 +1001,6 @@ async def media_channel_visual(
         source_revision=source_revision,
         fallback=fallback,
         fetch=fetch,
-    )
-
-
-@router.get("/api/media/channel/{canonical_key}/cover")
-async def media_channel_cover(
-    canonical_key: str,
-    request: Request,
-):
-    """返回该频道 adapter 类源的封面元数据（cover_url/avatar_url 已经是 image handle）。
-
-    使用轻量 CoverCache：
-    - 频道索引缓存 60s，不每次全量聚合；
-    - Adapter fetch 受 Semaphore(4) 限制；
-    - 同一 key 的并发请求合并为一次执行；
-    - 非 adapter 频道直接返回 logo_url 兜底并缓存。
-    """
-    from core.cover_cache import get_cover_cache
-
-    cache = get_cover_cache()
-    channel = await cache.get_channel(canonical_key)
-    if not channel:
-        raise HTTPException(status_code=404, detail="频道不存在")
-
-    sources = channel.get("urls", []) or []
-    import main as _m
-    adapter_source = next((s for s in sources if _m._source_type(s) == "adapter"), None)
-    adapter_url = adapter_source["url"] if adapter_source else None
-
-    return await cache.get_or_fetch(
-        canonical_key=canonical_key,
-        adapter_source_url=adapter_url,
-        logo_url=channel.get("logo_url") or "",
-        channel_name=channel.get("name") or "",
     )
 
 

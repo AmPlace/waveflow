@@ -450,7 +450,7 @@ class SubscriptionRouteLifecycleTest(unittest.IsolatedAsyncioTestCase):
             "_refresh_regular_subscription",
             new=mock.AsyncMock(side_effect=outcomes),
         ), mock.patch(
-            "core.cover_cache.invalidate_all_covers",
+            "core.visual_metadata.VisualMetadataCache.invalidate_all",
         ):
             result = await self.main.refresh_all_subscriptions()
 
@@ -516,7 +516,7 @@ class SubscriptionRouteLifecycleTest(unittest.IsolatedAsyncioTestCase):
             "_refresh_market_subscription",
             new=refresh_market,
         ), mock.patch(
-            "core.cover_cache.invalidate_all_covers",
+            "core.visual_metadata.VisualMetadataCache.invalidate_all",
         ):
             refresh_task = asyncio.create_task(
                 self.main.refresh_all_subscriptions()
