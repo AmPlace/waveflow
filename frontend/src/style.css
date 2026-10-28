@@ -232,29 +232,47 @@
 
   .app-sidebar {
     width: var(--sidebar-w);
+    box-shadow: inset -1px 0 var(--border);
     transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
   }
 
+  .app-sidebar .nav-item {
+    min-width: 0;
+    height: 56px;
+    flex-shrink: 0;
+    /* Keep the icon on one rail throughout the sidebar width transition. */
+    justify-content: flex-start;
+    padding-inline: 11px;
+    overflow: hidden;
+    border-radius: var(--card-radius);
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .app-sidebar .nav-item:focus-visible,
+  .sidebar-brand:focus-visible,
+  .sidebar-toggle:focus-visible {
+    outline: 2px solid var(--text-secondary);
+    outline-offset: 2px;
+  }
+
   .sidebar-toggle {
-    /* 直接相对 aside（fixed 定位上下文）算位置，绕开内部容器宽度。
-       展开 232px：right 12px → 按钮右沿距侧栏右沿 12px ✓
-       折叠 72px：实际内容边界下 right 14px → 按钮中心与导航图标中心重合 ✓
-       两态 right 都是确定 px，过渡平滑。 */
     position: absolute;
     top: 24px;
     right: 12px;
+    border-radius: var(--card-radius);
     transition: right 260ms cubic-bezier(0.4, 0, 0.2, 1),
                 background-color 200ms ease,
                 color 200ms ease;
   }
 
   .sidebar-collapsed .sidebar-toggle {
-    right: 14px;
+    right: calc((var(--sidebar-w-collapsed) - 40px) / 2);
   }
 
   .nav-label {
-    transition: opacity 180ms ease;
+    flex: 0 0 auto;
+    transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .nav-item-just-activated {
@@ -268,6 +286,9 @@
   }
 
   .sidebar-brand {
+    padding-inline: 11px;
+    border: 1px solid transparent;
+    border-radius: var(--card-radius);
     transition: opacity 180ms ease;
   }
 
