@@ -12,7 +12,6 @@ services:
       WAVEFLOW_PRODUCTION: ${WAVEFLOW_PRODUCTION:-}
       WAVEFLOW_PROXY_HANDLE_SECRET: ${WAVEFLOW_PROXY_HANDLE_SECRET:-}
       WAVEFLOW_SESSION_SECRET: ${WAVEFLOW_SESSION_SECRET:-}
-      HITFM_COOKIE: ${HITFM_COOKIE:-}
     volumes:
       - waveflow-data:/app/data
     networks:
